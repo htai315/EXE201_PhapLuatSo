@@ -1,0 +1,186 @@
+/* ===== Advanced Animations ===== */
+.fade-in, .fade-in-delay, .fade-in-delay-1, .fade-in-delay-2, .fade-in-delay-3 {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s ease-out;
+}
+
+.fade-in-delay { transition-delay: 0.2s; }
+.fade-in-delay-1 { transition-delay: 0.4s; }
+.fade-in-delay-2 { transition-delay: 0.6s; }
+.fade-in-delay-3 { transition-delay: 0.8s; }
+
+/* Parallax Effect */
+.hero-section {
+    position: relative;
+    min-height: 100vh;
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-image: linear-gradient(rgba(26, 75, 132, 0.9), rgba(13, 45, 84, 0.95)), url('/img/law-background.jpg');
+    overflow: hidden;
+}
+
+/* Slide animations */
+.slide-in-left {
+    opacity: 0;
+    transform: translateX(-50px);
+    transition: all 0.6s ease-out;
+}
+
+.slide-in-right {
+    opacity: 0;
+    transform: translateX(50px);
+    transition: all 0.6s ease-out;
+}
+
+/* Scale animations */
+.scale-in {
+    opacity: 0;
+    transform: scale(0.9);
+    transition: all 0.6s ease-out;
+}
+
+/* Floating animation */
+@keyframes float {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0); }
+}
+
+.hero-badge {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Card hover effects */
+.feature-card, .knowledge-card, .pricing-card {
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover, .knowledge-card:hover {
+    transform: translateY(-10px);
+}
+
+/* Icon rotate animation */
+.feature-icon, .why-icon, .knowledge-icon {
+    transition: transform 0.3s ease;
+}
+
+.feature-card:hover .feature-icon,
+.why-item:hover .why-icon,
+.knowledge-card:hover .knowledge-icon {
+    transform: rotate(360deg);
+}
+
+/* Button hover animation */
+.btn {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s ease, height 0.6s ease;
+}
+
+.btn:hover:after {
+    width: 200%;
+    height: 200%;
+}
+
+/* Enhanced Responsive Design */
+@media (max-width: 1200px) {
+    .hero-title {
+        font-size: 3rem;
+    }
+
+    .section-title {
+        font-size: 2.25rem;
+    }
+}
+
+@media (max-width: 991px) {
+    .hero-section {
+        min-height: auto;
+        padding: 120px 0 60px;
+        background-attachment: scroll;
+    }
+
+    .hero-title {
+        font-size: 2.5rem;
+    }
+
+    .hero-stats {
+        flex-wrap: wrap;
+        gap: 2rem;
+    }
+
+    .stat-item {
+        flex: 0 0 calc(50% - 1rem);
+    }
+
+    .navbar-nav {
+        background: var(--color-white);
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: var(--shadow-md);
+    }
+}
+
+@media (max-width: 767px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1rem;
+        padding: 1rem;
+        max-width: 100%;
+    }
+
+    .section-title {
+        font-size: 1.75rem;
+    }
+
+    .hero-stats {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .stat-item {
+        flex: 0 0 100%;
+        text-align: center;
+    }
+}
+
+@media (max-width: 576px) {
+    .hero-badge {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+    }
+
+    .feature-icon, .why-icon, .knowledge-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+
+    .d-flex.flex-wrap.gap-3 {
+        justify-content: center;
+    }
+
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
