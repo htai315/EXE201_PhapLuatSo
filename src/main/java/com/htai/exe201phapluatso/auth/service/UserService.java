@@ -99,6 +99,11 @@ public class UserService {
         }
 
         try {
+            // Xóa avatar cũ nếu có
+            if (user.getAvatarUrl() != null && !user.getAvatarUrl().isEmpty()) {
+                deleteOldAvatar(user.getAvatarUrl());
+            }
+
             // Generate unique filename
             String originalFilename = file.getOriginalFilename();
             String extension = originalFilename != null && originalFilename.contains(".") 
@@ -118,6 +123,26 @@ public class UserService {
             return avatarUrl;
         } catch (IOException e) {
             throw new RuntimeException("Không thể lưu file", e);
+        }
+    }
+
+    /**
+     * Xóa file avatar cũ khỏi hệ thống
+     */
+    private void deleteOldAvatar(String avatarUrl) {
+        try {
+            // Extract filename from URL (e.g., "/uploads/avatars/abc.jpg" -> "abc.jpg")
+            String filename = avatarUrl.substring(avatarUrl.lastIndexOf("/") + 1);
+            Path filePath = Paths.get(UPLOAD_DIR + filename);
+            
+            // Xóa file nếu tồn tại
+            if (Files.exists(filePath)) {
+                Files.delete(filePath);
+                System.out.println("Đã xóa avatar cũ: " + filename);
+            }
+        } catch (IOException e) {
+            // Log error nhưng không throw exception để không ảnh hưởng đến việc upload avatar mới
+            System.err.println("Không thể xóa avatar cũ: " + e.getMessage());
         }
     }
 }

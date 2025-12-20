@@ -1306,3 +1306,48 @@ button[type="submit"]:hover {
 
 
 
+
+/* ===== Avatar Quality Improvements ===== */
+#navUserAvatar {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s ease;
+}
+
+#navUserAvatar:hover {
+    transform: translateZ(0) scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Dropdown avatar styling */
+.navbar .dropdown-toggle::after {
+    display: none;
+}
+
+.navbar .dropdown-menu {
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e2e8f0;
+    margin-top: 0.5rem;
+}
+
+.navbar .dropdown-item {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.navbar .dropdown-item:hover {
+    background-color: #f8fafc;
+    color: var(--color-primary);
+}
+
+.navbar .dropdown-item i {
+    width: 20px;
+    text-align: center;
+}

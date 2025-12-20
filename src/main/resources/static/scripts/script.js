@@ -12,8 +12,15 @@ window.addEventListener("scroll", () => {
 // Smooth scroll for anchor links
 document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
     anchor.addEventListener("click", function (e) {
+        const href = this.getAttribute("href")
+        
+        // Bỏ qua nếu href chỉ là "#" (dropdown, modal, etc.)
+        if (!href || href === "#") {
+            return
+        }
+        
         e.preventDefault()
-        const target = document.querySelector(this.getAttribute("href"))
+        const target = document.querySelector(href)
         if (target) {
             target.scrollIntoView({
                 behavior: "smooth",
@@ -22,7 +29,7 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
 
             // Close mobile menu if open
             const navbarCollapse = document.querySelector(".navbar-collapse")
-            if (navbarCollapse.classList.contains("show")) {
+            if (navbarCollapse && navbarCollapse.classList.contains("show")) {
                 navbarCollapse.classList.remove("show")
             }
         }
@@ -177,7 +184,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const data = await res.json().catch(() => null)
         const avatarUrl = data && data.avatarUrl ? data.avatarUrl : 
-                         `https://ui-avatars.com/api/?name=${encodeURIComponent(data?.fullName || 'User')}&size=40&background=1a4b84&color=fff`
+                         `https://ui-avatars.com/api/?name=${encodeURIComponent(data?.fullName || 'User')}&size=80&background=1a4b84&color=fff`
 
         showAuth(avatarUrl)
 

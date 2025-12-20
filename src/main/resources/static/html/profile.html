@@ -8,6 +8,9 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/img/Law.png">
+
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
@@ -21,13 +24,45 @@
     <link rel="stylesheet" href="/css/animations.css">
     
     <style>
+        body {
+            background: #f8fafc;
+        }
+        
+        .profile-header {
+            background: linear-gradient(135deg, #1a4b84 0%, #0f3054 100%);
+            padding: 2rem 0 5rem;
+            margin-bottom: -3.5rem;
+            color: white;
+        }
+        
+        .profile-header h1 {
+            font-size: 1.75rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .profile-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 1rem 2rem;
+        }
+        
+        .profile-avatar-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            padding: 1.5rem;
+            text-align: center;
+            height: 100%;
+        }
+        
         .profile-avatar {
-            width: 150px;
-            height: 150px;
+            width: 140px;
+            height: 140px;
             border-radius: 50%;
             object-fit: cover;
             border: 4px solid #e2e8f0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
         }
         
         .avatar-upload-btn {
@@ -44,32 +79,133 @@
         .profile-card {
             background: white;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            padding: 2rem;
-            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+            height: 100%;
+        }
+        
+        .profile-card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1a4b84;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #e2e8f0;
         }
         
         .profile-info-item {
-            padding: 1rem 0;
-            border-bottom: 1px solid #e2e8f0;
+            padding: 0.875rem;
+            border-radius: 8px;
+            background: #f8fafc;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s;
         }
         
         .profile-info-item:last-child {
-            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .profile-info-item:hover {
+            background: #f1f5f9;
         }
         
         .profile-info-label {
             font-weight: 600;
             color: #64748b;
-            font-size: 0.875rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.35rem;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
         }
         
         .profile-info-value {
             font-size: 1rem;
             color: #0f172a;
+            font-weight: 500;
+        }
+        
+        .profile-stats {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 2px solid #e2e8f0;
+        }
+        
+        .profile-stat {
+            flex: 1;
+            text-align: center;
+            padding: 0.75rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        
+        .profile-stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a4b84;
+            display: block;
+            line-height: 1;
+        }
+        
+        .profile-stat-label {
+            font-size: 0.7rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.35rem;
+        }
+        
+        .form-control {
+            padding: 0.625rem 0.875rem;
+            font-size: 0.95rem;
+        }
+        
+        .form-control:focus {
+            border-color: #1a4b84;
+            box-shadow: 0 0 0 0.2rem rgba(26, 75, 132, 0.15);
+        }
+        
+        .form-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: #1a4b84;
+            border-color: #1a4b84;
+            padding: 0.625rem 1.75rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .btn-primary:hover {
+            background: #0f3054;
+            border-color: #0f3054;
+        }
+        
+        .mb-3 {
+            margin-bottom: 0.875rem !important;
+        }
+        
+        #profileFullName {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.25rem;
+        }
+        
+        #profileEmail {
+            font-size: 0.875rem;
+            margin-bottom: 0.75rem;
         }
     </style>
 </head>
@@ -121,77 +257,133 @@
     </div>
 </nav>
 
-<div class="page-wrapper">
-    <div class="container" style="max-width: 900px;">
-        <h1 class="page-title">Hồ Sơ Cá Nhân</h1>
-        <p class="section-subtitle mb-4">Quản lý thông tin tài khoản và cài đặt của bạn</p>
-        
-        <!-- Avatar & Basic Info Card -->
-        <div class="profile-card text-center">
-            <div class="mb-4">
-                <img id="profileAvatar" src="/img/default-avatar.png" alt="Avatar" class="profile-avatar mb-3" 
-                     onerror="this.src='https://ui-avatars.com/api/?name=User&size=150&background=1a4b84&color=fff'">
-                <div>
-                    <label for="avatarInput" class="btn btn-outline-primary btn-sm avatar-upload-btn">
-                        <i class="bi bi-camera me-1"></i>Thay đổi ảnh đại diện
-                        <input type="file" id="avatarInput" accept="image/*">
-                    </label>
-                </div>
-                <small class="text-muted d-block mt-2">JPG, PNG hoặc GIF. Tối đa 5MB</small>
-            </div>
-            
-            <h3 id="profileFullName" class="mb-1">Đang tải...</h3>
-            <p id="profileEmail" class="text-muted mb-0">email@example.com</p>
-        </div>
+<!-- Profile Header -->
+<div class="profile-header">
+    <div class="container">
+        <h1><i class="bi bi-person-circle me-2"></i>Hồ Sơ Cá Nhân</h1>
+        <p class="mb-0 opacity-75" style="font-size: 0.9rem;">Quản lý thông tin tài khoản và bảo mật</p>
+    </div>
+</div>
 
-        <!-- Account Information Card -->
-        <div class="profile-card">
-            <h5 class="mb-3"><i class="bi bi-person-circle me-2"></i>Thông tin tài khoản</h5>
-            
-            <div class="profile-info-item">
-                <div class="profile-info-label">Họ và tên</div>
-                <div class="profile-info-value" id="infoFullName">Đang tải...</div>
-            </div>
-            
-            <div class="profile-info-item">
-                <div class="profile-info-label">Email</div>
-                <div class="profile-info-value" id="infoEmail">email@example.com</div>
-            </div>
-            
-            <div class="profile-info-item">
-                <div class="profile-info-label">Vai trò</div>
-                <div class="profile-info-value" id="infoRole">USER</div>
+<div class="profile-container">
+    <div class="row g-3">
+        <!-- Left Column: Avatar & Stats -->
+        <div class="col-lg-4">
+            <div class="profile-avatar-card">
+                <img id="profileAvatar" src="/img/default-avatar.png" alt="Avatar" class="profile-avatar" 
+                     onerror="this.src='https://ui-avatars.com/api/?name=User&size=140&background=1a4b84&color=fff'">
+                
+                <h3 id="profileFullName">Đang tải...</h3>
+                <p id="profileEmail" class="text-muted">email@example.com</p>
+                
+                <label for="avatarInput" class="btn btn-outline-primary btn-sm avatar-upload-btn w-100 mb-2">
+                    <i class="bi bi-camera me-1"></i>Đổi ảnh đại diện
+                    <input type="file" id="avatarInput" accept="image/*">
+                </label>
+                <small class="text-muted d-block" style="font-size: 0.75rem;">JPG, PNG, GIF. Max 5MB</small>
+                
+                <div class="profile-stats">
+                    <div class="profile-stat">
+                        <span class="profile-stat-number">0</span>
+                        <span class="profile-stat-label">Quiz</span>
+                    </div>
+                    <div class="profile-stat">
+                        <span class="profile-stat-number">0</span>
+                        <span class="profile-stat-label">Điểm</span>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Change Password Card -->
-        <div class="profile-card">
-            <h5 class="mb-3"><i class="bi bi-shield-lock me-2"></i>Đổi mật khẩu</h5>
-            
-            <form id="changePasswordForm">
-                <div class="mb-3">
-                    <label for="currentPassword" class="form-label">Mật khẩu hiện tại</label>
-                    <input type="password" class="form-control" id="currentPassword" required>
-                    <div class="invalid-feedback d-block" id="currentPasswordError"></div>
+        <!-- Right Column: Info & Password -->
+        <div class="col-lg-8">
+            <div class="row g-3">
+                <!-- Account Information Card -->
+                <div class="col-12">
+                    <div class="profile-card">
+                        <h5 class="profile-card-title">
+                            <i class="bi bi-person-badge"></i>
+                            Thông tin tài khoản
+                        </h5>
+                        
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">
+                                        <i class="bi bi-person"></i>Họ và tên
+                                    </div>
+                                    <div class="profile-info-value" id="infoFullName">Đang tải...</div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">
+                                        <i class="bi bi-envelope"></i>Email
+                                    </div>
+                                    <div class="profile-info-value" id="infoEmail">email@example.com</div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">
+                                        <i class="bi bi-shield-check"></i>Vai trò
+                                    </div>
+                                    <div class="profile-info-value">
+                                        <span class="badge bg-primary" id="infoRole">USER</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="mb-3">
-                    <label for="newPassword" class="form-label">Mật khẩu mới</label>
-                    <input type="password" class="form-control" id="newPassword" required>
-                    <div class="invalid-feedback d-block" id="newPasswordError"></div>
-                    <small class="text-muted">Tối thiểu 6 ký tự</small>
+
+                <!-- Change Password Card -->
+                <div class="col-12">
+                    <div class="profile-card">
+                        <h5 class="profile-card-title">
+                            <i class="bi bi-shield-lock"></i>
+                            Đổi mật khẩu
+                        </h5>
+                        
+                        <form id="changePasswordForm">
+                            <div class="mb-3">
+                                <label for="currentPassword" class="form-label">
+                                    <i class="bi bi-key me-1"></i>Mật khẩu hiện tại
+                                </label>
+                                <input type="password" class="form-control" id="currentPassword" required 
+                                       placeholder="Nhập mật khẩu hiện tại">
+                                <div class="invalid-feedback d-block" id="currentPasswordError"></div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="newPassword" class="form-label">
+                                        <i class="bi bi-lock me-1"></i>Mật khẩu mới
+                                    </label>
+                                    <input type="password" class="form-control" id="newPassword" required 
+                                           placeholder="Tối thiểu 6 ký tự">
+                                    <div class="invalid-feedback d-block" id="newPasswordError"></div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="confirmNewPassword" class="form-label">
+                                        <i class="bi bi-lock-fill me-1"></i>Xác nhận mật khẩu
+                                    </label>
+                                    <input type="password" class="form-control" id="confirmNewPassword" required 
+                                           placeholder="Nhập lại mật khẩu mới">
+                                    <div class="invalid-feedback d-block" id="confirmNewPasswordError"></div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-1"></i>Cập nhật mật khẩu
+                            </button>
+                        </form>
+                    </div>
                 </div>
-                
-                <div class="mb-3">
-                    <label for="confirmNewPassword" class="form-label">Xác nhận mật khẩu mới</label>
-                    <input type="password" class="form-control" id="confirmNewPassword" required>
-                    <div class="invalid-feedback d-block" id="confirmNewPasswordError"></div>
-                </div>
-                
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-circle me-1"></i>Cập nhật mật khẩu
-                </button>
-            </form>
+            </div>
         </div>
     </div>
 </div>
