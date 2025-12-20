@@ -55,22 +55,27 @@
           <form class="auth-form">
             <div class="mb-3">
               <label class="form-label">Họ và tên</label>
-              <input type="text" class="form-control" required>
+              <input type="text" class="form-control" id="fullNameInput" required>
+              <div class="invalid-feedback d-block" id="fullNameError"></div>
             </div>
 
             <div class="mb-3">
               <label class="form-label">Email</label>
-              <input type="email" class="form-control" required>
+              <input type="email" class="form-control" id="emailInput" required>
+              <div class="invalid-feedback d-block" id="emailError"></div>
             </div>
 
             <div class="mb-3">
               <label class="form-label">Mật khẩu</label>
-              <input type="password" class="form-control" required>
+              <input type="password" class="form-control" id="passwordInput" required>
+              <div class="invalid-feedback d-block" id="passwordError"></div>
+              <small class="text-muted">Tối thiểu 6 ký tự</small>
             </div>
 
             <div class="mb-3">
               <label class="form-label">Xác nhận mật khẩu</label>
-              <input type="password" class="form-control" required>
+              <input type="password" class="form-control" id="confirmPasswordInput" required>
+              <div class="invalid-feedback d-block" id="confirmPasswordError"></div>
             </div>
 
             <button type="submit" class="btn btn-primary w-100 mb-3">Tạo Tài Khoản</button>
@@ -105,35 +110,174 @@
     const form = document.querySelector(".auth-form");
     const googleRegisterBtn = document.getElementById("googleRegisterBtn");
 
+    // Clear error message
+    function clearError(inputId) {
+      const input = document.getElementById(inputId);
+      const errorDiv = document.getElementById(inputId.replace('Input', 'Error'));
+      if (input) input.classList.remove('is-invalid');
+      if (errorDiv) errorDiv.textContent = '';
+    }
+
+    // Show error message
+    function showError(inputId, message) {
+      const input = document.getElementById(inputId);
+      const errorDiv = document.getElementById(inputId.replace('Input', 'Error'));
+      if (input) input.classList.add('is-invalid');
+      if (errorDiv) errorDiv.textContent = message;
+    }
+
+    // Validate email format
+    function isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
     if (googleRegisterBtn) {
       googleRegisterBtn.addEventListener("click", (e) => {
         e.preventDefault();
-        alert("Tính năng đăng ký/đăng nhập bằng Google đang được phát triển, vui lòng sử dụng đăng ký bằng email và mật khẩu.");
+        alert("Tính năng đăng ký bằng Google đang được phát triển");
       });
     }
 
     if (!form) return;
 
-    const nameInput = form.querySelector('input[type="text"]');
-    const emailInput = form.querySelector('input[type="email"]');
-    const passwordInput = form.querySelectorAll('input[type="password"]')[0];
-    const passwordConfirmInput = form.querySelectorAll('input[type="password"]')[1];
+    const fullNameInput = document.getElementById('fullNameInput');
+    const emailInput = document.getElementById('emailInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+
+    // Real-time validation
+    fullNameInput.addEventListener('blur', () => {
+      const value = fullNameInput.value.trim();
+      if (!value) {
+        showError('fullNameInput', 'Vui lòng nhập họ và tên');
+      } else if (value.length < 2) {
+        showError('fullNameInput', 'Họ và tên phải có ít nhất 2 ký tự');
+      } else {
+        clearError('fullNameInput');
+      }
+    });
+
+    fullNameInput.addEventListener('input', () => {
+      if (fullNameInput.value.trim()) {
+        clearError('fullNameInput');
+      }
+    });
+
+    emailInput.addEventListener('blur', () => {
+      const value = emailInput.value.trim();
+      if (!value) {
+        showError('emailInput', 'Vui lòng nhập email');
+      } else if (!isValidEmail(value)) {
+        showError('emailInput', 'Email không hợp lệ');
+      } else {
+        clearError('emailInput');
+      }
+    });
+
+    emailInput.addEventListener('input', () => {
+      if (emailInput.value.trim()) {
+        clearError('emailInput');
+      }
+    });
+
+    passwordInput.addEventListener('blur', () => {
+      const value = passwordInput.value;
+      if (!value) {
+        showError('passwordInput', 'Vui lòng nhập mật khẩu');
+      } else if (value.length < 6) {
+        showError('passwordInput', 'Mật khẩu phải có ít nhất 6 ký tự');
+      } else {
+        clearError('passwordInput');
+      }
+      // Re-validate confirm password if it has value
+      if (confirmPasswordInput.value) {
+        validateConfirmPassword();
+      }
+    });
+
+    passwordInput.addEventListener('input', () => {
+      if (passwordInput.value) {
+        clearError('passwordInput');
+      }
+      // Re-validate confirm password if it has value
+      if (confirmPasswordInput.value) {
+        validateConfirmPassword();
+      }
+    });
+
+    function validateConfirmPassword() {
+      const password = passwordInput.value;
+      const confirm = confirmPasswordInput.value;
+      
+      if (!confirm) {
+        showError('confirmPasswordInput', 'Vui lòng xác nhận mật khẩu');
+        return false;
+      } else if (password !== confirm) {
+        showError('confirmPasswordInput', 'Mật khẩu xác nhận không khớp');
+        return false;
+      } else {
+        clearError('confirmPasswordInput');
+        return true;
+      }
+    }
+
+    confirmPasswordInput.addEventListener('blur', validateConfirmPassword);
+    confirmPasswordInput.addEventListener('input', () => {
+      if (confirmPasswordInput.value) {
+        validateConfirmPassword();
+      }
+    });
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const fullName = nameInput.value.trim();
-      const email = (emailInput.value || "").trim();
-      const password = passwordInput.value;
-      const confirm = passwordConfirmInput.value;
+      // Clear all errors
+      clearError('fullNameInput');
+      clearError('emailInput');
+      clearError('passwordInput');
+      clearError('confirmPasswordInput');
 
-      if (!fullName || !email || !password || !confirm) {
-        alert("Vui lòng điền đầy đủ thông tin");
-        return;
+      const fullName = fullNameInput.value.trim();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      const confirm = confirmPasswordInput.value;
+
+      let hasError = false;
+
+      // Validate all fields
+      if (!fullName) {
+        showError('fullNameInput', 'Vui lòng nhập họ và tên');
+        hasError = true;
+      } else if (fullName.length < 2) {
+        showError('fullNameInput', 'Họ và tên phải có ít nhất 2 ký tự');
+        hasError = true;
       }
 
-      if (password !== confirm) {
-        alert("Mật khẩu xác nhận không khớp");
+      if (!email) {
+        showError('emailInput', 'Vui lòng nhập email');
+        hasError = true;
+      } else if (!isValidEmail(email)) {
+        showError('emailInput', 'Email không hợp lệ');
+        hasError = true;
+      }
+
+      if (!password) {
+        showError('passwordInput', 'Vui lòng nhập mật khẩu');
+        hasError = true;
+      } else if (password.length < 6) {
+        showError('passwordInput', 'Mật khẩu phải có ít nhất 6 ký tự');
+        hasError = true;
+      }
+
+      if (!confirm) {
+        showError('confirmPasswordInput', 'Vui lòng xác nhận mật khẩu');
+        hasError = true;
+      } else if (password !== confirm) {
+        showError('confirmPasswordInput', 'Mật khẩu xác nhận không khớp');
+        hasError = true;
+      }
+
+      if (hasError) {
         return;
       }
 
@@ -146,20 +290,28 @@
 
         if (!res.ok) {
           const text = await res.text();
-          // Nếu backend trả thông báo trùng email, hiển thị rõ ràng
-          if (text && text.toLowerCase().includes("exists")) {
-            alert("Email đã tồn tại, vui lòng dùng email khác.");
-          } else {
-            alert(text || "Đăng ký thất bại");
+          let errorMessage = 'Đăng ký thất bại';
+          
+          // Try parse JSON response
+          try {
+            const data = JSON.parse(text);
+            errorMessage = data.error || data.message || errorMessage;
+          } catch (e) {
+            // If not JSON, use text directly
+            errorMessage = text || errorMessage;
           }
+          
+          // Chỉ hiển thị message, không thêm text khác
+          showError('emailInput', errorMessage);
           return;
         }
 
-        alert("Đăng ký thành công, vui lòng đăng nhập");
+        // Đăng ký thành công
+        alert('Đăng ký thành công! Vui lòng đăng nhập');
         window.location.href = "login.html";
       } catch (err) {
         console.error("Register error", err);
-        alert("Có lỗi xảy ra, vui lòng thử lại");
+        showError('emailInput', 'Có lỗi xảy ra, vui lòng thử lại');
       }
     });
   });

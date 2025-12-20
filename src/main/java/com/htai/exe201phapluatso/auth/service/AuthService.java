@@ -3,6 +3,10 @@ package com.htai.exe201phapluatso.auth.service;
 import com.htai.exe201phapluatso.auth.dto.*;
 import com.htai.exe201phapluatso.auth.entity.*;
 import com.htai.exe201phapluatso.auth.repo.*;
+import com.htai.exe201phapluatso.common.exception.BadRequestException;
+import com.htai.exe201phapluatso.common.exception.ForbiddenException;
+import com.htai.exe201phapluatso.common.exception.NotFoundException;
+import com.htai.exe201phapluatso.common.exception.UnauthorizedException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -47,11 +51,11 @@ public class AuthService {
     public void register(RegisterRequest req) {
         String email = req.email().toLowerCase().trim();
         if (userRepo.existsByEmail(email)) {
-            throw new RuntimeException("Email already exists");
+            throw new BadRequestException("Email đã tồn tại");
         }
 
         Role userRole = roleRepo.findByName("USER")
-                .orElseThrow(() -> new RuntimeException("Role USER not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy role USER"));
 
         User u = new User();
         u.setEmail(email);
@@ -81,12 +85,16 @@ public class AuthService {
         String email = req.email().toLowerCase().trim();
 
         User u = userRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+                .orElseThrow(() -> new UnauthorizedException("Email hoặc mật khẩu không đúng"));
 
-        if (!u.isEnabled()) throw new RuntimeException("User is disabled");
-        if (u.getPasswordHash() == null) throw new RuntimeException("This account uses Google login");
+        if (!u.isEnabled()) {
+            throw new ForbiddenException("Tài khoản đã bị khóa");
+        }
+        if (u.getPasswordHash() == null) {
+            throw new BadRequestException("Tài khoản này đăng nhập bằng Google");
+        }
         if (!passwordEncoder.matches(req.password(), u.getPasswordHash())) {
-            throw new RuntimeException("Invalid email or password");
+            throw new UnauthorizedException("Email hoặc mật khẩu không đúng");
         }
 
         return issueTokens(u);
@@ -110,7 +118,7 @@ public class AuthService {
                 .orElseGet(() -> userRepo.findByEmail(normalized).orElse(null));
 
         Role userRole = roleRepo.findByName("USER")
-                .orElseThrow(() -> new RuntimeException("Role USER not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy role USER"));
 
         if (u == null) {
             // create new user
@@ -127,7 +135,7 @@ public class AuthService {
 
             // default plan FREE
             Plan free = planRepo.findByCode("FREE")
-                    .orElseThrow(() -> new RuntimeException("Plan FREE not found"));
+                    .orElseThrow(() -> new NotFoundException("Không tìm thấy gói FREE"));
             Subscription sub = new Subscription();
             sub.setUser(u);
             sub.setPlan(free);

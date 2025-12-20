@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface SubscriptionRepo extends JpaRepository<Subscription, Long> {
     Optional<Subscription> findTopByUserIdOrderByStartAtDesc(Long userId);
+
+    Optional<Subscription> findTopByUserIdAndStatusOrderByStartAtDesc(Long userId, String status);
 }

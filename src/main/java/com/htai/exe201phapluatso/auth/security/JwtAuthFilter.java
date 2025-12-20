@@ -40,8 +40,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         try {
             Claims claims = jwtService.parse(token);
+
             Long uid = claims.get("uid", Long.class);
             String email = claims.getSubject();
+
+            if (uid == null || email == null) {
+                chain.doFilter(request, response);
+                return;
+            }
 
             var user = userRepo.findById(uid).orElse(null);
             if (user == null || !user.isEnabled()) {
@@ -51,15 +57,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             @SuppressWarnings("unchecked")
             List<String> roles = (List<String>) claims.get("roles", List.class);
+
             var authorities = roles.stream()
                     .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
                     .toList();
 
-            var auth = new UsernamePasswordAuthenticationToken(email, null, authorities);
+            var principal = new AuthUserPrincipal(uid, email);
+
+            var auth = new UsernamePasswordAuthenticationToken(principal, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(auth);
 
         } catch (Exception ignored) {
-            // invalid/expired -> do nothing, continue
         }
 
         chain.doFilter(request, response);

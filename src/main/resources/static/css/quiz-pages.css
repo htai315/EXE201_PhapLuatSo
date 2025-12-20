@@ -1,0 +1,433 @@
+/* ===== Quiz Pages Specific Styles ===== */
+/* Styles extracted from inline <style> tags */
+
+/* Quiz layout container */
+.quiz-layout {
+    max-width: 1100px;
+}
+
+/* Question wrapper */
+.question-wrapper {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 0 16px;
+}
+
+/* Card header title */
+.card-header-title {
+    font-weight: 600;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #0f172a;
+}
+
+.card-header-title i {
+    color: #1a4b84;
+}
+
+/* Option label */
+.option-label-strong {
+    min-width: 30px;
+}
+
+/* Question meta */
+.question-meta {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+/* Question options row */
+.question-options-row {
+    margin-bottom: 8px;
+}
+
+/* ===== Question Cards (Quiz Manager) ===== */
+/* Container giới hạn width cho đẹp */
+#questionsList {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.question-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    margin-bottom: 12px !important;
+    background: #ffffff;
+}
+
+.question-card:hover {
+    border-color: #1a4b84;
+    box-shadow: 0 2px 8px rgba(26, 75, 132, 0.1);
+    transform: translateY(-1px);
+}
+
+.question-card .card-body {
+    padding: 14px 16px;
+}
+
+/* Question index badge - nhỏ gọn hơn */
+.question-index-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #1a4b84, #2563eb);
+    color: white;
+    border-radius: 7px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+/* Question title - gọn hơn */
+.question-title {
+    font-size: 0.92rem;
+    line-height: 1.4;
+    color: #0f172a;
+    font-weight: 500;
+}
+
+/* Option item - gọn và đẹp hơn */
+.option-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.86rem;
+    line-height: 1.4;
+    transition: all 0.15s ease;
+}
+
+.option-item:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.option-item.correct {
+    background: #dcfce7;
+    border-color: #86efac;
+}
+
+.option-item.correct:hover {
+    background: #bbf7d0;
+}
+
+/* Option key pill - nhỏ hơn */
+.option-key-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    background: #1a4b84;
+    color: white;
+    border-radius: 5px;
+    font-weight: 700;
+    font-size: 0.72rem;
+    flex-shrink: 0;
+}
+
+.option-item.correct .option-key-pill {
+    background: #16a34a;
+}
+
+/* Question options list - 1 cột gọn gàng */
+.question-options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+/* Option text - nội dung của option */
+.option-text {
+    flex: 1;
+    color: #334155;
+    line-height: 1.4;
+}
+
+/* Question explanation - gọn hơn */
+.question-explanation {
+    font-size: 0.83rem;
+    padding: 10px 12px;
+    background: #fef3c7;
+    border-left: 3px solid #f59e0b;
+    border-radius: 5px;
+    margin-top: 10px;
+    line-height: 1.4;
+    color: #78350f;
+}
+
+.question-explanation strong {
+    color: #92400e;
+}
+
+/* Buttons trong question card - nhỏ hơn */
+.question-card .btn-sm {
+    padding: 4px 10px;
+    font-size: 0.8rem;
+}
+
+/* ===== NEW: Question Manager 2-Column Layout ===== */
+
+/* Question List Card (Left Column) */
+.question-list-card {
+    height: calc(100vh - 200px);
+    min-height: 500px;
+    display: flex;
+    flex-direction: column;
+}
+
+.question-list-body {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px !important;
+}
+
+/* Question Grid Container - 5 cột ngang */
+.question-grid-container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    max-width: 350px; /* Giới hạn chiều rộng để ô không quá to */
+}
+
+.question-grid-item {
+    aspect-ratio: 1;
+    width: 100%;
+    max-width: 60px; /* Giới hạn kích thước tối đa */
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.question-grid-item:hover {
+    background: #f8fafc;
+    border-color: #1a4b84;
+    color: #1a4b84;
+    transform: scale(1.05);
+    box-shadow: 0 2px 6px rgba(26, 75, 132, 0.15);
+}
+
+.question-grid-item.active {
+    background: #1a4b84;
+    border-color: #1a4b84;
+    color: white;
+    box-shadow: 0 2px 8px rgba(26, 75, 132, 0.3);
+}
+
+.question-grid-item.active:hover {
+    background: #0d2d54;
+    border-color: #0d2d54;
+    transform: scale(1.05);
+}
+
+/* Question Detail Card (Right Column) */
+.question-detail-card {
+    height: calc(100vh - 200px);
+    min-height: 500px;
+    display: flex;
+    flex-direction: column;
+}
+
+.question-detail-card .card-body {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.question-detail-content {
+    max-width: 800px;
+}
+
+.question-detail-header {
+    margin-bottom: 16px;
+}
+
+.question-detail-text {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #0f172a;
+    font-weight: 500;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: #f8fafc;
+    border-left: 4px solid #1a4b84;
+    border-radius: 8px;
+}
+
+.question-detail-section {
+    margin-bottom: 24px;
+}
+
+.section-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+}
+
+.section-title i {
+    color: #1a4b84;
+}
+
+/* Options Detail List */
+.options-detail-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.option-detail-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.option-detail-item:hover {
+    border-color: #cbd5e1;
+    background: #f1f5f9;
+}
+
+.option-detail-item.correct {
+    background: #f0fdf4;
+    border-color: #86efac;
+}
+
+.option-detail-key {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    background: #ffffff;
+    border: 2px solid #cbd5e1;
+    color: #64748b;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.option-detail-item.correct .option-detail-key {
+    background: #22c55e;
+    border-color: #22c55e;
+    color: white;
+}
+
+.option-detail-text {
+    flex: 1;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #334155;
+}
+
+.option-detail-item.correct .option-detail-text {
+    color: #166534;
+    font-weight: 500;
+}
+
+.option-detail-item i {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+/* Correct Answer Box */
+.correct-answer-box {
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    border: 2px solid #86efac;
+    border-radius: 10px;
+    color: #166534;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    display: flex;
+    align-items: center;
+}
+
+.correct-answer-box i {
+    font-size: 1.3rem;
+    color: #22c55e;
+}
+
+/* Explanation Box */
+.explanation-box {
+    padding: 16px 18px;
+    background: #fef3c7;
+    border-left: 4px solid #f59e0b;
+    border-radius: 8px;
+    color: #78350f;
+    font-size: 0.92rem;
+    line-height: 1.6;
+}
+
+/* Scrollbar Styling */
+.question-list-body::-webkit-scrollbar,
+.question-detail-card .card-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.question-list-body::-webkit-scrollbar-track,
+.question-detail-card .card-body::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.question-list-body::-webkit-scrollbar-thumb,
+.question-detail-card .card-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.question-list-body::-webkit-scrollbar-thumb:hover,
+.question-detail-card .card-body::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+    .question-list-card,
+    .question-detail-card {
+        height: auto;
+        min-height: 400px;
+    }
+    
+    .question-list-scroll {
+        max-height: 400px;
+    }
+}
+
+@media (max-width: 576px) {
+    /* Mobile: vẫn giữ 5 cột */
+    #questionListContainer {
+        gap: 6px;
+    }
+    
+    .question-grid-item {
+        font-size: 0.85rem;
+    }
+}

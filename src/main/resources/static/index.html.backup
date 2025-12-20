@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -46,16 +46,14 @@
                 <!-- Khi chưa đăng nhập -->
                 <li class="nav-item ms-lg-3 guest-only"><a class="btn btn-outline-primary btn-sm px-3" href="/html/login.html"><i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập</a></li>
                 <li class="nav-item ms-lg-2 guest-only"><a class="btn btn-primary btn-sm px-3" href="/html/register.html"><i class="bi bi-person-plus me-1"></i>Đăng Ký</a></li>
-                <!-- Khi đã đăng nhập - Avatar Dropdown -->
-                <li class="nav-item dropdown ms-lg-3 auth-only d-none">
-                    <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img id="navUserAvatar" src="" alt="Avatar" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #1a4b84;">
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="/html/profile.html"><i class="bi bi-person-circle me-2"></i>Hồ sơ</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
-                    </ul>
+                <!-- Khi đã đăng nhập -->
+                <li class="nav-item ms-lg-3 auth-only d-none">
+                    <span id="navUserName" class="nav-link fw-semibold"></span>
+                </li>
+                <li class="nav-item ms-lg-2 auth-only d-none">
+                    <button id="navLogoutBtn" class="btn btn-outline-danger btn-sm px-3">
+                        <i class="bi bi-box-arrow-right me-1"></i>Đăng xuất
+                    </button>
                 </li>
             </ul>
         </div>

@@ -13,8 +13,8 @@
     --color-white: #ffffff;
 
     /* Typography */
-    --font-primary: "Inter", sans-serif;
-    --font-display: "Playfair Display", serif;
+    --font-primary: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-display: "Playfair Display", Georgia, serif;
 
     /* Spacing */
     --section-padding: 80px 0;
@@ -42,6 +42,8 @@ body {
     overflow-x: hidden;
     background-color: var(--color-light);
     background-image: linear-gradient(to right, rgba(245, 245, 245, 0.8) 0%, rgba(245, 245, 245, 0.9) 100%);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 html {
@@ -105,6 +107,41 @@ img {
     color: var(--color-dark);
 }
 
+/* ===== Quiz page: unified styling ===== */
+/* Keep styles scoped and minimal to match site theme */
+.exam-header { border-radius: 8px; background: #ffffff; border: 1px solid rgba(15,23,42,0.04); box-shadow: var(--shadow-sm); }
+.exam-header .fw-semibold { font-family: var(--font-display); font-weight:700; color:var(--color-dark); }
+
+.question-card { border-radius: 8px; border: 1px solid rgba(15,23,42,0.06); background: #fff; box-shadow: var(--shadow-md); }
+.question-card .card-body { padding: 22px; }
+.question-card h5 { font-family: var(--font-display); font-size: 1.125rem; margin-bottom: 0.5rem; color:var(--color-dark); }
+.question-index { font-weight:700; color:var(--color-primary-dark); }
+
+/* Option items - consistent with other site cards */
+.option-item { display:flex; align-items:center; gap:12px; padding:14px 16px; background:#fff; border:1px solid rgba(15,23,42,0.06); border-radius:6px; cursor:pointer; transition: box-shadow .12s ease, transform .08s ease; }
+.option-item:hover { box-shadow: var(--shadow-sm); transform: translateY(-2px); }
+.option-item.active { border-color: var(--color-primary-dark); background: linear-gradient(90deg, rgba(11,59,92,0.03), #fff); }
+.option-key-pill { min-width:36px; height:36px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--color-primary-dark); background:#f1f5f9; }
+.option-item.active .option-key-pill { background: var(--color-primary-dark); color:#fff; }
+.check-icon { margin-left:auto; color:var(--color-primary-dark); display:none; }
+.option-item.active .check-icon { display:inline-block; }
+
+/* Progress bar and stats */
+.progress { height:10px; border-radius:6px; background:#eef3f7; overflow:hidden; }
+.progress-bar { background: linear-gradient(90deg,var(--color-primary-dark),var(--color-primary)); }
+
+/* Sidebar: timer and question grid */
+#timerRow .bg-light { background: #fbfcfd; border:1px solid rgba(15,23,42,0.03); }
+#questionGrid { display:flex; flex-wrap:wrap; gap:10px; }
+#questionGrid .q-grid-item { width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; border:1px solid rgba(15,23,42,0.06); background:#f7fafc; font-weight:700; }
+#questionGrid .q-grid-item.active { background:var(--color-primary-dark); color:#fff; border-color:var(--color-primary-dark); box-shadow:0 8px 18px rgba(11,59,92,0.06); }
+#questionGrid .q-grid-item.answered { background:#e8f6ec; color:#0f5132 }
+#questionGrid .q-grid-item.flagged { background:#fff7ed; color:#92400e }
+
+.btn-submit-large { background: linear-gradient(90deg,var(--color-primary-dark),var(--color-primary)); color:#fff; border:none; border-radius:8px; padding:12px 20px; font-weight:700 }
+
+/* Submitted state */
+.exam-submitted .option-item { pointer-events:none; opacity:0.85 }
 /* ===== Auth (Login/Register) ===== */
 .auth-section {
     background: linear-gradient(135deg, #0d2d54, #1a4b84);
@@ -1188,6 +1225,8 @@ img {
     height: 60px; /* Hoặc 64px theo ý bạn */
     padding-top: 0 !important;
     padding-bottom: 0 !important;
+    z-index: 1050 !important; /* Đảm bảo navbar luôn ở trên cùng */
+    background-color: #ffffff !important; /* Đảm bảo có background */
 }
 
 #mainNav .navbar-brand img {

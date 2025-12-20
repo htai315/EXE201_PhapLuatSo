@@ -143,23 +143,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const guestItems = document.querySelectorAll(".guest-only")
         const authItems = document.querySelectorAll(".auth-only")
-        const nameSpan = document.getElementById("navUserName")
+        const avatarImg = document.getElementById("navUserAvatar")
         const logoutBtn = document.getElementById("navLogoutBtn")
 
         const showGuest = () => {
             guestItems.forEach(el => el.classList.remove("d-none"))
             authItems.forEach(el => el.classList.add("d-none"))
         }
-        const showAuth = (displayName) => {
+        const showAuth = (avatarUrl) => {
             guestItems.forEach(el => el.classList.add("d-none"))
             authItems.forEach(el => el.classList.remove("d-none"))
-            if (nameSpan && displayName) {
-                nameSpan.textContent = displayName
+            if (avatarImg && avatarUrl) {
+                avatarImg.src = avatarUrl
             }
         }
 
         // Nếu không có token thì để chế độ guest
-        if (!accessToken || !refreshToken || !nameSpan || !logoutBtn) {
+        if (!accessToken || !refreshToken) {
             showGuest()
             return
         }
@@ -176,31 +176,33 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         const data = await res.json().catch(() => null)
-        const email = data && data.email ? data.email : ""
-        const displayName = email ? email.split("@")[0] : "Tài khoản"
+        const avatarUrl = data && data.avatarUrl ? data.avatarUrl : 
+                         `https://ui-avatars.com/api/?name=${encodeURIComponent(data?.fullName || 'User')}&size=40&background=1a4b84&color=fff`
 
-        showAuth(displayName)
+        showAuth(avatarUrl)
 
         // Xử lý logout: gọi API logout + xoá token + reload
-        logoutBtn.addEventListener("click", async (e) => {
-            e.preventDefault()
-            try {
-                const token = localStorage.getItem("refreshToken")
-                if (token) {
-                    await fetch("/api/auth/logout", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ refreshToken: token })
-                    })
+        if (logoutBtn) {
+            logoutBtn.addEventListener("click", async (e) => {
+                e.preventDefault()
+                try {
+                    const token = localStorage.getItem("refreshToken")
+                    if (token) {
+                        await fetch("/api/auth/logout", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ refreshToken: token })
+                        })
+                    }
+                } catch (err) {
+                    console.warn("Logout error", err)
+                } finally {
+                    localStorage.removeItem("accessToken")
+                    localStorage.removeItem("refreshToken")
+                    window.location.href = "/index.html"
                 }
-            } catch (err) {
-                console.warn("Logout error", err)
-            } finally {
-                localStorage.removeItem("accessToken")
-                localStorage.removeItem("refreshToken")
-                window.location.href = "/index.html"
-            }
-        })
+            })
+        }
     } catch (err) {
         console.warn("Navbar auth init error", err)
     }

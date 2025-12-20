@@ -1,7 +1,9 @@
 package com.htai.exe201phapluatso.auth.controller;
 
 import com.htai.exe201phapluatso.auth.dto.*;
+import com.htai.exe201phapluatso.auth.security.AuthUserPrincipal;
 import com.htai.exe201phapluatso.auth.service.AuthService;
+import com.htai.exe201phapluatso.auth.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -12,9 +14,11 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService auth;
+    private final UserService userService;
 
-    public AuthController(AuthService auth) {
+    public AuthController(AuthService auth, UserService userService) {
         this.auth = auth;
+        this.userService = userService;
     }
 
     @PostMapping("/register")
@@ -39,12 +43,27 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/test")
+    public ResponseEntity<?> test() {
+        return ResponseEntity.ok("Auth controller is working");
+    }
+
     @GetMapping("/me")
-    public Object me(Authentication authentication) {
-        if (authentication == null) return ResponseEntity.status(401).body("Unauthorized");
-        return new Object() {
-            public final String email = authentication.getName();
-            public final Object roles = authentication.getAuthorities();
-        };
+    public ResponseEntity<?> me(Authentication authentication) {
+        if (authentication == null || authentication.getPrincipal() == null) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+        
+        try {
+            // Cast principal to AuthUserPrincipal to get email
+            AuthUserPrincipal principal = (AuthUserPrincipal) authentication.getPrincipal();
+            String email = principal.email();
+            
+            UserProfileResponse profile = userService.getUserProfile(email);
+            return ResponseEntity.ok(profile);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
+        }
     }
 }

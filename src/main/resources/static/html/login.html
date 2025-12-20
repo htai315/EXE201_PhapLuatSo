@@ -63,6 +63,7 @@
                 <span class="input-group-text"><i class="bi bi-envelope"></i></span>
                 <input id="loginEmail" type="email" class="form-control" placeholder="name@example.com" required>
               </div>
+              <div class="invalid-feedback d-block" id="emailError"></div>
             </div>
 
             <div class="mb-3">
@@ -74,6 +75,7 @@
                 <span class="input-group-text"><i class="bi bi-lock"></i></span>
                 <input id="loginPassword" type="password" class="form-control" placeholder="Nhập mật khẩu" required>
               </div>
+              <div class="invalid-feedback d-block" id="passwordError"></div>
             </div>
 
             <div class="mb-4 d-flex justify-content-between align-items-center">
@@ -119,23 +121,98 @@
     const passwordInput = document.getElementById("loginPassword");
     const googleBtn = document.getElementById("googleLoginBtn");
 
+    // Clear error message
+    function clearError(errorId) {
+      const errorDiv = document.getElementById(errorId);
+      const inputGroup = errorDiv?.previousElementSibling;
+      const input = inputGroup?.querySelector('input');
+      if (input) input.classList.remove('is-invalid');
+      if (errorDiv) errorDiv.textContent = '';
+    }
+
+    // Show error message
+    function showError(errorId, message) {
+      const errorDiv = document.getElementById(errorId);
+      const inputGroup = errorDiv?.previousElementSibling;
+      const input = inputGroup?.querySelector('input');
+      if (input) input.classList.add('is-invalid');
+      if (errorDiv) errorDiv.textContent = message;
+    }
+
+    // Validate email format
+    function isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
     if (googleBtn) {
       googleBtn.addEventListener("click", (e) => {
         e.preventDefault();
-        alert("Tính năng đăng nhập bằng Google đang được phát triển, vui lòng sử dụng đăng nhập bằng email và mật khẩu.");
+        alert("Tính năng đăng nhập bằng Google đang được phát triển");
       });
     }
 
     if (!form) return;
 
+    // Real-time validation
+    emailInput.addEventListener('blur', () => {
+      const value = emailInput.value.trim();
+      if (!value) {
+        showError('emailError', 'Vui lòng nhập email');
+      } else if (!isValidEmail(value)) {
+        showError('emailError', 'Email không hợp lệ');
+      } else {
+        clearError('emailError');
+      }
+    });
+
+    emailInput.addEventListener('input', () => {
+      if (emailInput.value.trim()) {
+        clearError('emailError');
+      }
+    });
+
+    passwordInput.addEventListener('blur', () => {
+      const value = passwordInput.value;
+      if (!value) {
+        showError('passwordError', 'Vui lòng nhập mật khẩu');
+      } else {
+        clearError('passwordError');
+      }
+    });
+
+    passwordInput.addEventListener('input', () => {
+      if (passwordInput.value) {
+        clearError('passwordError');
+      }
+    });
+
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+
+      // Clear all errors
+      clearError('emailError');
+      clearError('passwordError');
 
       const email = emailInput.value.trim();
       const password = passwordInput.value;
 
-      if (!email || !password) {
-        alert("Vui lòng nhập email và mật khẩu");
+      let hasError = false;
+
+      // Validate fields
+      if (!email) {
+        showError('emailError', 'Vui lòng nhập email');
+        hasError = true;
+      } else if (!isValidEmail(email)) {
+        showError('emailError', 'Email không hợp lệ');
+        hasError = true;
+      }
+
+      if (!password) {
+        showError('passwordError', 'Vui lòng nhập mật khẩu');
+        hasError = true;
+      }
+
+      if (hasError) {
         return;
       }
 
@@ -148,8 +225,19 @@
 
         if (!res.ok) {
           const text = await res.text();
-          // Thông báo rõ khi sai email/mật khẩu
-          alert(text || "Đăng nhập thất bại. Vui lòng kiểm tra email/mật khẩu.");
+          let errorMessage = 'Đăng nhập thất bại';
+          
+          // Try parse JSON response
+          try {
+            const data = JSON.parse(text);
+            errorMessage = data.error || data.message || errorMessage;
+          } catch (e) {
+            // If not JSON, use text directly
+            errorMessage = text || errorMessage;
+          }
+          
+          // Show error under email field (usually login errors are about credentials)
+          showError('emailError', errorMessage);
           return;
         }
 
@@ -162,7 +250,7 @@
         window.location.href = "/index.html";
       } catch (err) {
         console.error("Login error", err);
-        alert("Có lỗi xảy ra, vui lòng thử lại");
+        showError('emailError', 'Có lỗi xảy ra, vui lòng thử lại');
       }
     });
   });

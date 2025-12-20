@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sửa Câu Hỏi - AI Luật</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <!-- CSS chung của project -->
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/quiz-common.css">
+    <link rel="stylesheet" href="/css/quiz-pages.css">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+    <div class="container">
+        <a class="navbar-brand" href="/index.html">
+            <img src="/img/Law.png" alt="Logo">
+            <span>Pháp Luật Số</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-lg-center">
+                <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/chat.html">Chat AI</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/quiz.html">Quiz</a></li>
+                <li class="nav-item"><a class="nav-link active" href="/html/my-quizzes.html">Bộ đề</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/stats.html">Thống kê</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/admin.html">Quản trị</a></li>
+                <li class="nav-item ms-lg-3 guest-only">
+                    <a class="btn btn-outline-primary btn-sm px-3" href="/html/login.html">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập
+                    </a>
+                </li>
+                <li class="nav-item ms-lg-2 guest-only">
+                    <a class="btn btn-primary btn-sm px-3" href="/html/register.html">
+                        <i class="bi bi-person-plus me-1"></i>Đăng Ký
+                    </a>
+                </li>
+                <li class="nav-item dropdown ms-lg-3 auth-only d-none">
+                    <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img id="navUserAvatar" src="https://ui-avatars.com/api/?name=User&size=40&background=1a4b84&color=fff" 
+                             alt="Avatar" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #e2e8f0;">
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item" href="/html/profile.html"><i class="bi bi-person me-2"></i>Hồ sơ</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="page-wrapper">
+    <div class="question-wrapper">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h1 class="page-title mb-1">Sửa Câu hỏi</h1>
+                <p class="question-meta mb-0" id="setTitleText">Đang tải thông tin bộ đề...</p>
+            </div>
+            <button class="btn btn-outline-secondary btn-rounded" id="btnBackToManager">
+                <i class="bi bi-arrow-left me-1"></i>Quay lại Bộ đề
+            </button>
+        </div>
+
+        <div id="alertArea"></div>
+
+        <div class="card mt-2">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-pencil-square me-2"></i>Chỉnh sửa nội dung &amp; đáp án</span>
+                <span class="question-meta d-none d-md-inline">Cập nhật câu hỏi để rõ ràng và chính xác hơn.</span>
+            </div>
+            <div class="card-body">
+                <form id="editQuestionForm">
+                    <div class="mb-3">
+                        <label for="questionText" class="form-label">Nội dung câu hỏi <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="questionText" rows="3" required
+                                  placeholder="Nhập nội dung câu hỏi..." maxlength="2000"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="explanation" class="form-label">Giải thích</label>
+                        <textarea class="form-control" id="explanation" rows="2"
+                                  placeholder="Giải thích đáp án (tùy chọn)..." maxlength="2000"></textarea>
+                        <div class="helper-text mt-1">
+                            Cập nhật phần giải thích để người học nắm rõ lý do tại sao đáp án đúng.
+                        </div>
+                    </div>
+
+                    <h6 class="mb-3">Các phương án trả lời <span class="text-danger">*</span></h6>
+                    <p class="helper-text mb-2">
+                        Đảm bảo chỉ có <strong>một đáp án đúng</strong> và các đáp án sai vẫn hợp lý, dễ gây nhầm lẫn.
+                    </p>
+                    <div class="option-item mb-2">
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="radio" name="correctOption" value="A" id="correctA" required>
+                            <label class="form-check-label option-label-strong" for="correctA"><strong>A.</strong></label>
+                        </div>
+                        <input type="text" class="form-control" id="optionA" required
+                               placeholder="Phương án A" maxlength="1000">
+                    </div>
+                    <div class="option-item mb-2">
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="radio" name="correctOption" value="B" id="correctB">
+                            <label class="form-check-label option-label-strong" for="correctB"><strong>B.</strong></label>
+                        </div>
+                        <input type="text" class="form-control" id="optionB" required
+                               placeholder="Phương án B" maxlength="1000">
+                    </div>
+                    <div class="option-item mb-2">
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="radio" name="correctOption" value="C" id="correctC">
+                            <label class="form-check-label option-label-strong" for="correctC"><strong>C.</strong></label>
+                        </div>
+                        <input type="text" class="form-control" id="optionC" required
+                               placeholder="Phương án C" maxlength="1000">
+                    </div>
+                    <div class="option-item mb-2">
+                        <div class="form-check mb-0">
+                            <input class="form-check-input" type="radio" name="correctOption" value="D" id="correctD">
+                            <label class="form-check-label option-label-strong" for="correctD"><strong>D.</strong></label>
+                        </div>
+                        <input type="text" class="form-control" id="optionD" required
+                               placeholder="Phương án D" maxlength="1000">
+                    </div>
+
+                    <div class="mt-3 d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-secondary btn-rounded" id="btnCancel">
+                            Hủy
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-rounded px-4">
+                            <i class="bi bi-save me-1"></i>Lưu thay đổi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/scripts/error-handler.js"></script>
+<script src="/scripts/api-client.js"></script>
+<script src="/scripts/script.js"></script>
+<script>
+    const API_BASE = '/api/quiz-sets';
+    let currentQuizSetId = null;
+    let currentQuestionId = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            window.location.href = '/html/login.html';
+            return;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const setId = params.get('setId');
+        const questionId = params.get('questionId');
+        if (!setId || !questionId) {
+            window.location.href = '/html/my-quizzes.html';
+            return;
+        }
+        currentQuizSetId = parseInt(setId, 10);
+        currentQuestionId = parseInt(questionId, 10);
+
+        const goBack = () => {
+            window.location.href = `/html/quiz-manager.html?setId=${encodeURIComponent(currentQuizSetId)}`;
+        };
+        document.getElementById('btnBackToManager').addEventListener('click', goBack);
+        document.getElementById('btnCancel').addEventListener('click', goBack);
+
+        loadQuizSetTitle(currentQuizSetId);
+        loadQuestionDetail(currentQuizSetId, currentQuestionId);
+        initEditForm();
+    });
+
+    function showAlert(message, type = 'danger') {
+        const alertArea = document.getElementById('alertArea');
+        alertArea.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+    }
+
+    async function loadQuizSetTitle(setId) {
+        ERROR_HANDLER.showLoading(true);
+        try {
+            // Sử dụng API_CLIENT với auto token refresh
+            const res = await API_CLIENT.get(`${API_BASE}/${setId}`);
+            
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(text || 'Không thể tải thông tin bộ đề');
+            }
+            const data = await res.json();
+            document.getElementById('setTitleText').textContent = `Bộ đề: ${data.title}`;
+        } catch (err) {
+            console.error(err);
+            showAlert(err.message || 'Không thể tải thông tin bộ đề');
+        } finally {
+            ERROR_HANDLER.showLoading(false);
+        }
+    }
+
+    async function loadQuestionDetail(setId, questionId) {
+        console.log('loadQuestionDetail called with:', { setId, questionId });
+        ERROR_HANDLER.showLoading(true);
+        try {
+            // Sử dụng API_CLIENT với auto token refresh
+            const res = await API_CLIENT.get(`${API_BASE}/${setId}/questions`);
+            
+            console.log('Questions API response status:', res.status);
+            
+            if (!res.ok) {
+                const text = await res.text();
+                console.error('Failed to load questions:', text);
+                throw new Error(text || 'Không thể tải câu hỏi');
+            }
+            const list = await res.json();
+            console.log('Loaded questions:', list.length, 'questions');
+            console.log('Looking for questionId:', questionId);
+            
+            const q = list.find(it => it.id === questionId);
+            console.log('Found question:', q);
+            
+            if (!q) {
+                throw new Error('Không tìm thấy câu hỏi');
+            }
+            document.getElementById('questionText').value = q.questionText || '';
+            document.getElementById('explanation').value = q.explanation || '';
+            (q.options || []).forEach(opt => {
+                const key = opt.optionKey;
+                const textInput = document.getElementById(`option${key}`);
+                const radio = document.getElementById(`correct${key}`);
+                if (textInput) textInput.value = opt.optionText || '';
+                if (radio && opt.isCorrect) {
+                    radio.checked = true;
+                }
+            });
+            console.log('Question data loaded successfully');
+        } catch (err) {
+            console.error('Error in loadQuestionDetail:', err);
+            showAlert(err.message || 'Không thể tải chi tiết câu hỏi');
+        } finally {
+            ERROR_HANDLER.showLoading(false);
+        }
+    }
+
+    function initEditForm() {
+        const form = document.getElementById('editQuestionForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentQuizSetId || !currentQuestionId) {
+                showAlert('Không xác định được câu hỏi.', 'danger');
+                return;
+            }
+
+            ERROR_HANDLER.showLoading(true);
+            try {
+                const questionText = document.getElementById('questionText').value.trim();
+                const explanation = document.getElementById('explanation').value.trim();
+                const correctOption = document.querySelector('input[name="correctOption"]:checked')?.value;
+                if (!correctOption) throw new Error('Vui lòng chọn đáp án đúng');
+
+                const options = [
+                    { optionKey: 'A', optionText: document.getElementById('optionA').value.trim(), isCorrect: correctOption === 'A' },
+                    { optionKey: 'B', optionText: document.getElementById('optionB').value.trim(), isCorrect: correctOption === 'B' },
+                    { optionKey: 'C', optionText: document.getElementById('optionC').value.trim(), isCorrect: correctOption === 'C' },
+                    { optionKey: 'D', optionText: document.getElementById('optionD').value.trim(), isCorrect: correctOption === 'D' }
+                ];
+                for (const opt of options) {
+                    if (!opt.optionText) throw new Error(`Phương án ${opt.optionKey} không được để trống`);
+                }
+
+                // Sử dụng API_CLIENT với auto token refresh
+                const res = await API_CLIENT.put(`${API_BASE}/${currentQuizSetId}/questions/${currentQuestionId}`, {
+                    questionText,
+                    explanation: explanation || null,
+                    options
+                });
+
+                if (!res.ok) {
+                    const text = await res.text();
+                    let msg = 'Có lỗi xảy ra khi cập nhật câu hỏi';
+                    try {
+                        const data = JSON.parse(text);
+                        msg = data.error || msg;
+                    } catch (_) {
+                        if (text) msg = text;
+                    }
+                    throw new Error(msg);
+                }
+
+                showAlert('Đã cập nhật câu hỏi.', 'success');
+                setTimeout(() => {
+                    window.location.href = `/html/quiz-manager.html?setId=${encodeURIComponent(currentQuizSetId)}`;
+                }, 800);
+            } catch (err) {
+                console.error(err);
+                showAlert(err.message || 'Không thể cập nhật câu hỏi');
+            } finally {
+                ERROR_HANDLER.showLoading(false);
+            }
+        });
+    }
+</script>
+</body>
+</html>
+
+

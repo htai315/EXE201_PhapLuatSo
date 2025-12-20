@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ Sơ - AI Luật</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/animations.css">
+    
+    <style>
+        .profile-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #e2e8f0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .avatar-upload-btn {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        
+        .avatar-upload-btn input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+        
+        .profile-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .profile-info-item {
+            padding: 1rem 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .profile-info-item:last-child {
+            border-bottom: none;
+        }
+        
+        .profile-info-label {
+            font-weight: 600;
+            color: #64748b;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.25rem;
+        }
+        
+        .profile-info-value {
+            font-size: 1rem;
+            color: #0f172a;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+    <div class="container">
+        <a class="navbar-brand" href="/index.html">
+            <img src="/img/Law.png" alt="Logo">
+            <span>Pháp Luật Số</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-lg-center">
+                <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/chat.html">Chat AI</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/quiz.html">Quiz</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/my-quizzes.html">Bộ đề</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/stats.html">Thống kê</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/admin.html">Quản trị</a></li>
+                <li class="nav-item ms-lg-3 guest-only">
+                    <a class="btn btn-outline-primary btn-sm px-3" href="/html/login.html">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập
+                    </a>
+                </li>
+                <li class="nav-item ms-lg-2 guest-only">
+                    <a class="btn btn-primary btn-sm px-3" href="/html/register.html">
+                        <i class="bi bi-person-plus me-1"></i>Đăng Ký
+                    </a>
+                </li>
+                <li class="nav-item dropdown ms-lg-3 auth-only d-none">
+                    <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img id="navUserAvatar" src="https://ui-avatars.com/api/?name=User&size=40&background=1a4b84&color=fff" 
+                             alt="Avatar" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #e2e8f0;">
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item" href="/html/profile.html"><i class="bi bi-person me-2"></i>Hồ sơ</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="page-wrapper">
+    <div class="container" style="max-width: 900px;">
+        <h1 class="page-title">Hồ Sơ Cá Nhân</h1>
+        <p class="section-subtitle mb-4">Quản lý thông tin tài khoản và cài đặt của bạn</p>
+        
+        <!-- Avatar & Basic Info Card -->
+        <div class="profile-card text-center">
+            <div class="mb-4">
+                <img id="profileAvatar" src="/img/default-avatar.png" alt="Avatar" class="profile-avatar mb-3" 
+                     onerror="this.src='https://ui-avatars.com/api/?name=User&size=150&background=1a4b84&color=fff'">
+                <div>
+                    <label for="avatarInput" class="btn btn-outline-primary btn-sm avatar-upload-btn">
+                        <i class="bi bi-camera me-1"></i>Thay đổi ảnh đại diện
+                        <input type="file" id="avatarInput" accept="image/*">
+                    </label>
+                </div>
+                <small class="text-muted d-block mt-2">JPG, PNG hoặc GIF. Tối đa 5MB</small>
+            </div>
+            
+            <h3 id="profileFullName" class="mb-1">Đang tải...</h3>
+            <p id="profileEmail" class="text-muted mb-0">email@example.com</p>
+        </div>
+
+        <!-- Account Information Card -->
+        <div class="profile-card">
+            <h5 class="mb-3"><i class="bi bi-person-circle me-2"></i>Thông tin tài khoản</h5>
+            
+            <div class="profile-info-item">
+                <div class="profile-info-label">Họ và tên</div>
+                <div class="profile-info-value" id="infoFullName">Đang tải...</div>
+            </div>
+            
+            <div class="profile-info-item">
+                <div class="profile-info-label">Email</div>
+                <div class="profile-info-value" id="infoEmail">email@example.com</div>
+            </div>
+            
+            <div class="profile-info-item">
+                <div class="profile-info-label">Vai trò</div>
+                <div class="profile-info-value" id="infoRole">USER</div>
+            </div>
+        </div>
+
+        <!-- Change Password Card -->
+        <div class="profile-card">
+            <h5 class="mb-3"><i class="bi bi-shield-lock me-2"></i>Đổi mật khẩu</h5>
+            
+            <form id="changePasswordForm">
+                <div class="mb-3">
+                    <label for="currentPassword" class="form-label">Mật khẩu hiện tại</label>
+                    <input type="password" class="form-control" id="currentPassword" required>
+                    <div class="invalid-feedback d-block" id="currentPasswordError"></div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="newPassword" class="form-label">Mật khẩu mới</label>
+                    <input type="password" class="form-control" id="newPassword" required>
+                    <div class="invalid-feedback d-block" id="newPasswordError"></div>
+                    <small class="text-muted">Tối thiểu 6 ký tự</small>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="confirmNewPassword" class="form-label">Xác nhận mật khẩu mới</label>
+                    <input type="password" class="form-control" id="confirmNewPassword" required>
+                    <div class="invalid-feedback d-block" id="confirmNewPasswordError"></div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle me-1"></i>Cập nhật mật khẩu
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Custom JS -->
+<script src="/scripts/script.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+        window.location.href = '/html/login.html';
+        return;
+    }
+
+    // Load user profile
+    loadUserProfile();
+
+    // Avatar upload handler
+    document.getElementById('avatarInput').addEventListener('change', handleAvatarUpload);
+
+    // Change password form handler
+    document.getElementById('changePasswordForm').addEventListener('submit', handleChangePassword);
+
+    // Real-time validation for password fields
+    setupPasswordValidation();
+});
+
+async function loadUserProfile() {
+    try {
+        const res = await fetch('/api/auth/me', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+            }
+        });
+
+        if (!res.ok) {
+            throw new Error('Không thể tải thông tin người dùng');
+        }
+
+        const user = await res.json();
+        
+        // Update UI
+        document.getElementById('profileFullName').textContent = user.fullName || 'Người dùng';
+        document.getElementById('profileEmail').textContent = user.email || '';
+        document.getElementById('infoFullName').textContent = user.fullName || 'Người dùng';
+        document.getElementById('infoEmail').textContent = user.email || '';
+        document.getElementById('infoRole').textContent = user.role || 'USER';
+        
+        // Update avatar if exists
+        if (user.avatarUrl) {
+            document.getElementById('profileAvatar').src = user.avatarUrl;
+        }
+    } catch (err) {
+        console.error('Error loading profile:', err);
+        showError('currentPasswordError', 'Không thể tải thông tin hồ sơ');
+    }
+}
+
+async function handleAvatarUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Kích thước ảnh không được vượt quá 5MB');
+        return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+        alert('Vui lòng chọn file ảnh (JPG, PNG, GIF)');
+        return;
+    }
+
+    // Preview image immediately
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('profileAvatar').src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    // Upload to server
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    try {
+        const res = await fetch('/api/user/avatar', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+            },
+            body: formData
+        });
+
+        if (!res.ok) {
+            throw new Error('Không thể tải ảnh lên');
+        }
+
+        alert('Cập nhật ảnh đại diện thành công');
+    } catch (err) {
+        console.error('Error uploading avatar:', err);
+        alert('Có lỗi xảy ra khi tải ảnh lên. Vui lòng thử lại');
+        // Reload original avatar
+        loadUserProfile();
+    }
+}
+
+function setupPasswordValidation() {
+    const currentPassword = document.getElementById('currentPassword');
+    const newPassword = document.getElementById('newPassword');
+    const confirmNewPassword = document.getElementById('confirmNewPassword');
+
+    currentPassword.addEventListener('input', () => {
+        if (currentPassword.value) clearError('currentPasswordError');
+    });
+
+    newPassword.addEventListener('blur', () => {
+        const value = newPassword.value;
+        if (!value) {
+            showError('newPasswordError', 'Vui lòng nhập mật khẩu mới');
+        } else if (value.length < 6) {
+            showError('newPasswordError', 'Mật khẩu phải có ít nhất 6 ký tự');
+        } else {
+            clearError('newPasswordError');
+        }
+        // Re-validate confirm if it has value
+        if (confirmNewPassword.value) {
+            validateConfirmNewPassword();
+        }
+    });
+
+    newPassword.addEventListener('input', () => {
+        if (newPassword.value) {
+            clearError('newPasswordError');
+        }
+        if (confirmNewPassword.value) {
+            validateConfirmNewPassword();
+        }
+    });
+
+    confirmNewPassword.addEventListener('blur', validateConfirmNewPassword);
+    confirmNewPassword.addEventListener('input', () => {
+        if (confirmNewPassword.value) {
+            validateConfirmNewPassword();
+        }
+    });
+}
+
+function validateConfirmNewPassword() {
+    const newPassword = document.getElementById('newPassword').value;
+    const confirm = document.getElementById('confirmNewPassword').value;
+    
+    if (!confirm) {
+        showError('confirmNewPasswordError', 'Vui lòng xác nhận mật khẩu mới');
+        return false;
+    } else if (newPassword !== confirm) {
+        showError('confirmNewPasswordError', 'Mật khẩu xác nhận không khớp');
+        return false;
+    } else {
+        clearError('confirmNewPasswordError');
+        return true;
+    }
+}
+
+async function handleChangePassword(e) {
+    e.preventDefault();
+
+    // Clear all errors
+    clearError('currentPasswordError');
+    clearError('newPasswordError');
+    clearError('confirmNewPasswordError');
+
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+    let hasError = false;
+
+    // Validate
+    if (!currentPassword) {
+        showError('currentPasswordError', 'Vui lòng nhập mật khẩu hiện tại');
+        hasError = true;
+    }
+
+    if (!newPassword) {
+        showError('newPasswordError', 'Vui lòng nhập mật khẩu mới');
+        hasError = true;
+    } else if (newPassword.length < 6) {
+        showError('newPasswordError', 'Mật khẩu phải có ít nhất 6 ký tự');
+        hasError = true;
+    }
+
+    if (!confirmNewPassword) {
+        showError('confirmNewPasswordError', 'Vui lòng xác nhận mật khẩu mới');
+        hasError = true;
+    } else if (newPassword !== confirmNewPassword) {
+        showError('confirmNewPasswordError', 'Mật khẩu xác nhận không khớp');
+        hasError = true;
+    }
+
+    if (hasError) return;
+
+    try {
+        const res = await fetch('/api/user/change-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+            },
+            body: JSON.stringify({
+                currentPassword,
+                newPassword
+            })
+        });
+
+        if (!res.ok) {
+            const text = await res.text();
+            let errorMessage = 'Đổi mật khẩu thất bại';
+            
+            try {
+                const data = JSON.parse(text);
+                errorMessage = data.error || data.message || errorMessage;
+            } catch (e) {
+                errorMessage = text || errorMessage;
+            }
+            
+            showError('currentPasswordError', errorMessage);
+            return;
+        }
+
+        // Success
+        alert('Đổi mật khẩu thành công!');
+        document.getElementById('changePasswordForm').reset();
+        clearError('currentPasswordError');
+        clearError('newPasswordError');
+        clearError('confirmNewPasswordError');
+    } catch (err) {
+        console.error('Error changing password:', err);
+        showError('currentPasswordError', 'Có lỗi xảy ra, vui lòng thử lại');
+    }
+}
+
+function clearError(errorId) {
+    const errorDiv = document.getElementById(errorId);
+    const input = document.getElementById(errorId.replace('Error', ''));
+    if (input) input.classList.remove('is-invalid');
+    if (errorDiv) errorDiv.textContent = '';
+}
+
+function showError(errorId, message) {
+    const errorDiv = document.getElementById(errorId);
+    const input = document.getElementById(errorId.replace('Error', ''));
+    if (input) input.classList.add('is-invalid');
+    if (errorDiv) errorDiv.textContent = message;
+}
+</script>
+</body>
+</html>

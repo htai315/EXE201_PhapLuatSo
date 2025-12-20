@@ -29,11 +29,16 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/", "/index.html", "/app.html",
                                 "/css/**", "/img/**", "/scripts/**",
-                                "/html/**", "/favicon.ico"
+                                "/html/**", "/favicon.ico", "/uploads/**"
                         ).permitAll()
 
-                        // auth endpoints + oauth
-                        .requestMatchers("/api/auth/**", "/oauth2/**", "/login/**").permitAll()
+                        // auth endpoints (public - không cần token)
+                        .requestMatchers("/api/auth/register", "/api/auth/login", 
+                                       "/api/auth/refresh", "/api/auth/logout",
+                                       "/oauth2/**", "/login/**").permitAll()
+
+                        // auth endpoints (protected - cần token)
+                        .requestMatchers("/api/auth/me", "/api/auth/test").authenticated()
 
                         // mọi thứ khác mới cần đăng nhập
                         .anyRequest().authenticated()
