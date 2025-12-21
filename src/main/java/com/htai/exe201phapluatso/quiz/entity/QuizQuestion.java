@@ -34,7 +34,7 @@ public class QuizQuestion {
     private LocalDateTime updatedAt;
 
     // OneToMany relationship để fix N+1 query problem
-    @OneToMany(mappedBy = "question", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "question", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("optionKey ASC")
     private List<QuizQuestionOption> options = new ArrayList<>();
 
