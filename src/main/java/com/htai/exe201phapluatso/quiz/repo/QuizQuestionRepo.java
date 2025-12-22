@@ -2,6 +2,7 @@ package com.htai.exe201phapluatso.quiz.repo;
 
 import com.htai.exe201phapluatso.quiz.entity.QuizQuestion;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -21,4 +22,8 @@ public interface QuizQuestionRepo extends JpaRepository<QuizQuestion, Long> {
     List<QuizQuestion> findByQuizSetIdWithOptions(@Param("quizSetId") Long quizSetId);
     
     long countByQuizSetId(Long quizSetId);
+    
+    @Modifying
+    @Query("DELETE FROM QuizQuestion q WHERE q.quizSet.id = :quizSetId")
+    void deleteByQuizSetId(@Param("quizSetId") Long quizSetId);
 }

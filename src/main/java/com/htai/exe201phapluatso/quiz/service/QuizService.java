@@ -14,9 +14,13 @@ import com.htai.exe201phapluatso.quiz.entity.QuizQuestionOption;
 import com.htai.exe201phapluatso.quiz.entity.QuizSet;
 import com.htai.exe201phapluatso.quiz.dto.QuestionResponse;
 import com.htai.exe201phapluatso.quiz.repo.QuizAttemptAnswerRepo;
+import com.htai.exe201phapluatso.quiz.repo.QuizAttemptRepo;
 import com.htai.exe201phapluatso.quiz.repo.QuizQuestionOptionRepo;
 import com.htai.exe201phapluatso.quiz.repo.QuizQuestionRepo;
 import com.htai.exe201phapluatso.quiz.repo.QuizSetRepo;
+import jakarta.persistence.EntityManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,27 +33,35 @@ import java.util.stream.Collectors;
 @Service
 public class QuizService {
 
+    private static final Logger log = LoggerFactory.getLogger(QuizService.class);
+
     private final QuizSetRepo quizSetRepo;
     private final QuizQuestionRepo questionRepo;
     private final QuizQuestionOptionRepo optionRepo;
     private final QuizAttemptAnswerRepo attemptAnswerRepo;
+    private final QuizAttemptRepo attemptRepo;
     private final UserRepo userRepo;
     private final SubscriptionRepo subscriptionRepo;
+    private final EntityManager entityManager;
 
     public QuizService(
             QuizSetRepo quizSetRepo,
             QuizQuestionRepo questionRepo,
             QuizQuestionOptionRepo optionRepo,
             QuizAttemptAnswerRepo attemptAnswerRepo,
+            QuizAttemptRepo attemptRepo,
             UserRepo userRepo,
-            SubscriptionRepo subscriptionRepo
+            SubscriptionRepo subscriptionRepo,
+            EntityManager entityManager
     ) {
         this.quizSetRepo = quizSetRepo;
         this.questionRepo = questionRepo;
         this.optionRepo = optionRepo;
         this.attemptAnswerRepo = attemptAnswerRepo;
+        this.attemptRepo = attemptRepo;
         this.userRepo = userRepo;
         this.subscriptionRepo = subscriptionRepo;
+        this.entityManager = entityManager;
     }
     @Transactional
     public QuizSet createQuizSet(Long userId, CreateQuizSetRequest req) {
@@ -146,8 +158,46 @@ public class QuizService {
 
     @Transactional
     public void deleteQuizSet(Long userId, Long quizSetId) {
+        log.info("Attempting to delete quiz set {} by user {}", quizSetId, userId);
+        
         QuizSet quizSet = getOwnedQuizSet(userId, quizSetId);
-        quizSetRepo.delete(quizSet); // questions & options are ON DELETE CASCADE
+        log.info("Quiz set found: {}", quizSet.getTitle());
+        
+        try {
+            // SQL Server không cho phép multiple cascade paths
+            // Cascade path: quiz_sets -> quiz_attempts -> quiz_attempt_answers (OK)
+            // Nhưng: quiz_sets -> quiz_questions -> quiz_attempt_answers (CONFLICT!)
+            // 
+            // Giải pháp: Xóa attempt_answers trước khi cascade xóa questions
+            List<Long> questionIds = questionRepo.findByQuizSetIdOrderBySortOrderAsc(quizSetId)
+                    .stream()
+                    .map(QuizQuestion::getId)
+                    .toList();
+            
+            log.info("Found {} questions in quiz set", questionIds.size());
+            
+            if (!questionIds.isEmpty()) {
+                log.info("Deleting attempt answers for questions: {}", questionIds);
+                attemptAnswerRepo.deleteByQuestionIds(questionIds);
+                entityManager.flush(); // Đảm bảo delete được thực thi ngay
+                log.info("Attempt answers deleted successfully");
+            }
+            
+            // Clear persistence context để tránh lỗi TransientPropertyValueException
+            entityManager.clear();
+            
+            // Giờ có thể xóa quiz_set, database sẽ tự động cascade:
+            // - quiz_sets -> quiz_attempts (CASCADE - đã xóa answers ở trên)
+            // - quiz_sets -> quiz_questions -> quiz_question_options (CASCADE)
+            log.info("Deleting quiz set {}", quizSetId);
+            quizSetRepo.deleteById(quizSetId); // Dùng deleteById thay vì delete(entity)
+            entityManager.flush();
+            log.info("Quiz set deleted successfully");
+            
+        } catch (Exception e) {
+            log.error("Error deleting quiz set {}: {}", quizSetId, e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Transactional
