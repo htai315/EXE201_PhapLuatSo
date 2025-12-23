@@ -507,6 +507,8 @@
 <script src="/scripts/script.js"></script>
 
 <script>
+let currentSessionId = null;
+
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
@@ -518,6 +520,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatForm = document.getElementById('chatForm');
     const questionInput = document.getElementById('questionInput');
     const sendBtn = document.getElementById('sendBtn');
+
+    // Load chat history on page load
+    loadChatSessions();
 
     chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -536,7 +541,12 @@ document.addEventListener('DOMContentLoaded', () => {
         sendBtn.disabled = true;
 
         try {
-            const response = await fetch('/api/legal/chat/ask', {
+            // Send to appropriate endpoint
+            const endpoint = currentSessionId 
+                ? `/api/chat/sessions/${currentSessionId}/messages`
+                : '/api/chat/sessions/messages';
+
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -551,11 +561,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await response.json();
             
+            // Update current session ID if new session
+            if (!currentSessionId) {
+                currentSessionId = data.sessionId;
+                loadChatSessions(); // Reload sidebar
+            }
+            
             // Remove typing indicator
             removeTypingIndicator(typingId);
             
             // Add bot response
-            addMessage('bot', data.answer, data.citations);
+            addMessage('bot', data.assistantMessage.content, data.assistantMessage.citations);
         } catch (error) {
             removeTypingIndicator(typingId);
             addMessage('bot', 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau.');
@@ -567,6 +583,133 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    async function loadChatSessions() {
+        try {
+            const response = await fetch('/api/chat/sessions', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) return;
+
+            const sessions = await response.json();
+            renderChatSessions(sessions);
+        } catch (error) {
+            console.error('Error loading sessions:', error);
+        }
+    }
+
+    function renderChatSessions(sessions) {
+        const recentChats = document.querySelector('.recent-chats');
+        
+        if (sessions.length === 0) {
+            recentChats.innerHTML = '<h3>Lịch sử trò chuyện</h3><p style="color: #9ca3af; font-size: 0.85rem;">Chưa có cuộc trò chuyện nào</p>';
+            return;
+        }
+
+        const groupedSessions = groupSessionsByDate(sessions);
+        
+        let html = '';
+        for (const [label, sessionList] of Object.entries(groupedSessions)) {
+            html += `<h3>${label}</h3>`;
+            sessionList.forEach(session => {
+                const isActive = session.id === currentSessionId ? 'active' : '';
+                html += `
+                    <div class="chat-item ${isActive}" onclick="loadSession(${session.id}, this)">
+                        <div class="chat-item-icon">
+                            <i class="bi bi-chat-text"></i>
+                        </div>
+                        <div class="chat-item-text">
+                            <div class="chat-item-title">${escapeHtml(session.title)}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        recentChats.innerHTML = html;
+    }
+
+    function groupSessionsByDate(sessions) {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        const groups = {
+            'Hôm nay': [],
+            'Hôm qua': [],
+            'Tuần này': [],
+            'Cũ hơn': []
+        };
+
+        sessions.forEach(session => {
+            const sessionDate = new Date(session.updatedAt);
+            const sessionDay = new Date(sessionDate.getFullYear(), sessionDate.getMonth(), sessionDate.getDate());
+
+            if (sessionDay.getTime() === today.getTime()) {
+                groups['Hôm nay'].push(session);
+            } else if (sessionDay.getTime() === yesterday.getTime()) {
+                groups['Hôm qua'].push(session);
+            } else if (sessionDay >= new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)) {
+                groups['Tuần này'].push(session);
+            } else {
+                groups['Cũ hơn'].push(session);
+            }
+        });
+
+        // Remove empty groups
+        Object.keys(groups).forEach(key => {
+            if (groups[key].length === 0) {
+                delete groups[key];
+            }
+        });
+
+        return groups;
+    }
+
+    window.loadSession = async (sessionId, clickedElement) => {
+        try {
+            const response = await fetch(`/api/chat/sessions/${sessionId}/messages`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) throw new Error('Failed to load session');
+
+            const messages = await response.json();
+            
+            // Clear current messages
+            chatMessages.innerHTML = '';
+            
+            // Set current session
+            currentSessionId = sessionId;
+            
+            // Render messages
+            messages.forEach(msg => {
+                addMessage(msg.role.toLowerCase(), msg.content, msg.citations);
+            });
+
+            // Update active state in sidebar
+            document.querySelectorAll('.chat-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to clicked item
+            if (clickedElement) {
+                const chatItem = clickedElement.closest('.chat-item');
+                if (chatItem) {
+                    chatItem.classList.add('active');
+                }
+            }
+        } catch (error) {
+            console.error('Error loading session:', error);
+            alert('Không thể tải cuộc trò chuyện');
+        }
+    };
+
     function addMessage(type, content, citations = null) {
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${type}`;
@@ -577,34 +720,28 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const contentWrapper = document.createElement('div');
         
-        if (type === 'bot') {
-            const label = document.createElement('div');
-            label.className = 'message-label';
-            label.textContent = 'Trợ lý AI';
-            contentWrapper.appendChild(label);
-        } else {
-            const label = document.createElement('div');
-            label.className = 'message-label';
-            label.textContent = 'Bạn';
-            contentWrapper.appendChild(label);
-        }
+        const label = document.createElement('div');
+        label.className = 'message-label';
+        label.textContent = type === 'user' ? 'Bạn' : 'Trợ lý AI';
+        contentWrapper.appendChild(label);
         
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
         
-        if (type === 'bot') {
+        if (type === 'bot' || type === 'assistant') {
             const answerText = content.replace(/\n/g, '<br>');
             contentDiv.innerHTML = `<p>${answerText}</p>`;
             
-            if (citations && citations.length > 0) {
+            // Check if citations exist and is an array with items
+            if (citations && Array.isArray(citations) && citations.length > 0) {
                 const citationsDiv = document.createElement('div');
                 citationsDiv.className = 'citations';
                 citationsDiv.innerHTML = `
                     <div class="citations-title">📚 Nguồn trích dẫn</div>
                     ${citations.map(c => `
                         <div class="citation-item">
-                            <div>${c.documentName}</div>
-                            <div class="citation-source">Điều ${c.articleNumber}${c.articleTitle ? ' - ' + c.articleTitle : ''}</div>
+                            <div><strong>${escapeHtml(c.documentName || 'Văn bản pháp luật')}</strong></div>
+                            <div class="citation-source">Điều ${c.articleNumber || 'N/A'}${c.articleTitle ? ' - ' + escapeHtml(c.articleTitle) : ''}</div>
                         </div>
                     `).join('')}
                 `;
@@ -647,19 +784,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.startNewChat = () => {
-        if (confirm('Bạn có muốn bắt đầu cuộc trò chuyện mới?')) {
-            chatMessages.innerHTML = `
-                <div class="message bot">
-                    <div class="message-avatar">🤖</div>
-                    <div>
-                        <div class="message-label">Trợ lý AI</div>
-                        <div class="message-content">
-                            <p>Xin chào! Tôi là trợ lý AI chuyên về pháp luật Việt Nam. Bạn có thể hỏi tôi về các vấn đề pháp lý và tôi sẽ trả lời dựa trên các văn bản pháp luật đã được cập nhật.</p>
-                        </div>
+        currentSessionId = null;
+        chatMessages.innerHTML = `
+            <div class="message bot">
+                <div class="message-avatar">🤖</div>
+                <div>
+                    <div class="message-label">Trợ lý AI</div>
+                    <div class="message-content">
+                        <p>Xin chào! Tôi là trợ lý AI chuyên về pháp luật Việt Nam. Bạn có thể hỏi tôi về các vấn đề pháp lý và tôi sẽ trả lời dựa trên các văn bản pháp luật đã được cập nhật.</p>
                     </div>
                 </div>
-            `;
-        }
+            </div>
+        `;
+        
+        // Remove active state from all items
+        document.querySelectorAll('.chat-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        
+        questionInput.focus();
     };
 
     function removeTypingIndicator(id) {
@@ -671,6 +814,12 @@ document.addEventListener('DOMContentLoaded', () => {
         questionInput.value = question;
         chatForm.dispatchEvent(new Event('submit'));
     };
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
 });
 </script>
 </body>

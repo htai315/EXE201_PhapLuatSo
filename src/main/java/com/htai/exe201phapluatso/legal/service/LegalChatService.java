@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,7 +32,7 @@ public class LegalChatService {
     }
 
     /**
-     * Process user question using RAG pipeline
+     * Process user question using RAG pipeline with AI-powered re-ranking
      * 
      * @param question User's legal question
      * @return AI-generated answer with citations
@@ -41,21 +42,30 @@ public class LegalChatService {
         
         log.info("Processing chat question: {}", question);
 
-        // Step 1: Retrieve relevant articles
-        List<LegalArticle> articles = retrieveRelevantArticles(question);
+        // Step 1: Retrieve candidate articles (more than needed)
+        List<LegalArticle> candidateArticles = retrieveRelevantArticles(question);
         
-        if (articles.isEmpty()) {
+        if (candidateArticles.isEmpty()) {
             log.warn("No relevant articles found for question");
             return createNoResultsResponse();
         }
 
-        // Step 2: Generate AI response with context
-        String answer = generateAnswer(question, articles);
+        // Step 2: AI re-ranking - Let AI analyze and select most relevant articles
+        List<LegalArticle> relevantArticles = aiReRankArticles(question, candidateArticles);
+        
+        if (relevantArticles.isEmpty()) {
+            log.warn("AI determined no articles are truly relevant");
+            return createNoResultsResponse();
+        }
 
-        // Step 3: Build citations
-        List<CitationDTO> citations = buildCitations(articles);
+        // Step 3: Generate AI response with filtered context
+        String answer = generateAnswer(question, relevantArticles);
 
-        log.info("Chat response generated successfully with {} citations", citations.size());
+        // Step 4: Build citations (only from relevant articles)
+        List<CitationDTO> citations = buildCitations(relevantArticles);
+
+        log.info("Chat response generated with {} relevant citations (filtered from {} candidates)", 
+                citations.size(), candidateArticles.size());
         return new ChatResponse(answer, citations);
     }
 
@@ -80,6 +90,118 @@ public class LegalChatService {
             question, 
             LegalSearchConfig.DEFAULT_SEARCH_LIMIT
         );
+    }
+
+    /**
+     * AI-powered re-ranking: Let AI analyze and select truly relevant articles
+     * This filters out articles that match keywords but aren't actually relevant
+     */
+    private List<LegalArticle> aiReRankArticles(String question, List<LegalArticle> candidates) {
+        if (candidates.size() <= 3) {
+            // If we have 3 or fewer, assume all are relevant
+            return candidates;
+        }
+        
+        log.info("AI re-ranking {} candidate articles", candidates.size());
+        
+        // Build analysis prompt
+        String analysisPrompt = buildReRankingPrompt(question, candidates);
+        
+        try {
+            String aiResponse = aiService.generateText(analysisPrompt);
+            List<Integer> selectedIndices = parseSelectedIndices(aiResponse, candidates.size());
+            
+            List<LegalArticle> selected = selectedIndices.stream()
+                    .filter(i -> i >= 0 && i < candidates.size())
+                    .map(candidates::get)
+                    .collect(Collectors.toList());
+            
+            log.info("AI selected {} out of {} articles as truly relevant", selected.size(), candidates.size());
+            return selected.isEmpty() ? candidates.subList(0, Math.min(3, candidates.size())) : selected;
+            
+        } catch (Exception e) {
+            log.error("Error in AI re-ranking, falling back to top 5", e);
+            // Fallback: return top 5 if AI fails
+            return candidates.subList(0, Math.min(5, candidates.size()));
+        }
+    }
+
+    /**
+     * Build prompt for AI to analyze and select relevant articles
+     */
+    private String buildReRankingPrompt(String question, List<LegalArticle> candidates) {
+        StringBuilder prompt = new StringBuilder();
+        
+        prompt.append("Bạn là chuyên gia phân tích pháp luật. Nhiệm vụ của bạn là XÁC ĐỊNH điều luật nào THỰC SỰ LIÊN QUAN đến câu hỏi.\n\n");
+        prompt.append("CÂU HỎI CỦA NGƯỜI DÙNG:\n");
+        prompt.append(question).append("\n\n");
+        prompt.append("CÁC ĐIỀU LUẬT ỨNG VIÊN (tìm được bằng keyword matching):\n\n");
+        
+        for (int i = 0; i < candidates.size(); i++) {
+            LegalArticle article = candidates.get(i);
+            prompt.append(String.format("[%d] Điều %d", i, article.getArticleNumber()));
+            if (article.getArticleTitle() != null && !article.getArticleTitle().isEmpty()) {
+                prompt.append(" - ").append(article.getArticleTitle());
+            }
+            prompt.append("\n");
+            prompt.append("Văn bản: ").append(article.getDocument().getDocumentName()).append("\n");
+            // Only include first 300 chars for analysis
+            String preview = article.getContent().length() > 300 
+                    ? article.getContent().substring(0, 300) + "..." 
+                    : article.getContent();
+            prompt.append("Nội dung: ").append(preview).append("\n\n");
+        }
+        
+        prompt.append("NHIỆM VỤ:\n");
+        prompt.append("1. PHÂN TÍCH câu hỏi để hiểu chính xác người dùng muốn biết gì\n");
+        prompt.append("2. ĐÁNH GIÁ từng điều luật xem có TRỰC TIẾP liên quan đến câu hỏi không\n");
+        prompt.append("3. CHỈ CHỌN những điều luật THỰC SỰ CẦN THIẾT để trả lời câu hỏi (tối đa 3-5 điều)\n");
+        prompt.append("4. BỎ QUA những điều luật chỉ match keyword nhưng không liên quan thực sự\n\n");
+        prompt.append("YÊU CẦU:\n");
+        prompt.append("- Chỉ chọn điều luật có nội dung TRỰC TIẾP trả lời được câu hỏi\n");
+        prompt.append("- Ưu tiên CHẤT LƯỢNG hơn SỐ LƯỢNG (3 điều chính xác > 10 điều không liên quan)\n");
+        prompt.append("- Nếu không có điều nào thực sự liên quan, trả về: NONE\n\n");
+        prompt.append("TRẢ LỜI (chỉ ghi số thứ tự, cách nhau bởi dấu phẩy):\n");
+        prompt.append("VD: 0,2,5 hoặc NONE\n");
+        
+        return prompt.toString();
+    }
+
+    /**
+     * Parse AI response to extract selected article indices
+     */
+    private List<Integer> parseSelectedIndices(String aiResponse, int maxIndex) {
+        if (aiResponse == null || aiResponse.trim().isEmpty()) {
+            return List.of();
+        }
+        
+        String cleaned = aiResponse.trim().toUpperCase();
+        
+        // Check if AI said NONE
+        if (cleaned.contains("NONE") || cleaned.contains("KHÔNG CÓ")) {
+            return List.of();
+        }
+        
+        // Extract numbers
+        List<Integer> indices = new ArrayList<>();
+        String[] parts = cleaned.split("[,\\s]+");
+        
+        for (String part : parts) {
+            try {
+                // Remove any non-digit characters
+                String digits = part.replaceAll("[^0-9]", "");
+                if (!digits.isEmpty()) {
+                    int index = Integer.parseInt(digits);
+                    if (index >= 0 && index < maxIndex) {
+                        indices.add(index);
+                    }
+                }
+            } catch (NumberFormatException e) {
+                // Skip invalid numbers
+            }
+        }
+        
+        return indices;
     }
 
     /**
