@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/animations.css">
     <link rel="stylesheet" href="/css/quiz-pages.css">
+    <link rel="stylesheet" href="/css/credits-counter.css">
     
     <style>
         .ai-hero {
@@ -194,12 +195,10 @@
                 <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/legal-chat.html">Chat AI</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/quiz.html">Quiz</a></li>
                 <li class="nav-item"><a class="nav-link active" href="/html/my-quizzes.html">Bộ đề</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/stats.html">Thống kê</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/legal-upload.html">Văn bản PL</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/admin.html">Quản trị</a></li>
                 <li class="nav-item ms-lg-3 guest-only">
                     <a class="btn btn-outline-primary btn-sm px-3" href="/html/login.html">
                         <i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập
@@ -209,6 +208,9 @@
                     <a class="btn btn-primary btn-sm px-3" href="/html/register.html">
                         <i class="bi bi-person-plus me-1"></i>Đăng Ký
                     </a>
+                </li>
+                <li class="nav-item auth-only d-none">
+                    <div id="quizCreditsCounter"></div>
                 </li>
                 <li class="nav-item dropdown ms-lg-3 auth-only d-none">
                     <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -337,14 +339,21 @@
 
 <!-- Custom JS -->
 <script src="/scripts/script.js"></script>
+<script src="/scripts/credits-counter.js"></script>
 
 <script>
+let creditsCounter = null;
+
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
         window.location.href = '/html/login.html';
         return;
     }
+
+    // Initialize credits counter for quiz generation
+    creditsCounter = new CreditsCounter();
+    creditsCounter.init('quizCreditsCounter', 'quiz_gen');
 
     const uploadZone = document.getElementById('uploadZone');
     const fileInput = document.getElementById('fileInput');
@@ -461,6 +470,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await response.json();
             displayResults(data);
+            
+            // Refresh credits counter
+            if (creditsCounter) {
+                creditsCounter.refresh();
+            }
         } catch (error) {
             console.error('Error:', error);
             alert('Lỗi: ' + error.message);

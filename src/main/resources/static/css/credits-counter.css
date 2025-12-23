@@ -1,0 +1,102 @@
+/**
+ * Credits Counter Component Styles
+ */
+
+.credits-counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.credits-counter:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.credits-icon {
+    font-size: 1.2rem;
+}
+
+.credits-text {
+    font-weight: 500;
+}
+
+.credits-text strong {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+/* Color states */
+.credits-counter.text-success {
+    color: #059669;
+    border: 2px solid #d1fae5;
+}
+
+.credits-counter.text-warning {
+    color: #f59e0b;
+    border: 2px solid #fef3c7;
+    animation: pulse-warning 2s infinite;
+}
+
+.credits-counter.text-danger {
+    color: #dc2626;
+    border: 2px solid #fee2e2;
+    animation: pulse-danger 1.5s infinite;
+}
+
+@keyframes pulse-warning {
+    0%, 100% {
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+    }
+    50% {
+        box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+    }
+}
+
+@keyframes pulse-danger {
+    0%, 100% {
+        box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 16px rgba(220, 38, 38, 0.6);
+    }
+}
+
+/* Navbar integration */
+.navbar .credits-counter {
+    margin-left: 1rem;
+}
+
+/* Mobile responsive */
+@media (max-width: 991px) {
+    .navbar .credits-counter {
+        margin: 0.5rem 0;
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Toast container positioning */
+.toast-container {
+    z-index: 9999;
+}
+
+/* Upgrade modal styling */
+#upgradeModal .modal-content {
+    border: none;
+    border-radius: 12px;
+}
+
+#upgradeModal .modal-header {
+    border-radius: 12px 12px 0 0;
+}
+
+#upgradeModal .btn-primary {
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+}

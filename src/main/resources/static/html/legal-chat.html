@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/credits-counter.css">
     
     <style>
         body {
@@ -28,7 +29,7 @@
         
         /* Sidebar - Thu nhỏ lại */
         .chat-sidebar {
-            width: 240px;
+            width: 260px;
             background: white;
             border-right: 1px solid #e5e7eb;
             display: flex;
@@ -37,7 +38,7 @@
         }
         
         .sidebar-header {
-            margin-bottom: 1.25rem;
+            margin-bottom: 1rem;
         }
         
         .sidebar-header h2 {
@@ -51,6 +52,60 @@
             font-size: 0.8rem;
             color: #6b7280;
             margin: 0;
+        }
+        
+        .search-box {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 0.65rem 0.85rem 0.65rem 2.25rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+        
+        .search-box input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .search-box input::placeholder {
+            color: #9ca3af;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+        
+        .clear-search {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: none;
+            transition: color 0.2s;
+        }
+        
+        .clear-search:hover {
+            color: #6b7280;
+        }
+        
+        .clear-search.show {
+            display: block;
         }
         
         .new-chat-btn {
@@ -68,7 +123,7 @@
             justify-content: center;
             gap: 0.5rem;
             transition: background 0.2s;
-            margin-bottom: 1.25rem;
+            margin-bottom: 1rem;
         }
         
         .new-chat-btn:hover {
@@ -78,6 +133,24 @@
         .recent-chats {
             flex: 1;
             overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        .recent-chats::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .recent-chats::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .recent-chats::-webkit-scrollbar-thumb {
+            background: #e5e7eb;
+            border-radius: 3px;
+        }
+        
+        .recent-chats::-webkit-scrollbar-thumb:hover {
+            background: #d1d5db;
         }
         
         .recent-chats h3 {
@@ -85,8 +158,12 @@
             text-transform: uppercase;
             color: #9ca3af;
             font-weight: 600;
-            margin: 0 0 0.5rem 0;
+            margin: 1rem 0 0.5rem 0;
             letter-spacing: 0.05em;
+        }
+        
+        .recent-chats h3:first-child {
+            margin-top: 0;
         }
         
         .chat-item {
@@ -133,6 +210,52 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+        
+        .load-more-btn {
+            width: 100%;
+            padding: 0.65rem;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            color: #6b7280;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .load-more-btn:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+            color: #4b5563;
+        }
+        
+        .load-more-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: #9ca3af;
+        }
+        
+        .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.5;
+        }
+        
+        .empty-state p {
+            font-size: 0.85rem;
+            margin: 0;
         }
         
         /* Main Chat Area - Rộng hơn nhiều */
@@ -408,11 +531,13 @@
                 <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
                 <li class="nav-item"><a class="nav-link active" href="/html/legal-chat.html">Chat AI</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/quiz.html">Quiz</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/my-quizzes.html">Bộ đề</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/legal-upload.html">Văn bản PL</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
+                <li class="nav-item auth-only d-none">
+                    <div id="chatCreditsCounter"></div>
+                </li>
                 <li class="nav-item dropdown ms-lg-3 auth-only d-none">
                     <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                         <img id="navUserAvatar" src="" alt="Avatar" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #1a4b84;">
@@ -436,20 +561,21 @@
             <p>Trợ lý pháp lý thông minh</p>
         </div>
         
+        <div class="search-box">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" id="searchInput" placeholder="Tìm kiếm lịch sử...">
+            <i class="bi bi-x-circle-fill clear-search" id="clearSearch"></i>
+        </div>
+        
         <button class="new-chat-btn" onclick="startNewChat()">
             <i class="bi bi-plus-lg"></i>
             Chat mới
         </button>
         
-        <div class="recent-chats">
-            <h3>Lịch sử trò chuyện</h3>
-            <div class="chat-item active">
-                <div class="chat-item-icon">
-                    <i class="bi bi-chat-text"></i>
-                </div>
-                <div class="chat-item-text">
-                    <div class="chat-item-title">Chat hiện tại</div>
-                </div>
+        <div class="recent-chats" id="recentChats">
+            <div class="empty-state">
+                <i class="bi bi-chat-dots"></i>
+                <p>Đang tải lịch sử...</p>
             </div>
         </div>
     </div>
@@ -505,9 +631,16 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/scripts/script.js"></script>
+<script src="/scripts/credits-counter.js"></script>
 
 <script>
 let currentSessionId = null;
+let currentPage = 0;
+let hasMoreSessions = false;
+let isLoadingSessions = false;
+let searchQuery = '';
+let searchDebounceTimer = null;
+let creditsCounter = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('accessToken');
@@ -516,13 +649,49 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // Initialize credits counter
+    creditsCounter = new CreditsCounter();
+    creditsCounter.init('chatCreditsCounter', 'chat');
+
     const chatMessages = document.getElementById('chatMessages');
     const chatForm = document.getElementById('chatForm');
     const questionInput = document.getElementById('questionInput');
     const sendBtn = document.getElementById('sendBtn');
+    const searchInput = document.getElementById('searchInput');
+    const clearSearch = document.getElementById('clearSearch');
 
-    // Load chat history on page load
-    loadChatSessions();
+    // Load initial chat sessions
+    loadChatSessions(true);
+
+    // Search functionality with debounce
+    searchInput.addEventListener('input', (e) => {
+        const value = e.target.value.trim();
+        
+        // Show/hide clear button
+        if (value) {
+            clearSearch.classList.add('show');
+        } else {
+            clearSearch.classList.remove('show');
+        }
+        
+        // Debounce search
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => {
+            searchQuery = value;
+            currentPage = 0;
+            loadChatSessions(true);
+        }, 300);
+    });
+
+    // Clear search
+    clearSearch.addEventListener('click', () => {
+        searchInput.value = '';
+        searchQuery = '';
+        currentPage = 0;
+        clearSearch.classList.remove('show');
+        loadChatSessions(true);
+        searchInput.focus();
+    });
 
     chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -564,7 +733,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Update current session ID if new session
             if (!currentSessionId) {
                 currentSessionId = data.sessionId;
-                loadChatSessions(); // Reload sidebar
+                currentPage = 0;
+                loadChatSessions(true); // Reload sidebar
             }
             
             // Remove typing indicator
@@ -572,6 +742,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Add bot response
             addMessage('bot', data.assistantMessage.content, data.assistantMessage.citations);
+            
+            // Refresh credits counter
+            if (creditsCounter) {
+                creditsCounter.refresh();
+            }
         } catch (error) {
             removeTypingIndicator(typingId);
             addMessage('bot', 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau.');
@@ -583,28 +758,53 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    async function loadChatSessions() {
+    async function loadChatSessions(reset = false) {
+        if (isLoadingSessions) return;
+        isLoadingSessions = true;
+
         try {
-            const response = await fetch('/api/chat/sessions', {
+            const params = new URLSearchParams({
+                page: reset ? 0 : currentPage,
+                size: 20
+            });
+            
+            if (searchQuery) {
+                params.append('search', searchQuery);
+            }
+
+            const response = await fetch(`/api/chat/sessions?${params}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
 
-            if (!response.ok) return;
+            if (!response.ok) {
+                throw new Error('Failed to load sessions');
+            }
 
-            const sessions = await response.json();
-            renderChatSessions(sessions);
+            const data = await response.json();
+            
+            if (reset) {
+                renderChatSessions(data.sessions, data.hasMore);
+            } else {
+                appendChatSessions(data.sessions, data.hasMore);
+            }
+            
+            hasMoreSessions = data.hasMore;
+            
         } catch (error) {
             console.error('Error loading sessions:', error);
+            showEmptyState('Không thể tải lịch sử trò chuyện');
+        } finally {
+            isLoadingSessions = false;
         }
     }
 
-    function renderChatSessions(sessions) {
-        const recentChats = document.querySelector('.recent-chats');
+    function renderChatSessions(sessions, hasMore) {
+        const recentChats = document.getElementById('recentChats');
         
         if (sessions.length === 0) {
-            recentChats.innerHTML = '<h3>Lịch sử trò chuyện</h3><p style="color: #9ca3af; font-size: 0.85rem;">Chưa có cuộc trò chuyện nào</p>';
+            showEmptyState(searchQuery ? 'Không tìm thấy kết quả' : 'Chưa có cuộc trò chuyện nào');
             return;
         }
 
@@ -628,8 +828,86 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
+        // Add "Load More" button if there are more sessions
+        if (hasMore) {
+            html += `
+                <button class="load-more-btn" onclick="loadMoreSessions()">
+                    <i class="bi bi-arrow-down-circle"></i>
+                    Xem thêm
+                </button>
+            `;
+        }
+        
         recentChats.innerHTML = html;
     }
+
+    function appendChatSessions(sessions, hasMore) {
+        const recentChats = document.getElementById('recentChats');
+        
+        // Remove existing "Load More" button
+        const existingBtn = recentChats.querySelector('.load-more-btn');
+        if (existingBtn) {
+            existingBtn.remove();
+        }
+        
+        if (sessions.length === 0) {
+            return;
+        }
+
+        const groupedSessions = groupSessionsByDate(sessions);
+        
+        let html = '';
+        for (const [label, sessionList] of Object.entries(groupedSessions)) {
+            // Check if group already exists
+            const existingGroup = Array.from(recentChats.querySelectorAll('h3'))
+                .find(h3 => h3.textContent === label);
+            
+            if (!existingGroup) {
+                html += `<h3>${label}</h3>`;
+            }
+            
+            sessionList.forEach(session => {
+                const isActive = session.id === currentSessionId ? 'active' : '';
+                html += `
+                    <div class="chat-item ${isActive}" onclick="loadSession(${session.id}, this)">
+                        <div class="chat-item-icon">
+                            <i class="bi bi-chat-text"></i>
+                        </div>
+                        <div class="chat-item-text">
+                            <div class="chat-item-title">${escapeHtml(session.title)}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        // Add "Load More" button if there are more sessions
+        if (hasMore) {
+            html += `
+                <button class="load-more-btn" onclick="loadMoreSessions()">
+                    <i class="bi bi-arrow-down-circle"></i>
+                    Xem thêm
+                </button>
+            `;
+        }
+        
+        recentChats.insertAdjacentHTML('beforeend', html);
+    }
+
+    function showEmptyState(message) {
+        const recentChats = document.getElementById('recentChats');
+        recentChats.innerHTML = `
+            <div class="empty-state">
+                <i class="bi bi-chat-dots"></i>
+                <p>${message}</p>
+            </div>
+        `;
+    }
+
+    window.loadMoreSessions = () => {
+        currentPage++;
+        loadChatSessions(false);
+    };
 
     function groupSessionsByDate(sessions) {
         const now = new Date();

@@ -22,6 +22,7 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/animations.css">
+    <link rel="stylesheet" href="/css/credits-counter.css">
     
     <style>
         body {
@@ -225,12 +226,10 @@
                 <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/legal-chat.html">Chat AI</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/quiz.html">Quiz</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/my-quizzes.html">Bộ đề</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/stats.html">Thống kê</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/legal-upload.html">Văn bản PL</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/admin.html">Quản trị</a></li>
                 <li class="nav-item ms-lg-3 guest-only">
                     <a class="btn btn-outline-primary btn-sm px-3" href="/html/login.html">
                         <i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập
@@ -298,6 +297,68 @@
         <!-- Right Column: Info & Password -->
         <div class="col-lg-8">
             <div class="row g-3">
+                <!-- Credits Information Card -->
+                <div class="col-12">
+                    <div class="profile-card">
+                        <h5 class="profile-card-title">
+                            <i class="bi bi-wallet2"></i>
+                            Thông tin Credits
+                        </h5>
+                        
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">
+                                        <i class="bi bi-chat-dots"></i>Chat Credits
+                                    </div>
+                                    <div class="profile-info-value">
+                                        <span id="chatCreditsValue" class="text-primary fw-bold">--</span> lượt
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">
+                                        <i class="bi bi-robot"></i>AI Tạo Đề
+                                    </div>
+                                    <div class="profile-info-value">
+                                        <span id="quizGenCreditsValue" class="text-success fw-bold">--</span> lượt
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">
+                                        <i class="bi bi-calendar-check"></i>Hạn sử dụng
+                                    </div>
+                                    <div class="profile-info-value">
+                                        <span id="expiryDateValue">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="profile-info-item">
+                                    <div class="profile-info-label">
+                                        <i class="bi bi-star"></i>Gói hiện tại
+                                    </div>
+                                    <div class="profile-info-value">
+                                        <span class="badge bg-info" id="currentPlanValue">FREE</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <a href="/html/plans.html" class="btn btn-primary">
+                                <i class="bi bi-cart-plus me-1"></i>Nâng cấp gói
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Account Information Card -->
                 <div class="col-12">
                     <div class="profile-card">
@@ -440,9 +501,68 @@ async function loadUserProfile() {
         if (user.avatarUrl) {
             document.getElementById('profileAvatar').src = user.avatarUrl;
         }
+        
+        // Load credits information
+        loadCreditsInfo();
     } catch (err) {
         console.error('Error loading profile:', err);
         showError('currentPasswordError', 'Không thể tải thông tin hồ sơ');
+    }
+}
+
+async function loadCreditsInfo() {
+    try {
+        const res = await fetch('/api/credits/balance', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+            }
+        });
+
+        if (!res.ok) {
+            throw new Error('Không thể tải thông tin credits');
+        }
+
+        const credits = await res.json();
+        
+        // Update credits UI
+        document.getElementById('chatCreditsValue').textContent = credits.chatCredits || 0;
+        document.getElementById('quizGenCreditsValue').textContent = credits.quizGenCredits || 0;
+        
+        // Format expiry date
+        if (credits.expiryDate) {
+            const expiryDate = new Date(credits.expiryDate);
+            const formattedDate = expiryDate.toLocaleDateString('vi-VN');
+            document.getElementById('expiryDateValue').textContent = formattedDate;
+            
+            // Check if expired
+            if (credits.isExpired) {
+                document.getElementById('expiryDateValue').innerHTML = 
+                    `<span class="text-danger">${formattedDate} (Đã hết hạn)</span>`;
+            }
+        } else {
+            document.getElementById('expiryDateValue').textContent = 'Vĩnh viễn';
+        }
+        
+        // Update plan badge
+        const planBadge = document.getElementById('currentPlanValue');
+        if (credits.planName) {
+            planBadge.textContent = credits.planName;
+            
+            // Set badge color based on plan
+            planBadge.className = 'badge';
+            if (credits.planName === 'FREE') {
+                planBadge.classList.add('bg-secondary');
+            } else if (credits.planName === 'REGULAR') {
+                planBadge.classList.add('bg-primary');
+            } else if (credits.planName === 'STUDENT') {
+                planBadge.classList.add('bg-success');
+            } else {
+                planBadge.classList.add('bg-info');
+            }
+        }
+    } catch (err) {
+        console.error('Error loading credits:', err);
+        // Don't show error to user, just log it
     }
 }
 

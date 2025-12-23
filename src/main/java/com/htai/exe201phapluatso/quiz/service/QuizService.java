@@ -1,8 +1,6 @@
 package com.htai.exe201phapluatso.quiz.service;
 
-import com.htai.exe201phapluatso.auth.entity.Subscription;
 import com.htai.exe201phapluatso.auth.entity.User;
-import com.htai.exe201phapluatso.auth.repo.SubscriptionRepo;
 import com.htai.exe201phapluatso.auth.repo.UserRepo;
 import com.htai.exe201phapluatso.common.exception.BadRequestException;
 import com.htai.exe201phapluatso.common.exception.ForbiddenException;
@@ -41,7 +39,6 @@ public class QuizService {
     private final QuizAttemptAnswerRepo attemptAnswerRepo;
     private final QuizAttemptRepo attemptRepo;
     private final UserRepo userRepo;
-    private final SubscriptionRepo subscriptionRepo;
     private final EntityManager entityManager;
 
     public QuizService(
@@ -51,7 +48,6 @@ public class QuizService {
             QuizAttemptAnswerRepo attemptAnswerRepo,
             QuizAttemptRepo attemptRepo,
             UserRepo userRepo,
-            SubscriptionRepo subscriptionRepo,
             EntityManager entityManager
     ) {
         this.quizSetRepo = quizSetRepo;
@@ -60,7 +56,6 @@ public class QuizService {
         this.attemptAnswerRepo = attemptAnswerRepo;
         this.attemptRepo = attemptRepo;
         this.userRepo = userRepo;
-        this.subscriptionRepo = subscriptionRepo;
         this.entityManager = entityManager;
     }
     @Transactional
@@ -282,21 +277,9 @@ public class QuizService {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
-        // Lấy subscription ACTIVE mới nhất của user
-        Subscription subscription = subscriptionRepo
-                .findTopByUserIdAndStatusOrderByStartAtDesc(userId, "ACTIVE")
-                .orElseThrow(() -> new BadRequestException("No subscription found"));
-
-        // Check plan
-        if (!"STUDENT".equals(subscription.getPlan().getCode())) {
-            throw new ForbiddenException("Only STUDENT plan users can create quiz sets");
-        }
-
-        // Check subscription expiration
-        if (subscription.getEndAt() != null && LocalDateTime.now().isAfter(subscription.getEndAt())) {
-            throw new ForbiddenException("Subscription has expired");
-        }
-
+        // TODO: Implement credits checking
+        // For now, allow all users to create quiz sets
+        
         return user;
     }
 

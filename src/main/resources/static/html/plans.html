@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Giá - AI Luật</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="/img/Law.png">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/animations.css">
+    
+    <style>
+        body {
+            background: #f8fafc;
+        }
+        
+        .plans-header {
+            background: linear-gradient(135deg, #1a4b84 0%, #0f3054 100%);
+            padding: 3rem 0 6rem;
+            margin-bottom: -4rem;
+            color: white;
+            text-align: center;
+        }
+        
+        .plans-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .plans-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .plans-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem 3rem;
+        }
+        
+        .pricing-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 2.5rem;
+            height: 100%;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+        
+        .pricing-card.featured {
+            border: 3px solid #1a4b84;
+            transform: scale(1.05);
+        }
+        
+        .pricing-card.featured:hover {
+            transform: scale(1.05) translateY(-8px);
+        }
+        
+        .featured-badge {
+            position: absolute;
+            top: 20px;
+            right: -35px;
+            background: #f59e0b;
+            color: white;
+            padding: 0.4rem 3rem;
+            transform: rotate(45deg);
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .plan-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .plan-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a4b84;
+            margin-bottom: 0.5rem;
+        }
+        
+        .plan-description {
+            color: #64748b;
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+            min-height: 48px;
+        }
+        
+        .plan-price {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 0.25rem;
+        }
+        
+        .plan-price small {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #64748b;
+        }
+        
+        .plan-duration {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+        
+        .plan-features {
+            list-style: none;
+            padding: 0;
+            margin: 2rem 0;
+        }
+        
+        .plan-features li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: start;
+            gap: 0.75rem;
+        }
+        
+        .plan-features li:last-child {
+            border-bottom: none;
+        }
+        
+        .plan-features i {
+            color: #10b981;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            margin-top: 0.1rem;
+        }
+        
+        .plan-features .text-muted i {
+            color: #cbd5e1;
+        }
+        
+        .btn-plan {
+            width: 100%;
+            padding: 1rem;
+            font-weight: 600;
+            font-size: 1.05rem;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .btn-plan-free {
+            background: #f1f5f9;
+            color: #64748b;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .btn-plan-free:hover {
+            background: #e2e8f0;
+            color: #475569;
+        }
+        
+        .btn-plan-regular {
+            background: #1a4b84;
+            color: white;
+            border: 2px solid #1a4b84;
+        }
+        
+        .btn-plan-regular:hover {
+            background: #0f3054;
+            border-color: #0f3054;
+            transform: translateY(-2px);
+        }
+        
+        .btn-plan-student {
+            background: #10b981;
+            color: white;
+            border: 2px solid #10b981;
+        }
+        
+        .btn-plan-student:hover {
+            background: #059669;
+            border-color: #059669;
+            transform: translateY(-2px);
+        }
+        
+        .comparison-section {
+            background: white;
+            border-radius: 16px;
+            padding: 3rem;
+            margin-top: 3rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .comparison-section h3 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1a4b84;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .comparison-table {
+            width: 100%;
+        }
+        
+        .comparison-table th {
+            background: #f8fafc;
+            padding: 1rem;
+            font-weight: 600;
+            color: #1a4b84;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .comparison-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .check-icon {
+            color: #10b981;
+            font-size: 1.3rem;
+        }
+        
+        .cross-icon {
+            color: #cbd5e1;
+            font-size: 1.3rem;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+    <div class="container">
+        <a class="navbar-brand" href="/index.html">
+            <img src="/img/Law.png" alt="Logo">
+            <span>Pháp Luật Số</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-lg-center">
+                <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/legal-chat.html">Chat AI</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/my-quizzes.html">Bộ đề</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/legal-upload.html">Văn bản PL</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
+                <li class="nav-item ms-lg-3 guest-only">
+                    <a class="btn btn-outline-primary btn-sm px-3" href="/html/login.html">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập
+                    </a>
+                </li>
+                <li class="nav-item ms-lg-2 guest-only">
+                    <a class="btn btn-primary btn-sm px-3" href="/html/register.html">
+                        <i class="bi bi-person-plus me-1"></i>Đăng Ký
+                    </a>
+                </li>
+                <li class="nav-item dropdown ms-lg-3 auth-only d-none">
+                    <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                        <img id="navUserAvatar" src="" alt="Avatar" class="rounded-circle" 
+                             style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #1a4b84;">
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/html/profile.html"><i class="bi bi-person-circle me-2"></i>Hồ sơ</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Header -->
+<div class="plans-header">
+    <div class="container">
+        <h1><i class="bi bi-star-fill me-2"></i>Bảng Giá</h1>
+        <p>Chọn gói phù hợp với nhu cầu của bạn</p>
+    </div>
+</div>
+
+<div class="plans-container">
+    <!-- Pricing Cards -->
+    <div class="row g-4 mb-4">
+        <!-- FREE Plan -->
+        <div class="col-lg-4">
+            <div class="pricing-card">
+                <div class="plan-icon">🎁</div>
+                <h3 class="plan-name">FREE</h3>
+                <p class="plan-description">Dùng thử miễn phí để trải nghiệm dịch vụ</p>
+                
+                <div class="plan-price">
+                    0<small> VNĐ</small>
+                </div>
+                <div class="plan-duration">Vĩnh viễn</div>
+                
+                <ul class="plan-features">
+                    <li>
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span><strong>10 lượt</strong> Chat AI pháp luật</span>
+                    </li>
+                    <li class="text-muted">
+                        <i class="bi bi-x-circle-fill"></i>
+                        <span>AI tạo đề thi</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Truy cập văn bản pháp luật</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Làm bài tập trắc nghiệm</span>
+                    </li>
+                    <li class="text-muted">
+                        <i class="bi bi-x-circle-fill"></i>
+                        <span>Hỗ trợ ưu tiên</span>
+                    </li>
+                </ul>
+                
+                <button class="btn btn-plan btn-plan-free" onclick="selectPlan('FREE')">
+                    <i class="bi bi-gift me-2"></i>Đã kích hoạt
+                </button>
+            </div>
+        </div>
+
+        <!-- REGULAR Plan -->
+        <div class="col-lg-4">
+            <div class="pricing-card featured">
+                <div class="featured-badge">Phổ biến</div>
+                <div class="plan-icon">💼</div>
+                <h3 class="plan-name">REGULAR</h3>
+                <p class="plan-description">Dành cho người dùng cá nhân thường xuyên</p>
+                
+                <div class="plan-price">
+                    159,000<small> VNĐ</small>
+                </div>
+                <div class="plan-duration">12 tháng</div>
+                
+                <ul class="plan-features">
+                    <li>
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span><strong>100 lượt</strong> Chat AI pháp luật</span>
+                    </li>
+                    <li class="text-muted">
+                        <i class="bi bi-x-circle-fill"></i>
+                        <span>AI tạo đề thi</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Truy cập văn bản pháp luật</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Làm bài tập trắc nghiệm</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Hỗ trợ email</span>
+                    </li>
+                </ul>
+                
+                <button class="btn btn-plan btn-plan-regular" onclick="selectPlan('REGULAR')">
+                    <i class="bi bi-cart-plus me-2"></i>Chọn gói này
+                </button>
+            </div>
+        </div>
+
+        <!-- STUDENT Plan -->
+        <div class="col-lg-4">
+            <div class="pricing-card">
+                <div class="plan-icon">🎓</div>
+                <h3 class="plan-name">STUDENT</h3>
+                <p class="plan-description">Dành cho sinh viên luật và người học</p>
+                
+                <div class="plan-price">
+                    249,000<small> VNĐ</small>
+                </div>
+                <div class="plan-duration">12 tháng</div>
+                
+                <ul class="plan-features">
+                    <li>
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span><strong>100 lượt</strong> Chat AI pháp luật</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span><strong>20 lượt</strong> AI tạo đề thi</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Truy cập văn bản pháp luật</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Làm bài tập trắc nghiệm</span>
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Hỗ trợ ưu tiên</span>
+                    </li>
+                </ul>
+                
+                <button class="btn btn-plan btn-plan-student" onclick="selectPlan('STUDENT')">
+                    <i class="bi bi-cart-plus me-2"></i>Chọn gói này
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comparison Table -->
+    <div class="comparison-section">
+        <h3><i class="bi bi-table me-2"></i>So sánh chi tiết</h3>
+        
+        <div class="table-responsive">
+            <table class="comparison-table table">
+                <thead>
+                    <tr>
+                        <th>Tính năng</th>
+                        <th class="text-center">FREE</th>
+                        <th class="text-center">REGULAR</th>
+                        <th class="text-center">STUDENT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Chat AI pháp luật</strong></td>
+                        <td class="text-center">10 lượt</td>
+                        <td class="text-center">100 lượt</td>
+                        <td class="text-center">100 lượt</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AI tạo đề thi</strong></td>
+                        <td class="text-center"><i class="bi bi-x-circle-fill cross-icon"></i></td>
+                        <td class="text-center"><i class="bi bi-x-circle-fill cross-icon"></i></td>
+                        <td class="text-center">20 lượt</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Truy cập văn bản pháp luật</strong></td>
+                        <td class="text-center"><i class="bi bi-check-circle-fill check-icon"></i></td>
+                        <td class="text-center"><i class="bi bi-check-circle-fill check-icon"></i></td>
+                        <td class="text-center"><i class="bi bi-check-circle-fill check-icon"></i></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Làm bài tập trắc nghiệm</strong></td>
+                        <td class="text-center"><i class="bi bi-check-circle-fill check-icon"></i></td>
+                        <td class="text-center"><i class="bi bi-check-circle-fill check-icon"></i></td>
+                        <td class="text-center"><i class="bi bi-check-circle-fill check-icon"></i></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Thời hạn sử dụng</strong></td>
+                        <td class="text-center">Vĩnh viễn</td>
+                        <td class="text-center">12 tháng</td>
+                        <td class="text-center">12 tháng</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Hỗ trợ khách hàng</strong></td>
+                        <td class="text-center">Cơ bản</td>
+                        <td class="text-center">Email</td>
+                        <td class="text-center">Ưu tiên</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="comparison-section mt-4">
+        <h3><i class="bi bi-question-circle me-2"></i>Câu hỏi thường gặp</h3>
+        
+        <div class="accordion" id="faqAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                        Làm sao để thanh toán?
+                    </button>
+                </h2>
+                <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        Hiện tại chúng tôi đang phát triển tính năng thanh toán tự động. Vui lòng liên hệ qua email hoặc hotline để được hỗ trợ mua gói.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                        Credits có thể chuyển nhượng không?
+                    </button>
+                </h2>
+                <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        Không, credits chỉ sử dụng cho tài khoản đã mua và không thể chuyển nhượng cho người khác.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                        Nếu hết credits trước hạn thì sao?
+                    </button>
+                </h2>
+                <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        Bạn có thể mua thêm gói mới bất cứ lúc nào. Credits mới sẽ được cộng thêm vào tài khoản và thời hạn sẽ được gia hạn thêm 12 tháng.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                        Có chính sách hoàn tiền không?
+                    </button>
+                </h2>
+                <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        Chúng tôi có chính sách hoàn tiền trong vòng 7 ngày nếu bạn chưa sử dụng quá 10% credits đã mua.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/scripts/script.js"></script>
+
+<script>
+function selectPlan(planName) {
+    if (planName === 'FREE') {
+        alert('Bạn đã có gói FREE miễn phí khi đăng ký!');
+        return;
+    }
+    
+    // Show contact modal
+    const message = `Bạn đã chọn gói ${planName}. Vui lòng liên hệ với chúng tôi qua:\n\n` +
+                   `📧 Email: support@phapluatso.vn\n` +
+                   `📞 Hotline: 1900-xxxx\n\n` +
+                   `Chúng tôi sẽ hỗ trợ bạn hoàn tất thanh toán và kích hoạt gói.`;
+    
+    alert(message);
+}
+</script>
+</body>
+</html>

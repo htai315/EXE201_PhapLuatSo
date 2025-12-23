@@ -2,6 +2,7 @@ package com.htai.exe201phapluatso.legal.service;
 
 import com.htai.exe201phapluatso.ai.service.OpenAIService;
 import com.htai.exe201phapluatso.common.exception.BadRequestException;
+import com.htai.exe201phapluatso.credit.service.CreditService;
 import com.htai.exe201phapluatso.legal.config.LegalSearchConfig;
 import com.htai.exe201phapluatso.legal.dto.ChatResponse;
 import com.htai.exe201phapluatso.legal.dto.CitationDTO;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 
 /**
  * Service for RAG-based legal chatbot
- * Implements Retrieval-Augmented Generation pattern
+ * Implements Retrieval-Augmented Generation pattern with credits system
  */
 @Service
 public class LegalChatService {
@@ -25,22 +26,35 @@ public class LegalChatService {
 
     private final LegalSearchService searchService;
     private final OpenAIService aiService;
+    private final CreditService creditService;
 
-    public LegalChatService(LegalSearchService searchService, OpenAIService aiService) {
+    public LegalChatService(
+            LegalSearchService searchService, 
+            OpenAIService aiService,
+            CreditService creditService
+    ) {
         this.searchService = searchService;
         this.aiService = aiService;
+        this.creditService = creditService;
     }
 
     /**
      * Process user question using RAG pipeline with AI-powered re-ranking
+     * Requires 1 chat credit per request
      * 
+     * @param userId User ID (for credit checking)
      * @param question User's legal question
      * @return AI-generated answer with citations
+     * @throws com.htai.exe201phapluatso.common.exception.ForbiddenException if insufficient credits
      */
-    public ChatResponse chat(String question) {
+    public ChatResponse chat(Long userId, String question) {
         validateQuestion(question);
         
-        log.info("Processing chat question: {}", question);
+        // STEP 0: Check and deduct credit BEFORE processing
+        // This ensures user is charged only if they have credits
+        creditService.checkAndDeductChatCredit(userId);
+        
+        log.info("Processing chat question for user {}: {}", userId, question);
 
         // Step 1: Retrieve candidate articles (more than needed)
         List<LegalArticle> candidateArticles = retrieveRelevantArticles(question);

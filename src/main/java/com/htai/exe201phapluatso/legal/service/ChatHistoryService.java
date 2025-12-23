@@ -13,6 +13,9 @@ import com.htai.exe201phapluatso.legal.repo.ChatSessionRepo;
 import jakarta.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,16 +50,28 @@ public class ChatHistoryService {
     }
 
     /**
-     * Get all chat sessions for a user
+     * Get all chat sessions for a user (paginated with optional search)
      */
     @Transactional(readOnly = true)
-    public List<ChatSessionDTO> getUserSessions(String userEmail) {
+    public List<ChatSessionDTO> getUserSessions(String userEmail, Integer page, Integer size, String search) {
         User user = userRepo.findByEmail(userEmail)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
-        List<ChatSession> sessions = sessionRepo.findByUserIdOrderByUpdatedAtDesc(user.getId());
+        // Default pagination values
+        int pageNum = (page != null && page >= 0) ? page : 0;
+        int pageSize = (size != null && size > 0 && size <= 100) ? size : 20;
+        
+        Pageable pageable = PageRequest.of(pageNum, pageSize);
+        Page<ChatSession> sessionPage;
+        
+        // Search or get all
+        if (search != null && !search.trim().isEmpty()) {
+            sessionPage = sessionRepo.searchByUserIdAndTitle(user.getId(), search.trim(), pageable);
+        } else {
+            sessionPage = sessionRepo.findByUserIdOrderByUpdatedAtDesc(user.getId(), pageable);
+        }
 
-        return sessions.stream()
+        return sessionPage.getContent().stream()
                 .map(session -> new ChatSessionDTO(
                         session.getId(),
                         session.getTitle(),
@@ -65,6 +80,22 @@ public class ChatHistoryService {
                         sessionRepo.countMessagesBySessionId(session.getId())
                 ))
                 .collect(Collectors.toList());
+    }
+    
+    /**
+     * Get total count of sessions for a user (for pagination)
+     */
+    @Transactional(readOnly = true)
+    public long getUserSessionsCount(String userEmail, String search) {
+        User user = userRepo.findByEmail(userEmail)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        
+        if (search != null && !search.trim().isEmpty()) {
+            Pageable pageable = PageRequest.of(0, 1);
+            return sessionRepo.searchByUserIdAndTitle(user.getId(), search.trim(), pageable).getTotalElements();
+        } else {
+            return sessionRepo.findByUserIdOrderByUpdatedAtDesc(user.getId()).size();
+        }
     }
 
     /**
@@ -106,7 +137,7 @@ public class ChatHistoryService {
         userMessage = messageRepo.save(userMessage);
 
         // Generate AI response
-        ChatResponse chatResponse = chatService.chat(question);
+        ChatResponse chatResponse = chatService.chat(user.getId(), question);
 
         // Save assistant message with citations
         ChatMessage assistantMessage = new ChatMessage();

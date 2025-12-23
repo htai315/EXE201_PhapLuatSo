@@ -17,7 +17,6 @@ public class AuthService {
     private final UserRepo userRepo;
     private final RoleRepo roleRepo;
     private final PlanRepo planRepo;
-    private final SubscriptionRepo subscriptionRepo;
     private final RefreshTokenRepo refreshTokenRepo;
 
     private final PasswordEncoder passwordEncoder;
@@ -31,7 +30,6 @@ public class AuthService {
             UserRepo userRepo,
             RoleRepo roleRepo,
             PlanRepo planRepo,
-            SubscriptionRepo subscriptionRepo,
             RefreshTokenRepo refreshTokenRepo,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
@@ -40,7 +38,6 @@ public class AuthService {
         this.userRepo = userRepo;
         this.roleRepo = roleRepo;
         this.planRepo = planRepo;
-        this.subscriptionRepo = subscriptionRepo;
         this.refreshTokenRepo = refreshTokenRepo;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -69,15 +66,7 @@ public class AuthService {
 
         userRepo.save(u);
 
-        // default plan FREE
-        Plan free = planRepo.findByCode("FREE")
-                .orElseThrow(() -> new RuntimeException("Plan FREE not found"));
-
-        Subscription sub = new Subscription();
-        sub.setUser(u);
-        sub.setPlan(free);
-        sub.setStatus("ACTIVE");
-        subscriptionRepo.save(sub);
+        // Database trigger will automatically create FREE credits (10 chat credits)
     }
 
     // -------- LOCAL LOGIN --------
@@ -133,14 +122,7 @@ public class AuthService {
 
             userRepo.save(u);
 
-            // default plan FREE
-            Plan free = planRepo.findByCode("FREE")
-                    .orElseThrow(() -> new NotFoundException("Không tìm thấy gói FREE"));
-            Subscription sub = new Subscription();
-            sub.setUser(u);
-            sub.setPlan(free);
-            sub.setStatus("ACTIVE");
-            subscriptionRepo.save(sub);
+            // Database trigger will automatically create FREE credits (10 chat credits)
         } else {
             // link google if not linked yet
             if (u.getProviderId() == null) {
