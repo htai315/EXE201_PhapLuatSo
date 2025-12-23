@@ -129,6 +129,26 @@ public class QuizService {
     }
 
     @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<QuizSet> getQuizSetsForUserPaginated(
+            Long userId, 
+            int page, 
+            int size
+    ) {
+        // Validate user
+        requireActiveStudent(userId);
+        
+        // Create pageable with sorting by updatedAt DESC (newest first)
+        org.springframework.data.domain.Pageable pageable = 
+                org.springframework.data.domain.PageRequest.of(
+                        page, 
+                        size, 
+                        org.springframework.data.domain.Sort.by("updatedAt").descending()
+                );
+        
+        return quizSetRepo.findByCreatedById(userId, pageable);
+    }
+
+    @Transactional(readOnly = true)
     public QuizSet getOwnedQuizSet(Long userId, Long quizSetId) {
         QuizSet quizSet = quizSetRepo.findById(quizSetId)
                 .orElseThrow(() -> new NotFoundException("Quiz set not found"));

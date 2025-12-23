@@ -60,6 +60,50 @@ public class QuizController {
         return ResponseEntity.ok(quizSets);
     }
 
+    @GetMapping("/my/paginated")
+    public ResponseEntity<com.htai.exe201phapluatso.quiz.dto.PagedQuizSetsResponse> getMyQuizSetsPaginated(
+            Authentication auth,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size
+    ) {
+        Long userId = getUserId(auth);
+        
+        // Validate pagination parameters
+        if (page < 0) {
+            page = 0;
+        }
+        if (size < 1 || size > 50) {
+            size = 6; // Default to 6 items per page
+        }
+        
+        var pagedQuizSets = quizService.getQuizSetsForUserPaginated(userId, page, size);
+        
+        // Map to response DTOs
+        var content = pagedQuizSets.getContent().stream()
+                .map(set -> new QuizSetResponse(
+                        set.getId(),
+                        set.getTitle(),
+                        set.getDescription(),
+                        set.getStatus(),
+                        set.getVisibility(),
+                        set.getCreatedBy().getId(),
+                        set.getCreatedAt(),
+                        set.getUpdatedAt(),
+                        quizService.countQuestionsInSet(userId, set.getId())
+                ))
+                .toList();
+        
+        var response = com.htai.exe201phapluatso.quiz.dto.PagedQuizSetsResponse.from(
+                content,
+                pagedQuizSets.getNumber(),
+                pagedQuizSets.getSize(),
+                pagedQuizSets.getTotalElements(),
+                pagedQuizSets.getTotalPages()
+        );
+        
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<QuizSetResponse> getQuizSet(
             Authentication auth,

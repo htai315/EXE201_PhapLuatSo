@@ -35,7 +35,7 @@
             <ul class="navbar-nav ms-auto align-items-lg-center">
                 <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/chat.html">Chat AI</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/legal-chat.html">Chat AI</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/quiz.html">Quiz</a></li>
                 <li class="nav-item"><a class="nav-link active" href="/html/my-quizzes.html">Bộ đề</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/stats.html">Thống kê</a></li>
@@ -106,6 +106,10 @@
         </div>
 
         <div id="quizSetGrid" class="row g-4"></div>
+
+        <nav id="paginationNav" class="d-none mt-4" aria-label="Quiz sets pagination">
+            <ul class="pagination justify-content-center" id="paginationControls"></ul>
+        </nav>
     </div>
 </div>
 
@@ -115,7 +119,10 @@
 <script src="/scripts/script.js"></script>
 <script>
     const API_BASE = '/api/quiz-sets';
-    let allQuizSets = [];
+    const PAGE_SIZE = 6;
+    let currentPage = 0;
+    let paginationData = null;
+    let searchText = '';
 
     document.addEventListener('DOMContentLoaded', () => {
         const accessToken = localStorage.getItem('accessToken');
@@ -132,10 +139,12 @@
         });
 
         document.getElementById('searchInput').addEventListener('input', (e) => {
-            renderQuizSets(e.target.value.trim().toLowerCase());
+            searchText = e.target.value.trim().toLowerCase();
+            currentPage = 0;
+            loadQuizSets();
         });
 
-        loadQuizSets(accessToken);
+        loadQuizSets();
     });
 
     function showAlert(message, type = 'danger') {
@@ -148,19 +157,21 @@
         `;
     }
 
-    async function loadQuizSets(token) {
+    async function loadQuizSets() {
         ERROR_HANDLER.showLoading(true);
         try {
-            // Sử dụng API_CLIENT với auto token refresh
-            const res = await API_CLIENT.get(API_BASE + '/my');
+            const res = await API_CLIENT.get(
+                `${API_BASE}/my/paginated?page=${currentPage}&size=${PAGE_SIZE}`
+            );
 
             if (!res.ok) {
                 const text = await res.text();
                 throw new Error(text || 'Không thể tải danh sách bộ đề');
             }
 
-            allQuizSets = await res.json();
-            renderQuizSets('');
+            paginationData = await res.json();
+            renderQuizSets();
+            renderPagination();
         } catch (e) {
             console.error(e);
             showAlert(e.message || 'Có lỗi xảy ra khi tải danh sách bộ đề');
@@ -169,23 +180,140 @@
         }
     }
 
-    function renderQuizSets(filterText) {
+    function renderQuizSets() {
         const grid = document.getElementById('quizSetGrid');
         const empty = document.getElementById('emptyState');
+        const paginationNav = document.getElementById('paginationNav');
 
-        let items = allQuizSets || [];
-        if (filterText) {
-            items = items.filter(x => (x.title || '').toLowerCase().includes(filterText));
+        if (!paginationData || !paginationData.content) {
+            grid.innerHTML = '';
+            empty.classList.remove('d-none');
+            paginationNav.classList.add('d-none');
+            return;
+        }
+
+        let items = paginationData.content;
+        
+        // Client-side filtering for search
+        if (searchText) {
+            items = items.filter(x => (x.title || '').toLowerCase().includes(searchText));
         }
 
         if (!items.length) {
             grid.innerHTML = '';
             empty.classList.remove('d-none');
+            paginationNav.classList.add('d-none');
             return;
         }
 
         empty.classList.add('d-none');
         grid.innerHTML = items.map(set => createQuizCardHtml(set)).join('');
+        
+        // Show pagination only if there are multiple pages
+        if (paginationData.totalPages > 1) {
+            paginationNav.classList.remove('d-none');
+        } else {
+            paginationNav.classList.add('d-none');
+        }
+    }
+
+    function renderPagination() {
+        if (!paginationData || paginationData.totalPages <= 1) {
+            return;
+        }
+
+        const controls = document.getElementById('paginationControls');
+        controls.innerHTML = '';
+
+        // Previous button
+        const prevLi = document.createElement('li');
+        prevLi.className = `page-item ${paginationData.first ? 'disabled' : ''}`;
+        prevLi.innerHTML = `
+            <a class="page-link" href="#" ${paginationData.first ? 'tabindex="-1"' : ''}>
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        `;
+        if (!paginationData.first) {
+            prevLi.querySelector('a').addEventListener('click', (e) => {
+                e.preventDefault();
+                goToPage(currentPage - 1);
+            });
+        }
+        controls.appendChild(prevLi);
+
+        // Page numbers
+        const totalPages = paginationData.totalPages;
+        const maxVisible = 5;
+        let startPage = Math.max(0, currentPage - Math.floor(maxVisible / 2));
+        let endPage = Math.min(totalPages - 1, startPage + maxVisible - 1);
+        
+        if (endPage - startPage < maxVisible - 1) {
+            startPage = Math.max(0, endPage - maxVisible + 1);
+        }
+
+        // First page + ellipsis
+        if (startPage > 0) {
+            addPageButton(controls, 0);
+            if (startPage > 1) {
+                const ellipsisLi = document.createElement('li');
+                ellipsisLi.className = 'page-item disabled';
+                ellipsisLi.innerHTML = '<span class="page-link">...</span>';
+                controls.appendChild(ellipsisLi);
+            }
+        }
+
+        // Page numbers
+        for (let i = startPage; i <= endPage; i++) {
+            addPageButton(controls, i);
+        }
+
+        // Ellipsis + last page
+        if (endPage < totalPages - 1) {
+            if (endPage < totalPages - 2) {
+                const ellipsisLi = document.createElement('li');
+                ellipsisLi.className = 'page-item disabled';
+                ellipsisLi.innerHTML = '<span class="page-link">...</span>';
+                controls.appendChild(ellipsisLi);
+            }
+            addPageButton(controls, totalPages - 1);
+        }
+
+        // Next button
+        const nextLi = document.createElement('li');
+        nextLi.className = `page-item ${paginationData.last ? 'disabled' : ''}`;
+        nextLi.innerHTML = `
+            <a class="page-link" href="#" ${paginationData.last ? 'tabindex="-1"' : ''}>
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        `;
+        if (!paginationData.last) {
+            nextLi.querySelector('a').addEventListener('click', (e) => {
+                e.preventDefault();
+                goToPage(currentPage + 1);
+            });
+        }
+        controls.appendChild(nextLi);
+    }
+
+    function addPageButton(controls, pageNum) {
+        const li = document.createElement('li');
+        li.className = `page-item ${pageNum === currentPage ? 'active' : ''}`;
+        li.innerHTML = `<a class="page-link" href="#">${pageNum + 1}</a>`;
+        
+        if (pageNum !== currentPage) {
+            li.querySelector('a').addEventListener('click', (e) => {
+                e.preventDefault();
+                goToPage(pageNum);
+            });
+        }
+        
+        controls.appendChild(li);
+    }
+
+    function goToPage(page) {
+        currentPage = page;
+        loadQuizSets();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function createQuizCardHtml(set) {
