@@ -10,6 +10,10 @@ import com.htai.exe201phapluatso.legal.entity.LegalArticle;
 import com.htai.exe201phapluatso.legal.entity.LegalDocument;
 import com.htai.exe201phapluatso.legal.repo.LegalArticleRepo;
 import com.htai.exe201phapluatso.legal.repo.LegalDocumentRepo;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,7 +26,9 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -134,6 +140,37 @@ public class LegalDocumentService {
                 .stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Get paginated documents with search
+     */
+    public Page<LegalDocumentDTO> getDocumentsPaginated(int page, int size, String search) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        
+        Page<LegalDocument> documentsPage;
+        if (search != null && !search.trim().isEmpty()) {
+            documentsPage = documentRepo.findByDocumentNameContainingIgnoreCaseOrDocumentCodeContainingIgnoreCase(
+                    search.trim(), search.trim(), pageable);
+        } else {
+            documentsPage = documentRepo.findAll(pageable);
+        }
+        
+        return documentsPage.map(this::toDTO);
+    }
+
+    /**
+     * Get documents statistics
+     */
+    public Map<String, Object> getDocumentsStats() {
+        long totalDocuments = documentRepo.count();
+        long totalArticles = articleRepo.count();
+        
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalDocuments", totalDocuments);
+        stats.put("totalArticles", totalArticles);
+        
+        return stats;
     }
 
     /**

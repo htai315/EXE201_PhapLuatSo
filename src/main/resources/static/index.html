@@ -21,7 +21,175 @@
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/animations.css">
+    <link rel="stylesheet" href="/css/index-enhanced.css">
+    
+    <style>
+        /* Enhanced Pricing Section Styles */
+        #pricing {
+            background: linear-gradient(135deg, #f0f4f8 0%, #e8eef5 100%);
+        }
+        
+        .pricing-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 2.5rem;
+            height: 100%;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            border: 2px solid transparent;
+        }
+        
+        .pricing-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #1a4b84, #10b981);
+            transform: scaleX(0);
+            transition: transform 0.4s;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-12px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+            border-color: #1a4b84;
+        }
+        
+        .pricing-card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .pricing-card-popular {
+            border: 2px solid #1a4b84;
+            background: white;
+        }
+        
+        .pricing-card-popular:hover {
+            transform: translateY(-12px);
+        }
+        
+        .pricing-badge {
+            display: none;
+        }
+        
+        .pricing-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .pricing-name {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1a4b84;
+            margin-bottom: 1rem;
+        }
+        
+        .pricing-price {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #1a4b84 0%, #10b981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .price-currency {
+            font-size: 1.5rem;
+            vertical-align: super;
+        }
+        
+        .pricing-features {
+            list-style: none;
+            padding: 0;
+            margin: 2rem 0;
+        }
+        
+        .pricing-features li {
+            padding: 0.875rem 0;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: start;
+            gap: 0.75rem;
+            transition: all 0.3s;
+        }
+        
+        .pricing-features li:hover {
+            padding-left: 0.5rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        
+        .pricing-features li:last-child {
+            border-bottom: none;
+        }
+        
+        .pricing-features i {
+            font-size: 1.3rem;
+            flex-shrink: 0;
+            margin-top: 0.1rem;
+        }
+        
+        .pricing-card .btn {
+            padding: 1.125rem;
+            font-weight: 600;
+            font-size: 1.05rem;
+            border-radius: 12px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .pricing-card .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .pricing-card .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .pricing-card .btn-outline-primary {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            color: #64748b;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .pricing-card .btn-outline-primary:hover {
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            color: #475569;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .pricing-card .btn-primary {
+            background: linear-gradient(135deg, #1a4b84 0%, #0f3054 100%);
+            border: 2px solid #1a4b84;
+        }
+        
+        .pricing-card .btn-primary:hover {
+            background: linear-gradient(135deg, #0f3054 0%, #1a4b84 100%);
+            border-color: #0f3054;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(26, 75, 132, 0.4);
+        }
+    </style>
 </head>
 <body>
 <!-- Navbar -->
@@ -35,19 +203,22 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto align-items-lg-center">
+            <ul class="navbar-nav mx-auto align-items-lg-center">
                 <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/legal-chat.html">Chat AI</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/my-quizzes.html">Bộ đề</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/legal-upload.html">Văn bản PL</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/plans.html"><i class="bi bi-credit-card me-1"></i>Thanh toán</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
+            </ul>
+            <ul class="navbar-nav ms-auto align-items-lg-center">
                 <!-- Khi chưa đăng nhập -->
-                <li class="nav-item ms-lg-3 guest-only"><a class="btn btn-outline-primary btn-sm px-3" href="/html/login.html"><i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập</a></li>
-                <li class="nav-item ms-lg-2 guest-only"><a class="btn btn-primary btn-sm px-3" href="/html/register.html"><i class="bi bi-person-plus me-1"></i>Đăng Ký</a></li>
+                <li class="nav-item guest-only"><a class="btn btn-outline-primary btn-sm px-3 me-2" href="/html/login.html"><i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập</a></li>
+                <li class="nav-item guest-only"><a class="btn btn-primary btn-sm px-3" href="/html/register.html"><i class="bi bi-person-plus me-1"></i>Đăng Ký</a></li>
                 <!-- Khi đã đăng nhập - Avatar Dropdown -->
-                <li class="nav-item dropdown ms-lg-3 auth-only d-none">
+                <li class="nav-item dropdown auth-only d-none">
                     <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <img id="navUserAvatar" src="" alt="Avatar" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #1a4b84;">
                     </a>
@@ -463,17 +634,17 @@
                         <div class="pricing-price">
                             <span class="price-currency">₫</span>
                             <span class="price-amount">0</span>
-                            <!-- <span class="price-period">/tháng</span> -->
                         </div>
                     </div>
                     <ul class="pricing-features">
                         <li><i class="bi bi-check-circle-fill text-success me-2"></i>10 câu hỏi</li>
                         <li><i class="bi bi-check-circle-fill text-success me-2"></i>Truy cập cơ bản</li>
-                        <!-- <li><i class="bi bi-check-circle-fill text-success me-2"></i>Hỗ trợ email</li> -->
                         <li class="text-muted"><i class="bi bi-x-circle me-2"></i>Quiz AI</li>
                         <li class="text-muted"><i class="bi bi-x-circle me-2"></i>Tư vấn chuyên sâu</li>
                     </ul>
-                    <button class="btn btn-outline-primary w-100">Dùng Thử Miễn Phí</button>
+                    <button class="btn btn-outline-primary w-100" onclick="selectPlan('FREE')">
+                        <i class="bi bi-gift me-2"></i>Đã kích hoạt
+                    </button>
                 </div>
             </div>
 
@@ -481,44 +652,43 @@
             <div class="col-lg-4 col-md-6 fade-in-delay-1">
                 <div class="pricing-card">
                     <div class="pricing-header">
-                        <h3 class="pricing-name">Gói người dân </h3>
+                        <h3 class="pricing-name">Gói người dân</h3>
                         <div class="pricing-price">
                             <span class="price-currency">₫</span>
                             <span class="price-amount">159,000</span>
-                            <!-- <span class="price-period">/tháng</span> -->
                         </div>
                     </div>
                     <ul class="pricing-features">
                         <li><i class="bi bi-check-circle-fill text-success me-2"></i>100 câu hỏi</li>
                         <li><i class="bi bi-check-circle-fill text-success me-2"></i>Truy cập đầy đủ</li>
                         <li><i class="bi bi-check-circle-fill text-success me-2"></i>Hỗ trợ ưu tiên</li>
-
                         <li class="text-muted"><i class="bi bi-x-circle me-2"></i>Tư vấn chuyên sâu</li>
                     </ul>
-                    <a href="/html/payment.html"><button class="btn btn-primary w-100">Chọn Gói Này</button> </a>
+                    <button class="btn btn-primary w-100" onclick="selectPlan('REGULAR')">
+                        <i class="bi bi-cart-plus me-2"></i>Chọn Gói Này
+                    </button>
                 </div>
             </div>
 
-            <!-- Pro Plan (Popular) -->
+            <!-- Pro Plan -->
             <div class="col-lg-4 col-md-6 fade-in-delay-2">
-                <div class="pricing-card pricing-card-popular">
-                    <div class="pricing-badge">Phổ Biến Nhất</div>
+                <div class="pricing-card">
                     <div class="pricing-header">
-                        <h3 class="pricing-name">Gói tra cứu và học tập </h3>
+                        <h3 class="pricing-name">Gói tra cứu và học tập</h3>
                         <div class="pricing-price">
                             <span class="price-currency">₫</span>
-                            <span class="price-amount">289,000</span>
-                            <!-- <span class="price-period">/tháng</span> -->
+                            <span class="price-amount">249,000</span>
                         </div>
                     </div>
                     <ul class="pricing-features">
                         <li><i class="bi bi-check-circle-fill text-success me-2"></i>100 câu hỏi</li>
                         <li><i class="bi bi-check-circle-fill text-success me-2"></i>Truy cập cao cấp</li>
                         <li><i class="bi bi-check-circle-fill text-success me-2"></i>Tư vấn chuyên sâu</li>
-                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Quiz AI -20 đề (50 câu/ đề) </li>
-
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Quiz AI - 20 đề (50 câu/đề)</li>
                     </ul>
-                    <a href="/html/payment.html"><button class="btn btn-primary w-100">Chọn Gói Này</button> </a>
+                    <button class="btn btn-primary w-100" onclick="selectPlan('STUDENT')">
+                        <i class="bi bi-cart-plus me-2"></i>Chọn Gói Này
+                    </button>
                 </div>
             </div>
 
@@ -727,5 +897,70 @@
 
 <!-- Custom JS -->
 <script src="/scripts/script.js"></script>
+
+<script>
+// Payment function for pricing cards
+async function selectPlan(planName) {
+    if (planName === 'FREE') {
+        alert('Bạn đã có gói FREE miễn phí khi đăng ký!');
+        return;
+    }
+    
+    // Check if user is logged in
+    const token = localStorage.getItem('accessToken');
+    
+    if (!token) {
+        if (confirm('Vui lòng đăng nhập để mua gói! Bạn có muốn đăng nhập ngay không?')) {
+            window.location.href = '/html/login.html';
+        }
+        return;
+    }
+    
+    // Show loading
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Đang xử lý...';
+    
+    try {
+        // Call payment API
+        const response = await fetch('/api/payment/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                planCode: planName
+            })
+        });
+        
+        if (!response.ok) {
+            // If 401, token expired - redirect to login
+            if (response.status === 401) {
+                alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                window.location.href = '/html/login.html';
+                return;
+            }
+            
+            const error = await response.json();
+            throw new Error(error.message || 'Không thể tạo thanh toán');
+        }
+        
+        const data = await response.json();
+        
+        // Redirect to VNPay
+        window.location.href = data.paymentUrl;
+        
+    } catch (error) {
+        console.error('Payment error:', error);
+        alert('Lỗi: ' + error.message);
+        button.disabled = false;
+        button.innerHTML = originalText;
+    }
+}
+</script>
 </body>
 </html>

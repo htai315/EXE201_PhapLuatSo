@@ -23,72 +23,206 @@
     <link rel="stylesheet" href="/css/style.css">
     
     <style>
+        body {
+            padding-top: 76px;
+            background: linear-gradient(135deg, #f0f4f8 0%, #e8eef5 100%);
+            min-height: 100vh;
+        }
+        
         .legal-hero {
             background: linear-gradient(135deg, #1a4b84 0%, #0f3054 100%);
-            padding: 2rem 0 5rem;
-            margin-bottom: -3.5rem;
+            padding: 3rem 0 6rem;
+            margin-bottom: -4rem;
             color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .legal-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.3;
+        }
+        
+        .legal-hero h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .legal-hero p {
+            position: relative;
+            z-index: 1;
         }
         
         .legal-container {
             max-width: 1000px;
             margin: 0 auto;
-            padding: 0 1rem 2rem;
+            padding: 0 1rem 3rem;
+            position: relative;
+            z-index: 2;
         }
         
         .upload-card {
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-            padding: 2rem;
-            margin-bottom: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(26, 75, 132, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .upload-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
         }
         
         .upload-zone {
-            border: 2px dashed #cbd5e1;
-            border-radius: 12px;
-            padding: 3rem 2rem;
+            border: 3px dashed #cbd5e1;
+            border-radius: 16px;
+            padding: 4rem 2rem;
             text-align: center;
-            background: #f8fafc;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
             transition: all 0.3s;
             cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .upload-zone::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(220, 38, 38, 0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .upload-zone:hover::before {
+            width: 300px;
+            height: 300px;
         }
         
         .upload-zone:hover {
-            border-color: #1a4b84;
-            background: #f1f5f9;
+            border-color: #dc2626;
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            transform: scale(1.02);
         }
         
         .upload-zone.dragover {
-            border-color: #1a4b84;
-            background: #e0f2fe;
+            border-color: #dc2626;
+            background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(220, 38, 38, 0.2);
+        }
+        
+        .upload-zone i {
+            font-size: 4rem;
+            color: #dc2626;
+            margin-bottom: 1.5rem;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .upload-zone h6 {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .upload-zone p {
+            position: relative;
+            z-index: 1;
         }
         
         .file-list {
-            max-height: 300px;
+            max-height: 400px;
             overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+        
+        .file-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .file-list::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        
+        .file-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        
+        .file-list::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
         
         .file-item {
             display: flex;
             align-items: center;
             gap: 1rem;
-            padding: 0.75rem;
-            background: #f8fafc;
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .file-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         
         .file-item.uploading {
             opacity: 0.6;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 0.8; }
         }
         
         .file-item.success {
-            background: #d1fae5;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-color: #6ee7b7;
         }
         
         .file-item.error {
-            background: #fee2e2;
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border-color: #fca5a5;
         }
         
         .loading-overlay {
@@ -98,7 +232,8 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(4px);
             z-index: 9999;
             align-items: center;
             justify-content: center;
@@ -108,13 +243,22 @@
             display: flex;
         }
         
+        .loading-overlay > div {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
         .spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid #e2e8f0;
-            border-top-color: #1a4b84;
+            width: 70px;
+            height: 70px;
+            border: 5px solid #e2e8f0;
+            border-top-color: #dc2626;
             border-radius: 50%;
             animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
         }
         
         @keyframes spin {
@@ -123,21 +267,156 @@
         
         .documents-list {
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 2.5rem;
+            border: 1px solid rgba(26, 75, 132, 0.1);
         }
         
         .document-card {
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.25rem;
             margin-bottom: 1rem;
-            transition: all 0.2s;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
         }
         
         .document-card:hover {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transform: translateX(5px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            border-color: #1a4b84;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #1a4b84 0%, #0f3054 100%);
+            border: none;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26, 75, 132, 0.4);
+            background: linear-gradient(135deg, #0f3054 0%, #1a4b84 100%);
+        }
+        
+        .btn-outline-danger:hover {
+            transform: scale(1.1);
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            transition: all 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            border-color: #1a4b84;
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #1a4b84 0%, #0f3054 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            color: white;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a4b84;
+            line-height: 1;
+        }
+        
+        .stat-label {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+        
+        .search-box {
+            position: relative;
+            width: 250px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+        
+        .search-box input {
+            padding-left: 38px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .search-box input:focus {
+            border-color: #1a4b84;
+            box-shadow: 0 0 0 4px rgba(26, 75, 132, 0.1);
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .page-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .page-btn:hover:not(:disabled) {
+            border-color: #1a4b84;
+            background: #f0f9ff;
+            transform: translateY(-2px);
+        }
+        
+        .page-btn.active {
+            background: linear-gradient(135deg, #1a4b84 0%, #0f3054 100%);
+            color: white;
+            border-color: #1a4b84;
+        }
+        
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #94a3b8;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
         }
     </style>
 </head>
@@ -208,13 +487,52 @@
     
     <!-- Documents List -->
     <div class="documents-list">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Văn Bản Đã Upload</h5>
-            <button class="btn btn-sm btn-outline-primary" onclick="loadDocuments()">
-                <i class="bi bi-arrow-clockwise me-1"></i>Làm mới
-            </button>
+        <!-- Stats Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value" id="totalDocuments">0</div>
+                        <div class="stat-label">Văn bản pháp luật</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="bi bi-list-ol"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value" id="totalArticles">0</div>
+                        <div class="stat-label">Điều luật</div>
+                    </div>
+                </div>
+            </div>
         </div>
+        
+        <!-- Search and Controls -->
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Danh Sách Văn Bản</h5>
+            <div class="d-flex gap-2">
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="searchInput" class="form-control form-control-sm" 
+                           placeholder="Tìm theo tên hoặc mã...">
+                </div>
+                <button class="btn btn-sm btn-outline-primary" onclick="loadDocuments()">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Làm mới
+                </button>
+            </div>
+        </div>
+        
+        <!-- Documents Grid -->
         <div id="documentsList"></div>
+        
+        <!-- Pagination -->
+        <div id="paginationContainer" class="mt-4"></div>
     </div>
 </div>
 
@@ -234,6 +552,10 @@
 <script src="/scripts/script.js"></script>
 
 <script>
+let currentPage = 0;
+let currentSearch = '';
+const pageSize = 10;
+
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
@@ -247,6 +569,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileList = document.getElementById('fileList');
     const uploadBtn = document.getElementById('uploadBtn');
     const loadingOverlay = document.getElementById('loadingOverlay');
+    const searchInput = document.getElementById('searchInput');
 
     let selectedFiles = [];
 
@@ -339,7 +662,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         loadingOverlay.classList.remove('show');
         
-        // Reload documents list
+        // Reload documents and stats
+        await loadStats();
         await loadDocuments();
         
         // Clear selection
@@ -373,17 +697,49 @@ document.addEventListener('DOMContentLoaded', () => {
         return await response.json();
     }
 
-    // Load documents
-    window.loadDocuments = async () => {
+    // Search with debounce
+    let searchTimeout;
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            currentSearch = e.target.value.trim();
+            currentPage = 0;
+            loadDocuments();
+        }, 500);
+    });
+
+    // Load stats
+    window.loadStats = async () => {
         try {
-            const response = await fetch('/api/legal/documents', {
+            const response = await fetch('/api/legal/documents/stats', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
 
-            const documents = await response.json();
-            displayDocuments(documents);
+            const stats = await response.json();
+            document.getElementById('totalDocuments').textContent = stats.totalDocuments;
+            document.getElementById('totalArticles').textContent = stats.totalArticles;
+        } catch (error) {
+            console.error('Load stats error:', error);
+        }
+    };
+
+    // Load documents with pagination
+    window.loadDocuments = async (page = currentPage) => {
+        try {
+            currentPage = page;
+            const url = `/api/legal/documents/paginated?page=${page}&size=${pageSize}${currentSearch ? '&search=' + encodeURIComponent(currentSearch) : ''}`;
+            
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const data = await response.json();
+            displayDocuments(data.documents);
+            displayPagination(data);
         } catch (error) {
             console.error('Load error:', error);
         }
@@ -394,7 +750,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = document.getElementById('documentsList');
         
         if (documents.length === 0) {
-            container.innerHTML = '<p class="text-muted text-center">Chưa có văn bản nào</p>';
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <h6>Chưa có văn bản nào</h6>
+                    <p class="text-muted mb-0">Upload văn bản pháp luật để bắt đầu</p>
+                </div>
+            `;
             return;
         }
 
@@ -417,6 +779,64 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     }
 
+    // Display pagination
+    function displayPagination(data) {
+        const container = document.getElementById('paginationContainer');
+        
+        if (data.totalPages <= 1) {
+            container.innerHTML = '';
+            return;
+        }
+
+        let paginationHTML = '<div class="pagination">';
+        
+        // Previous button
+        paginationHTML += `
+            <button class="page-btn" onclick="loadDocuments(${data.currentPage - 1})" 
+                    ${!data.hasPrevious ? 'disabled' : ''}>
+                <i class="bi bi-chevron-left"></i> Trước
+            </button>
+        `;
+        
+        // Page numbers
+        const startPage = Math.max(0, data.currentPage - 2);
+        const endPage = Math.min(data.totalPages - 1, data.currentPage + 2);
+        
+        if (startPage > 0) {
+            paginationHTML += `<button class="page-btn" onclick="loadDocuments(0)">1</button>`;
+            if (startPage > 1) {
+                paginationHTML += `<span class="page-btn" disabled>...</span>`;
+            }
+        }
+        
+        for (let i = startPage; i <= endPage; i++) {
+            paginationHTML += `
+                <button class="page-btn ${i === data.currentPage ? 'active' : ''}" 
+                        onclick="loadDocuments(${i})">
+                    ${i + 1}
+                </button>
+            `;
+        }
+        
+        if (endPage < data.totalPages - 1) {
+            if (endPage < data.totalPages - 2) {
+                paginationHTML += `<span class="page-btn" disabled>...</span>`;
+            }
+            paginationHTML += `<button class="page-btn" onclick="loadDocuments(${data.totalPages - 1})">${data.totalPages}</button>`;
+        }
+        
+        // Next button
+        paginationHTML += `
+            <button class="page-btn" onclick="loadDocuments(${data.currentPage + 1})" 
+                    ${!data.hasNext ? 'disabled' : ''}>
+                Sau <i class="bi bi-chevron-right"></i>
+            </button>
+        `;
+        
+        paginationHTML += '</div>';
+        container.innerHTML = paginationHTML;
+    }
+
     // Delete document
     window.deleteDocument = async (id) => {
         if (!confirm('Bạn có chắc muốn xóa văn bản này?')) return;
@@ -429,6 +849,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
+            await loadStats();
             await loadDocuments();
         } catch (error) {
             console.error('Delete error:', error);
@@ -449,7 +870,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return date.toLocaleDateString('vi-VN');
     }
 
-    // Load documents on page load
+    // Load initial data
+    loadStats();
     loadDocuments();
 });
 </script>

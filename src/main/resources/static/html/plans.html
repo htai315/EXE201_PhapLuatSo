@@ -12,235 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/animations.css">
-    
-    <style>
-        body {
-            background: #f8fafc;
-        }
-        
-        .plans-header {
-            background: linear-gradient(135deg, #1a4b84 0%, #0f3054 100%);
-            padding: 3rem 0 6rem;
-            margin-bottom: -4rem;
-            color: white;
-            text-align: center;
-        }
-        
-        .plans-header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-        
-        .plans-header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-        
-        .plans-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem 3rem;
-        }
-        
-        .pricing-card {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            padding: 2.5rem;
-            height: 100%;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .pricing-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-        }
-        
-        .pricing-card.featured {
-            border: 3px solid #1a4b84;
-            transform: scale(1.05);
-        }
-        
-        .pricing-card.featured:hover {
-            transform: scale(1.05) translateY(-8px);
-        }
-        
-        .featured-badge {
-            position: absolute;
-            top: 20px;
-            right: -35px;
-            background: #f59e0b;
-            color: white;
-            padding: 0.4rem 3rem;
-            transform: rotate(45deg);
-            font-weight: 700;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-        
-        .plan-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-        
-        .plan-name {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #1a4b84;
-            margin-bottom: 0.5rem;
-        }
-        
-        .plan-description {
-            color: #64748b;
-            font-size: 0.95rem;
-            margin-bottom: 1.5rem;
-            min-height: 48px;
-        }
-        
-        .plan-price {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #0f172a;
-            margin-bottom: 0.25rem;
-        }
-        
-        .plan-price small {
-            font-size: 1rem;
-            font-weight: 500;
-            color: #64748b;
-        }
-        
-        .plan-duration {
-            color: #64748b;
-            font-size: 0.9rem;
-            margin-bottom: 2rem;
-        }
-        
-        .plan-features {
-            list-style: none;
-            padding: 0;
-            margin: 2rem 0;
-        }
-        
-        .plan-features li {
-            padding: 0.75rem 0;
-            border-bottom: 1px solid #f1f5f9;
-            display: flex;
-            align-items: start;
-            gap: 0.75rem;
-        }
-        
-        .plan-features li:last-child {
-            border-bottom: none;
-        }
-        
-        .plan-features i {
-            color: #10b981;
-            font-size: 1.2rem;
-            flex-shrink: 0;
-            margin-top: 0.1rem;
-        }
-        
-        .plan-features .text-muted i {
-            color: #cbd5e1;
-        }
-        
-        .btn-plan {
-            width: 100%;
-            padding: 1rem;
-            font-weight: 600;
-            font-size: 1.05rem;
-            border-radius: 10px;
-            transition: all 0.3s;
-        }
-        
-        .btn-plan-free {
-            background: #f1f5f9;
-            color: #64748b;
-            border: 2px solid #e2e8f0;
-        }
-        
-        .btn-plan-free:hover {
-            background: #e2e8f0;
-            color: #475569;
-        }
-        
-        .btn-plan-regular {
-            background: #1a4b84;
-            color: white;
-            border: 2px solid #1a4b84;
-        }
-        
-        .btn-plan-regular:hover {
-            background: #0f3054;
-            border-color: #0f3054;
-            transform: translateY(-2px);
-        }
-        
-        .btn-plan-student {
-            background: #10b981;
-            color: white;
-            border: 2px solid #10b981;
-        }
-        
-        .btn-plan-student:hover {
-            background: #059669;
-            border-color: #059669;
-            transform: translateY(-2px);
-        }
-        
-        .comparison-section {
-            background: white;
-            border-radius: 16px;
-            padding: 3rem;
-            margin-top: 3rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
-        
-        .comparison-section h3 {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: #1a4b84;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-        
-        .comparison-table {
-            width: 100%;
-        }
-        
-        .comparison-table th {
-            background: #f8fafc;
-            padding: 1rem;
-            font-weight: 600;
-            color: #1a4b84;
-            border-bottom: 2px solid #e2e8f0;
-        }
-        
-        .comparison-table td {
-            padding: 1rem;
-            border-bottom: 1px solid #f1f5f9;
-        }
-        
-        .comparison-table tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .check-icon {
-            color: #10b981;
-            font-size: 1.3rem;
-        }
-        
-        .cross-icon {
-            color: #cbd5e1;
-            font-size: 1.3rem;
-        }
-    </style>
+    <link rel="stylesheet" href="/css/plans.css">
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
@@ -253,25 +25,20 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto align-items-lg-center">
+            <ul class="navbar-nav mx-auto align-items-lg-center">
                 <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/legal-chat.html">Chat AI</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/my-quizzes.html">Bộ đề</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/legal-upload.html">Văn bản PL</a></li>
+                <li class="nav-item"><a class="nav-link" href="/html/plans.html"><i class="bi bi-credit-card me-1"></i>Thanh toán</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
-                <li class="nav-item ms-lg-3 guest-only">
-                    <a class="btn btn-outline-primary btn-sm px-3" href="/html/login.html">
-                        <i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập
-                    </a>
-                </li>
-                <li class="nav-item ms-lg-2 guest-only">
-                    <a class="btn btn-primary btn-sm px-3" href="/html/register.html">
-                        <i class="bi bi-person-plus me-1"></i>Đăng Ký
-                    </a>
-                </li>
-                <li class="nav-item dropdown ms-lg-3 auth-only d-none">
+            </ul>
+            <ul class="navbar-nav ms-auto align-items-lg-center">
+                <li class="nav-item guest-only"><a class="btn btn-outline-primary btn-sm px-3 me-2" href="/html/login.html"><i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập</a></li>
+                <li class="nav-item guest-only"><a class="btn btn-primary btn-sm px-3" href="/html/register.html"><i class="bi bi-person-plus me-1"></i>Đăng Ký</a></li>
+                <li class="nav-item dropdown auth-only d-none">
                     <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                         <img id="navUserAvatar" src="" alt="Avatar" class="rounded-circle" 
                              style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #1a4b84;">
@@ -541,21 +308,74 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/scripts/script.js"></script>
+<script src="/scripts/api-client.js"></script>
 
 <script>
-function selectPlan(planName) {
+async function selectPlan(planName) {
     if (planName === 'FREE') {
         alert('Bạn đã có gói FREE miễn phí khi đăng ký!');
         return;
     }
     
-    // Show contact modal
-    const message = `Bạn đã chọn gói ${planName}. Vui lòng liên hệ với chúng tôi qua:\n\n` +
-                   `📧 Email: support@phapluatso.vn\n` +
-                   `📞 Hotline: 1900-xxxx\n\n` +
-                   `Chúng tôi sẽ hỗ trợ bạn hoàn tất thanh toán và kích hoạt gói.`;
+    // Check if user is logged in
+    const token = localStorage.getItem('accessToken');
+    console.log('Token check:', token ? 'Token exists' : 'No token found');
     
-    alert(message);
+    if (!token) {
+        alert('Vui lòng đăng nhập để mua gói!');
+        window.location.href = '/html/login.html';
+        return;
+    }
+    
+    // Show loading
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Đang xử lý...';
+    
+    try {
+        console.log('Calling payment API with plan:', planName);
+        
+        // Call payment API
+        const response = await fetch('/api/payment/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                planCode: planName
+            })
+        });
+        
+        console.log('Payment API response status:', response.status);
+        
+        if (!response.ok) {
+            // If 401, token expired - redirect to login
+            if (response.status === 401) {
+                alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                window.location.href = '/html/login.html';
+                return;
+            }
+            
+            const error = await response.json();
+            throw new Error(error.message || 'Không thể tạo thanh toán');
+        }
+        
+        const data = await response.json();
+        console.log('Payment URL received:', data.paymentUrl);
+        
+        // Redirect to VNPay
+        window.location.href = data.paymentUrl;
+        
+    } catch (error) {
+        console.error('Payment error:', error);
+        alert('Lỗi: ' + error.message);
+        button.disabled = false;
+        button.innerHTML = originalText;
+    }
 }
 </script>
 </body>

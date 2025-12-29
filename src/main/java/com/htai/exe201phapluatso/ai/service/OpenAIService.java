@@ -45,12 +45,12 @@ public class OpenAIService {
      * Generate text response from OpenAI (for chatbot)
      */
     public String generateText(String prompt) {
-        return callOpenAI(prompt);
+        return callOpenAI(prompt, 0);  // 0 = không log số câu hỏi
     }
 
     public List<AIQuestionDTO> generateQuestions(String documentText, int count) {
         String prompt = buildPrompt(documentText, count);
-        String response = callOpenAI(prompt);
+        String response = callOpenAI(prompt, count);  // Truyền count vào
         return parseResponse(response);
     }
 
@@ -86,7 +86,7 @@ public class OpenAIService {
             """, count, documentText);
     }
 
-    private String callOpenAI(String prompt) {
+    private String callOpenAI(String prompt, int questionCount) {
         try {
             Map<String, Object> requestBody = Map.of(
                 "model", model,
@@ -97,10 +97,13 @@ public class OpenAIService {
                     )
                 ),
                 "temperature", 0.7,
-                "max_tokens", 8000
+                "max_tokens", 16000  // Tăng lên để đủ cho 20 câu hỏi
             );
 
             System.out.println("Calling OpenAI API with model: " + model);
+            if (questionCount > 0) {
+                System.out.println("Requesting " + questionCount + " questions");  // Log số câu yêu cầu
+            }
             
             String response = webClient.post()
                     .uri(OPENAI_API_URL)
@@ -177,6 +180,8 @@ public class OpenAIService {
             if (questions.isEmpty()) {
                 throw new BadRequestException("OpenAI không tạo được câu hỏi nào");
             }
+
+            System.out.println("Parsed " + questions.size() + " questions from OpenAI response");
 
             return questions;
         } catch (Exception e) {

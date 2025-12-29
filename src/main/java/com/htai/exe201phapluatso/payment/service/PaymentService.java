@@ -1,0 +1,138 @@
+package com.htai.exe201phapluatso.payment.service;
+
+import com.htai.exe201phapluatso.auth.entity.Plan;
+import com.htai.exe201phapluatso.auth.entity.User;
+import com.htai.exe201phapluatso.auth.repo.PlanRepo;
+import com.htai.exe201phapluatso.auth.repo.UserRepo;
+import com.htai.exe201phapluatso.common.exception.NotFoundException;
+import com.htai.exe201phapluatso.credit.service.CreditService;
+import com.htai.exe201phapluatso.payment.entity.Payment;
+import com.htai.exe201phapluatso.payment.repo.PaymentRepo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Service
+public class PaymentService {
+    
+    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
+    
+    private final PaymentRepo paymentRepo;
+    private final UserRepo userRepo;
+    private final PlanRepo planRepo;
+    private final CreditService creditService;
+    private final VNPayService vnPayService;
+
+    public PaymentService(
+            PaymentRepo paymentRepo,
+            UserRepo userRepo,
+            PlanRepo planRepo,
+            CreditService creditService,
+            VNPayService vnPayService
+    ) {
+        this.paymentRepo = paymentRepo;
+        this.userRepo = userRepo;
+        this.planRepo = planRepo;
+        this.creditService = creditService;
+        this.vnPayService = vnPayService;
+    }
+
+    /**
+     * Create payment and generate VNPay URL
+     */
+    @Transactional
+    public String createPayment(Long userId, String planCode, String ipAddress) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        
+        Plan plan = planRepo.findByCode(planCode)
+                .orElseThrow(() -> new NotFoundException("Plan not found"));
+        
+        // Generate unique transaction reference
+        String txnRef = "PAY" + System.currentTimeMillis() + UUID.randomUUID().toString().substring(0, 8);
+
+        
+        // Create payment record
+        Payment payment = new Payment();
+        payment.setUser(user);
+        payment.setPlan(plan);
+        payment.setAmount(BigDecimal.valueOf(plan.getPrice()));
+        payment.setVnpTxnRef(txnRef);
+        payment.setStatus("PENDING");
+        payment.setIpAddress(ipAddress);
+        paymentRepo.save(payment);
+        
+        log.info("Created payment: txnRef={}, user={}, plan={}, amount={}", 
+                txnRef, userId, planCode, plan.getPrice());
+        
+        // Generate VNPay payment URL (NO spaces, NO special chars to avoid signature issues)
+        String orderInfo = "Payment_" + planCode;
+        return vnPayService.createPaymentUrl(txnRef, BigDecimal.valueOf(plan.getPrice()), orderInfo, ipAddress);
+    }
+
+    /**
+     * Process VNPay callback
+     */
+    @Transactional
+    public void processPaymentCallback(String txnRef, String responseCode, 
+                                      String transactionNo, String bankCode, String cardType,
+                                      String vnpAmount) {
+        Payment payment = paymentRepo.findByVnpTxnRef(txnRef)
+                .orElseThrow(() -> new NotFoundException("Payment not found"));
+        
+        // Check if already processed (prevent double callback)
+        if ("SUCCESS".equals(payment.getStatus())) {
+            log.warn("Payment already processed: {}", txnRef);
+            return;
+        }
+        
+        // Validate amount (security check)
+        BigDecimal receivedAmount = new BigDecimal(vnpAmount).divide(new BigDecimal(100));
+        if (payment.getAmount().compareTo(receivedAmount) != 0) {
+            log.error("Amount mismatch: expected={}, received={}", payment.getAmount(), receivedAmount);
+            payment.setStatus("FAILED");
+            paymentRepo.save(payment);
+            throw new IllegalStateException("Amount mismatch");
+        }
+        
+        if ("00".equals(responseCode)) {
+            // Payment success
+            payment.setStatus("SUCCESS");
+            payment.setPaidAt(LocalDateTime.now());
+            payment.setVnpTransactionNo(transactionNo);
+            payment.setVnpBankCode(bankCode);
+            payment.setVnpCardType(cardType);
+            paymentRepo.save(payment);
+            
+            log.info("Payment SUCCESS: txnRef={}, transactionNo={}", txnRef, transactionNo);
+            
+            // Add credits to user
+            Plan plan = payment.getPlan();
+            LocalDateTime expiresAt = plan.getDurationMonths() > 0 
+                    ? LocalDateTime.now().plusMonths(plan.getDurationMonths())
+                    : null;
+            
+            creditService.addCredits(
+                    payment.getUser().getId(),
+                    plan.getChatCredits(),
+                    plan.getQuizGenCredits(),
+                    plan.getCode(),
+                    expiresAt
+            );
+            
+            log.info("Credits added: user={}, chat={}, quiz={}", 
+                    payment.getUser().getId(), plan.getChatCredits(), plan.getQuizGenCredits());
+        } else {
+            // Payment failed
+            payment.setStatus("FAILED");
+            paymentRepo.save(payment);
+            
+            log.warn("Payment FAILED: txnRef={}, responseCode={}", txnRef, responseCode);
+        }
+    }
+}

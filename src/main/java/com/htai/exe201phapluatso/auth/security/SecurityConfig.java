@@ -32,10 +32,16 @@ public class SecurityConfig {
                                 "/html/**", "/favicon.ico", "/uploads/**"
                         ).permitAll()
 
+                        // payment result page (public - VNPay redirect without token)
+                        .requestMatchers("/payment-result.html").permitAll()
+
                         // auth endpoints (public - không cần token)
                         .requestMatchers("/api/auth/register", "/api/auth/login", 
                                        "/api/auth/refresh", "/api/auth/logout",
                                        "/oauth2/**", "/login/**").permitAll()
+
+                        // payment IPN callback (public - VNPay server-to-server)
+                        .requestMatchers("/api/payment/vnpay-ipn").permitAll()
 
                         // auth endpoints (protected - cần token)
                         .requestMatchers("/api/auth/me", "/api/auth/test").authenticated()
