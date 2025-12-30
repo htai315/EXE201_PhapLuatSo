@@ -16,249 +16,10 @@
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/common.css">
   <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/contact.css">
 
-  <style>
-    :root {
-      --primary: #1a4b84;
-      --primary-dark: #0f3054;
-      --bg-light: #f5f7fb;
-      --border-soft: #e3e7f0;
-      --text-main: #1a1a1a;
-      --text-muted: #6c757d;
-      --radius: 12px;
-      --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.06);
-    }
-
-    body {
-      font-family: "Inter", sans-serif !important;
-      color: var(--text-main);
-      background: #fff;
-    }
-
-    h1, h2, h3, h4, h5, h6 {
-      font-family: "Playfair Display", serif !important;
-      font-weight: 700;
-    }
-
-    p, span, div, label, input, textarea, select, li, a {
-      font-family: "Inter", sans-serif !important;
-    }
-
-    a { text-decoration: none; }
-
-    /* Navbar */
-    .navbar {
-      box-shadow: 0 1px 5px rgba(0,0,0,0.04);
-    }
-    .nav-link.active {
-      color: var(--primary) !important;
-      font-weight: 600;
-    }
-
-    /* Hero */
-    .contact-hero {
-      padding: 120px 0 70px;
-      background: linear-gradient(135deg, rgba(26,75,132,0.96), rgba(9,25,48,0.98));
-      color: #fff;
-      text-align: left;
-    }
-    .contact-hero .headline {
-      font-size: 2.4rem;
-      font-weight: 800;
-      text-transform: uppercase;
-    }
-    .contact-hero p {
-      max-width: 650px;
-      font-size: 1.02rem;
-      color: rgba(255,255,255,0.9);
-    }
-    .contact-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 14px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.2);
-      font-size: 0.78rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 12px;
-      color: rgba(255,255,255,0.85);
-    }
-    .contact-hero .badge-pill {
-      background: rgba(255,255,255,0.08);
-      padding: 8px 14px;
-      border-radius: 999px;
-      font-size: 0.8rem;
-      margin-right: 8px;
-      display: inline-flex;
-      gap: 6px;
-      align-items: center;
-    }
-
-    /* Contact Layout */
-    .contact-section {
-      padding: 60px 0 80px;
-      background-color: #ffffff;
-    }
-    .contact-card, .contact-form-card {
-      background: #fff;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-soft);
-      border: 1px solid var(--border-soft);
-      padding: 24px;
-    }
-    .contact-card h3 {
-      font-size: 1.1rem;
-      color: var(--primary-dark);
-      text-transform: uppercase;
-      margin-bottom: 0.75rem;
-    }
-    .contact-list {
-      list-style: none;
-      padding-left: 0;
-      font-size: 0.93rem;
-      margin-bottom: 0;
-    }
-    .contact-list li {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      margin-bottom: 10px;
-      color: var(--text-muted);
-    }
-    .contact-list i {
-      color: var(--primary);
-      font-size: 1.1rem;
-      margin-top: 3px;
-    }
-    .contact-highlight {
-      font-size: 0.82rem;
-      color: #999;
-    }
-
-    .contact-form-title {
-      font-size: 1.25rem;
-      color: var(--primary-dark);
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-    .contact-form-subtitle {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      margin-bottom: 18px;
-    }
-
-    .form-label {
-      font-size: 0.86rem;
-      font-weight: 600;
-      color: #444;
-    }
-    .form-control, .form-select {
-      border-radius: 8px;
-      border: 1px solid #d7dce6;
-      font-size: 0.9rem;
-      padding: 9px 11px;
-    }
-    .form-control:focus, .form-select:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 0.15rem rgba(26,75,132,0.12);
-    }
-    .contact-submit-btn {
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      padding: 10px 22px;
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 0.95rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.25s ease;
-    }
-    .contact-submit-btn:hover {
-      background: var(--primary-dark);
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-    }
-    .policy-note {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-    }
-
-    /* Map */
-    .map-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 18px;
-      border: 1px solid var(--border-soft);
-      box-shadow: var(--shadow-soft);
-    }
-    .fake-map {
-      margin-top: 10px;
-      width: 100%;
-      height: 190px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #dce6f5, #c5d4ee);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--primary-dark);
-      font-weight: 600;
-      font-size: 0.85rem;
-      border: 1px solid #c3d0ea;
-    }
-
-    /* Support section (fixed) */
-    .support-section {
-      background-color: var(--bg-light);
-      padding: 60px 0 100px; /* thêm khoảng cách dưới */
-    }
-    .support-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 22px 18px;
-      border: 1px solid var(--border-soft);
-      box-shadow: 0 6px 22px rgba(0,0,0,0.04);
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
-    }
-    .support-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    }
-    .support-card h5 {
-      font-size: 0.98rem;
-      font-weight: 700;
-      color: var(--primary);
-      margin-bottom: 6px;
-    }
-    .support-card p {
-      margin-bottom: 0;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-
-    /* Footer */
-    .footer {
-      background: #111;
-      color: rgba(255,255,255,0.7);
-      text-align: center;
-      padding: 30px 0;
-      font-size: 0.9rem;
-      margin-top: 0;
-    }
-
-    @media (max-width: 767.98px) {
-      .contact-hero { text-align: center; padding-top: 100px; }
-      .contact-hero .headline { font-size: 1.9rem; }
-    }
-  </style>
 </head>
 
 <body>
@@ -299,78 +60,83 @@
 </nav>
 
 <!-- Hero -->
-<section class="contact-hero" style="padding-top: 120px;">
+<section class="contact-hero">
   <div class="container">
-    <div class="contact-label fade-in"><i class="bi bi-life-preserver"></i> Liên hệ với Pháp Luật Số</div>
-    <h1 class="headline mb-3 fade-in-delay">Kết nối cùng đội ngũ Pháp Luật Số</h1>
-    <p class="fade-in-delay-1">Chúng tôi luôn sẵn sàng lắng nghe, hỗ trợ và đồng hành cùng bạn trong hành trình hiểu và áp dụng pháp luật thông minh, minh bạch và hiệu quả hơn.</p>
-    <div class="mt-3">
-      <span class="badge-pill"><i class="bi bi-shield-lock"></i> Bảo mật tuyệt đối</span>
-      <span class="badge-pill"><i class="bi bi-clock-history"></i> Phản hồi trong giờ hành chính</span>
+    <div class="text-center">
+      <h1 class="hero-title mb-3">
+        Liên Hệ Với <span class="text-gradient">Chúng Tôi</span>
+      </h1>
+      <p class="hero-subtitle">
+        Chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn
+      </p>
     </div>
   </div>
 </section>
 
 <!-- Main Contact Section -->
 <section class="contact-section">
-  <div class="container">
+  <div class="container contact-container">
+
     <div class="row g-4">
-      <!-- Left info -->
+      <!-- Contact Info Cards -->
       <div class="col-lg-4">
-        <div class="contact-card mb-3">
-          <h3>Thông tin liên hệ</h3>
-          <ul class="contact-list">
-            <li><i class="bi bi-telephone-outbound"></i>
-              <div><strong>Hotline hỗ trợ</strong><br>1900 xxxx xx<br><span class="contact-highlight">Giờ hành chính (T2 - T6)</span></div>
-            </li>
-            <li><i class="bi bi-envelope-at"></i>
-              <div><strong>Email hỗ trợ</strong><br>support@phapluatso.vn</div>
-            </li>
-            <li><i class="bi bi-people"></i>
-              <div><strong>Hợp tác & đối tác</strong><br>partner@phapluatso.vn</div>
-            </li>
-          </ul>
+        <div class="contact-info-card">
+          <div class="contact-info-icon bg-primary">
+            <i class="bi bi-telephone"></i>
+          </div>
+          <h3 class="contact-info-title">Hotline Hỗ Trợ</h3>
+          <p class="contact-info-text">1900 xxxx xx</p>
+          <p class="contact-info-note">Giờ hành chính (T2 - T6)</p>
         </div>
 
-        <div class="contact-card mb-3">
-          <h3>Thời gian làm việc</h3>
-          <ul class="contact-list">
-            <li><i class="bi bi-clock"></i>
-              <div>Thứ 2 - Thứ 6: 08:30 - 17:30<br>Thứ 7: 08:30 - 12:00</div>
-            </li>
-          </ul>
+        <div class="contact-info-card">
+          <div class="contact-info-icon bg-success">
+            <i class="bi bi-envelope"></i>
+          </div>
+          <h3 class="contact-info-title">Email Hỗ Trợ</h3>
+          <p class="contact-info-text">support@phapluatso.vn</p>
+          <p class="contact-info-note">Phản hồi trong 24h</p>
         </div>
 
-        <div class="map-card">
-          <strong>Văn phòng làm việc (dự kiến)</strong>
-          <p class="mt-1 mb-2">Khu vực trung tâm TP. Hồ Chí Minh (sẽ cập nhật chi tiết khi đưa vào vận hành chính thức).</p>
-          <div class="fake-map">Vị trí hiển thị bản đồ văn phòng</div>
+        <div class="contact-info-card">
+          <div class="contact-info-icon bg-warning">
+            <i class="bi bi-people"></i>
+          </div>
+          <h3 class="contact-info-title">Hợp Tác & Đối Tác</h3>
+          <p class="contact-info-text">partner@phapluatso.vn</p>
+          <p class="contact-info-note">Dành cho doanh nghiệp</p>
+        </div>
+
+        <div class="contact-info-card">
+          <div class="contact-info-icon bg-danger">
+            <i class="bi bi-clock"></i>
+          </div>
+          <h3 class="contact-info-title">Thời Gian Làm Việc</h3>
+          <p class="contact-info-text">T2 - T6: 08:30 - 17:30</p>
+          <p class="contact-info-note">T7: 08:30 - 12:00</p>
         </div>
       </div>
 
-      <!-- Right form -->
+      <!-- Contact Form -->
       <div class="col-lg-8">
         <div class="contact-form-card">
-          <div class="contact-form-title">Gửi yêu cầu đến Pháp Luật Số</div>
-          <div class="contact-form-subtitle">Vui lòng điền đầy đủ thông tin. Chúng tôi sẽ phản hồi trong thời gian sớm nhất.</div>
-
-          <form>
+          <form id="contactForm">
             <div class="row g-3">
               <div class="col-md-6">
-                <label class="form-label">Họ và tên *</label>
-                <input type="text" class="form-control" placeholder="Nhập họ và tên của bạn">
+                <label class="form-label">Họ và Tên <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" placeholder="Nhập họ và tên của bạn" required>
               </div>
               <div class="col-md-6">
-                <label class="form-label">Email liên hệ *</label>
-                <input type="email" class="form-control" placeholder="name@example.com">
+                <label class="form-label">Email Liên Hệ <span class="text-danger">*</span></label>
+                <input type="email" class="form-control" placeholder="name@example.com" required>
               </div>
               <div class="col-md-6">
-                <label class="form-label">Số điện thoại</label>
-                <input type="text" class="form-control" placeholder="Số điện thoại (không bắt buộc)">
+                <label class="form-label">Số Điện Thoại</label>
+                <input type="tel" class="form-control" placeholder="Số điện thoại (không bắt buộc)">
               </div>
               <div class="col-md-6">
-                <label class="form-label">Loại yêu cầu *</label>
-                <select class="form-select">
+                <label class="form-label">Loại Yêu Cầu <span class="text-danger">*</span></label>
+                <select class="form-select" required>
                   <option selected disabled>Chọn loại yêu cầu</option>
                   <option>Hỗ trợ sử dụng nền tảng</option>
                   <option>Góp ý / phản hồi</option>
@@ -380,47 +146,77 @@
                 </select>
               </div>
               <div class="col-12">
-                <label class="form-label">Nội dung chi tiết *</label>
-                <textarea class="form-control" rows="5" placeholder="Mô tả rõ yêu cầu của bạn..."></textarea>
+                <label class="form-label">Nội Dung Chi Tiết <span class="text-danger">*</span></label>
+                <textarea class="form-control" rows="6" placeholder="Mô tả rõ yêu cầu của bạn..." required></textarea>
               </div>
-              <div class="col-12 d-flex align-items-start gap-2">
-                <input type="checkbox" class="form-check-input mt-1" id="agreePolicy">
-                <label for="agreePolicy" class="form-check-label policy-note">
-                  Tôi đồng ý rằng thông tin cung cấp sẽ được Pháp Luật Số sử dụng để liên hệ và hỗ trợ theo chính sách bảo mật.
-                </label>
+              <div class="col-12">
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input" id="agreePolicy" required>
+                  <label for="agreePolicy" class="form-check-label">
+                    Tôi đồng ý rằng thông tin cung cấp sẽ được Pháp Luật Số sử dụng để liên hệ và hỗ trợ theo chính sách bảo mật
+                  </label>
+                </div>
               </div>
-              <div class="col-12 mt-2">
-                <button type="submit" class="contact-submit-btn"><i class="bi bi-send-fill"></i> Gửi yêu cầu</button>
+              <div class="col-12">
+                <button type="submit" class="btn btn-primary btn-lg w-100">
+                  <i class="bi bi-send me-2"></i>
+                  Gửi Yêu Cầu
+                </button>
               </div>
             </div>
           </form>
-
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Support section (fixed) -->
-<section class="support-section">
+<!-- Support Features Section -->
+<section class="features-section">
   <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="section-title">Tại Sao Chọn <span class="text-gradient">Pháp Luật Số</span></h2>
+      <p class="section-subtitle">Chúng tôi cam kết mang đến dịch vụ tốt nhất cho bạn</p>
+    </div>
+
     <div class="row g-4">
-      <div class="col-md-4">
-        <div class="support-card">
-          <h5><i class="bi bi-shield-lock me-1"></i> Cam kết bảo mật</h5>
-          <p>Mọi thông tin bạn gửi qua form hoặc email đều được bảo mật và chỉ sử dụng để hỗ trợ liên quan đến Pháp Luật Số.</p>
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card text-center">
+          <div class="feature-icon bg-primary mx-auto">
+            <i class="bi bi-shield-lock"></i>
+          </div>
+          <h3 class="feature-title">Bảo Mật Tuyệt Đối</h3>
+          <p class="feature-description">Mọi thông tin bạn gửi đều được bảo mật và chỉ sử dụng để hỗ trợ liên quan đến Pháp Luật Số</p>
         </div>
       </div>
-      <div class="col-md-4">
-        <div class="support-card">
-          <h5><i class="bi bi-cpu me-1"></i> Hỗ trợ nền tảng</h5>
-          <p>Đội ngũ kỹ thuật sẵn sàng hỗ trợ các vấn đề về truy cập, tài khoản, tốc độ, lỗi hiển thị, tích hợp API (nếu có).</p>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card text-center">
+          <div class="feature-icon bg-success mx-auto">
+            <i class="bi bi-lightning-charge"></i>
+          </div>
+          <h3 class="feature-title">Phản Hồi Nhanh</h3>
+          <p class="feature-description">Đội ngũ hỗ trợ sẵn sàng phản hồi trong vòng 24h làm việc, giải quyết mọi thắc mắc của bạn</p>
         </div>
       </div>
-      <div class="col-md-4">
-        <div class="support-card">
-          <h5><i class="bi bi-people-fill me-1"></i> Hợp tác & đồng hành</h5>
-          <p>Chúng tôi chào đón các đối tác đào tạo, văn phòng luật và doanh nghiệp pháp lý cùng xây dựng hệ sinh thái pháp luật số.</p>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card text-center">
+          <div class="feature-icon bg-warning mx-auto">
+            <i class="bi bi-cpu"></i>
+          </div>
+          <h3 class="feature-title">Hỗ Trợ Kỹ Thuật</h3>
+          <p class="feature-description">Đội ngũ kỹ thuật hỗ trợ các vấn đề về truy cập, tài khoản, tốc độ và lỗi hiển thị</p>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card text-center">
+          <div class="feature-icon bg-danger mx-auto">
+            <i class="bi bi-people"></i>
+          </div>
+          <h3 class="feature-title">Hợp Tác Đối Tác</h3>
+          <p class="feature-description">Chào đón các đối tác đào tạo, văn phòng luật cùng xây dựng hệ sinh thái pháp luật số</p>
         </div>
       </div>
     </div>

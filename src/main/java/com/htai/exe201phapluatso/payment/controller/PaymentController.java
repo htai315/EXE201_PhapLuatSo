@@ -61,13 +61,19 @@ public class PaymentController {
      */
     @GetMapping("/vnpay-ipn")
     public ResponseEntity<Map<String, String>> vnpayIPN(@RequestParam Map<String, String> params) {
-        log.info("VNPay IPN received: {}", params);
+        log.info("========== VNPay IPN CALLBACK START ==========");
+        log.info("Received params: {}", params);
+        log.info("Param count: {}", params.size());
         
         Map<String, String> response = new HashMap<>();
         
         // Verify signature
-        if (!vnPayService.verifySignature(params)) {
-            log.error("Invalid VNPay signature");
+        log.info("Verifying signature...");
+        boolean signatureValid = vnPayService.verifySignature(params);
+        log.info("Signature valid: {}", signatureValid);
+        
+        if (!signatureValid) {
+            log.error("❌ Invalid VNPay signature");
             response.put("RspCode", "97");
             response.put("Message", "Invalid signature");
             return ResponseEntity.ok(response);
@@ -80,17 +86,23 @@ public class PaymentController {
         String cardType = params.get("vnp_CardType");
         String vnpAmount = params.get("vnp_Amount");
         
+        log.info("Transaction details: txnRef={}, responseCode={}, transactionNo={}, amount={}", 
+                txnRef, responseCode, transactionNo, vnpAmount);
+        
         try {
+            log.info("Processing payment callback...");
             paymentService.processPaymentCallback(txnRef, responseCode, transactionNo, bankCode, cardType, vnpAmount);
             
+            log.info("✅ Payment processed successfully");
             response.put("RspCode", "00");
             response.put("Message", "Success");
         } catch (Exception e) {
-            log.error("Error processing payment callback", e);
+            log.error("❌ Error processing payment callback", e);
             response.put("RspCode", "99");
             response.put("Message", "Error: " + e.getMessage());
         }
         
+        log.info("========== VNPay IPN CALLBACK END ==========");
         return ResponseEntity.ok(response);
     }
 

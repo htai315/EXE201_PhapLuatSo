@@ -147,7 +147,8 @@
     if (googleBtn) {
       googleBtn.addEventListener("click", (e) => {
         e.preventDefault();
-        alert("Tính năng đăng nhập bằng Google đang được phát triển");
+        // Redirect to Google OAuth2 authorization endpoint
+        window.location.href = "/oauth2/authorization/google";
       });
     }
 

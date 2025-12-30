@@ -11,185 +11,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
-    
-    <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem 1rem;
-        }
-        
-        .result-container {
-            max-width: 600px;
-            width: 100%;
-        }
-        
-        .result-card {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            padding: 3rem;
-            text-align: center;
-            animation: slideUp 0.5s ease-out;
-        }
-        
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .result-icon {
-            font-size: 5rem;
-            margin-bottom: 1.5rem;
-            animation: scaleIn 0.6s ease-out 0.2s both;
-        }
-        
-        @keyframes scaleIn {
-            from {
-                transform: scale(0);
-            }
-            to {
-                transform: scale(1);
-            }
-        }
-        
-        .result-icon.success {
-            color: #10b981;
-        }
-        
-        .result-icon.failed {
-            color: #ef4444;
-        }
-        
-        .result-title {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-        
-        .result-title.success {
-            color: #10b981;
-        }
-        
-        .result-title.failed {
-            color: #ef4444;
-        }
-        
-        .result-message {
-            color: #64748b;
-            font-size: 1.1rem;
-            margin-bottom: 2rem;
-            line-height: 1.6;
-        }
-        
-        .result-details {
-            background: #f8fafc;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            text-align: left;
-        }
-        
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .detail-row:last-child {
-            border-bottom: none;
-        }
-        
-        .detail-label {
-            color: #64748b;
-            font-weight: 500;
-        }
-        
-        .detail-value {
-            color: #0f172a;
-            font-weight: 600;
-        }
-        
-        .credits-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin: 1rem 0;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-        }
-        
-        .btn-home {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 1rem 2.5rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            border-radius: 50px;
-            transition: all 0.3s;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-        
-        .btn-home:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-            color: white;
-        }
-        
-        .btn-retry {
-            background: #f59e0b;
-            color: white;
-            border: none;
-            padding: 1rem 2.5rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            border-radius: 50px;
-            transition: all 0.3s;
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
-        }
-        
-        .btn-retry:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
-            color: white;
-        }
-        
-        .loading-spinner {
-            display: inline-block;
-            width: 3rem;
-            height: 3rem;
-            border: 4px solid #f3f4f6;
-            border-top-color: #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .redirect-timer {
-            color: #64748b;
-            font-size: 0.95rem;
-            margin-top: 1.5rem;
-        }
-    </style>
+    <link rel="stylesheet" href="/css/payment-result.css">
+
 </head>
 <body>
 
@@ -296,7 +119,7 @@ function formatDate(dateStr) {
 // Fetch updated credit balance
 async function fetchCreditBalance() {
     try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('accessToken');
         if (!token) return null;
         
         const response = await fetch('/api/credits/balance', {
@@ -426,20 +249,86 @@ function retryPayment() {
     window.location.href = '/html/plans.html';
 }
 
+// Process payment callback
+async function processPaymentCallback() {
+    try {
+        // Get all URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        const params = {};
+        for (const [key, value] of urlParams.entries()) {
+            params[key] = value;
+        }
+        
+        console.log('=== PAYMENT CALLBACK START ===');
+        console.log('URL Params:', params);
+        console.log('Full URL:', window.location.href);
+        
+        // Build the API URL
+        const apiUrl = '/api/payment/vnpay-ipn?' + urlParams.toString();
+        console.log('Calling API:', apiUrl);
+        
+        // Call backend IPN endpoint to process payment and add credits
+        const response = await fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+        
+        const result = await response.json();
+        console.log('Backend processing result:', result);
+        
+        if (result.RspCode === '00') {
+            console.log('✅ Payment processed successfully on backend');
+            console.log('Credits should be added now');
+        } else {
+            console.error('❌ Backend processing failed:', result.Message);
+        }
+        
+        console.log('=== PAYMENT CALLBACK END ===');
+        
+        return result;
+    } catch (error) {
+        console.error('❌ Error calling backend:', error);
+        console.error('Error details:', error.message);
+        return null;
+    }
+}
+
 // Main execution
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+    console.log('=== PAGE LOADED ===');
+    console.log('Window location:', window.location.href);
+    
     const params = getUrlParams();
     
     console.log('Payment result params:', params);
+    console.log('Response code:', params.vnp_ResponseCode);
     
     // Check response code
     if (params.vnp_ResponseCode === '00') {
-        // Success
-        showSuccess(params);
+        console.log('✅ Payment successful - calling backend...');
+        
+        // Call backend to process payment and add credits
+        const result = await processPaymentCallback();
+        console.log('Callback result:', result);
+        
+        // Show success
+        await showSuccess(params);
     } else {
-        // Failed
+        console.log('❌ Payment failed - calling backend...');
+        
+        // Failed - still call backend to update payment status
+        await processPaymentCallback();
+        
+        // Show failed
         showFailed(params);
     }
+    
+    console.log('=== PAGE PROCESSING COMPLETE ===');
 });
 </script>
 

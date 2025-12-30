@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng Giá - AI Luật</title>
+    <title>Bảng Giá - Pháp Luật Số</title>
 
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="icon" type="image/png" href="/img/Law.png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/animations.css">
     <link rel="stylesheet" href="/css/plans.css">
 </head>
@@ -25,20 +25,17 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav mx-auto align-items-lg-center">
+            <ul class="navbar-nav ms-auto align-items-lg-center">
                 <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/legal-chat.html">Chat AI</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/my-quizzes.html">Bộ đề</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/legal-upload.html">Văn bản PL</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/plans.html"><i class="bi bi-credit-card me-1"></i>Thanh toán</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
-            </ul>
-            <ul class="navbar-nav ms-auto align-items-lg-center">
-                <li class="nav-item guest-only"><a class="btn btn-outline-primary btn-sm px-3 me-2" href="/html/login.html"><i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập</a></li>
-                <li class="nav-item guest-only"><a class="btn btn-primary btn-sm px-3" href="/html/register.html"><i class="bi bi-person-plus me-1"></i>Đăng Ký</a></li>
-                <li class="nav-item dropdown auth-only d-none">
+                <li class="nav-item ms-lg-3 guest-only"><a class="btn btn-outline-primary btn-sm px-3" href="/html/login.html"><i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập</a></li>
+                <li class="nav-item ms-lg-2 guest-only"><a class="btn btn-primary btn-sm px-3" href="/html/register.html"><i class="bi bi-person-plus me-1"></i>Đăng Ký</a></li>
+                <li class="nav-item dropdown ms-lg-3 auth-only d-none">
                     <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                         <img id="navUserAvatar" src="" alt="Avatar" class="rounded-circle" 
                              style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #1a4b84;">
@@ -54,262 +51,91 @@
     </div>
 </nav>
 
-<!-- Header -->
-<div class="plans-header">
+<!-- Hero Section -->
+<section class="plans-hero">
     <div class="container">
-        <h1><i class="bi bi-star-fill me-2"></i>Bảng Giá</h1>
-        <p>Chọn gói phù hợp với nhu cầu của bạn</p>
-    </div>
-</div>
-
-<div class="plans-container">
-    <!-- Pricing Cards -->
-    <div class="row g-4 mb-4">
-        <!-- FREE Plan -->
-        <div class="col-lg-4">
-            <div class="pricing-card">
-                <div class="plan-icon">🎁</div>
-                <h3 class="plan-name">FREE</h3>
-                <p class="plan-description">Dùng thử miễn phí để trải nghiệm dịch vụ</p>
-                
-                <div class="plan-price">
-                    0<small> VNĐ</small>
-                </div>
-                <div class="plan-duration">Vĩnh viễn</div>
-                
-                <ul class="plan-features">
-                    <li>
-                        <i class="bi bi-check-circle-fill"></i>
-                        <span><strong>10 lượt</strong> Chat AI pháp luật</span>
-                    </li>
-                    <li class="text-muted">
-                        <i class="bi bi-x-circle-fill"></i>
-                        <span>AI tạo đề thi</span>
-                    </li>
-                    <li>
-                        <i class="bi bi-check-circle-fill"></i>
-                        <span>Truy cập văn bản pháp luật</span>
-                    </li>
-                    <li>
-                        <i class="bi bi-check-circle-fill"></i>
-                        <span>Làm bài tập trắc nghiệm</span>
-                    </li>
-                    <li class="text-muted">
-                        <i class="bi bi-x-circle-fill"></i>
-                        <span>Hỗ trợ ưu tiên</span>
-                    </li>
-                </ul>
-                
-                <button class="btn btn-plan btn-plan-free" onclick="selectPlan('FREE')">
-                    <i class="bi bi-gift me-2"></i>Đã kích hoạt
-                </button>
-            </div>
-        </div>
-
-        <!-- REGULAR Plan -->
-        <div class="col-lg-4">
-            <div class="pricing-card featured">
-                <div class="featured-badge">Phổ biến</div>
-                <div class="plan-icon">💼</div>
-                <h3 class="plan-name">REGULAR</h3>
-                <p class="plan-description">Dành cho người dùng cá nhân thường xuyên</p>
-                
-                <div class="plan-price">
-                    159,000<small> VNĐ</small>
-                </div>
-                <div class="plan-duration">12 tháng</div>
-                
-                <ul class="plan-features">
-                    <li>
-                        <i class="bi bi-check-circle-fill"></i>
-                        <span><strong>100 lượt</strong> Chat AI pháp luật</span>
-                    </li>
-                    <li class="text-muted">
-                        <i class="bi bi-x-circle-fill"></i>
-                        <span>AI tạo đề thi</span>
-                    </li>
-                    <li>
-                        <i class="bi bi-check-circle-fill"></i>
-                        <span>Truy cập văn bản pháp luật</span>
-                    </li>
-                    <li>
-                        <i class="bi bi-check-circle-fill"></i>
-                        <span>Làm bài tập trắc nghiệm</span>
-                    </li>
-                    <li>
-                        <i class="bi bi-check-circle-fill"></i>
-                        <span>Hỗ trợ email</span>
-                    </li>
-                </ul>
-                
-                <button class="btn btn-plan btn-plan-regular" onclick="selectPlan('REGULAR')">
-                    <i class="bi bi-cart-plus me-2"></i>Chọn gói này
-                </button>
-            </div>
-        </div>
-
-        <!-- STUDENT Plan -->
-        <div class="col-lg-4">
-            <div class="pricing-card">
-                <div class="plan-icon">🎓</div>
-                <h3 class="plan-name">STUDENT</h3>
-                <p class="plan-description">Dành cho sinh viên luật và người học</p>
-                
-                <div class="plan-price">
-                    249,000<small> VNĐ</small>
-                </div>
-                <div class="plan-duration">12 tháng</div>
-                
-                <ul class="plan-features">
-                    <li>
-                        <i class="bi bi-check-circle-fill"></i>
-                        <span><strong>100 lượt</strong> Chat AI pháp luật</span>
-                    </li>
-                    <li>
-                        <i class="bi bi-check-circle-fill"></i>
-                        <span><strong>20 lượt</strong> AI tạo đề thi</span>
-                    </li>
-                    <li>
-                        <i class="bi bi-check-circle-fill"></i>
-                        <span>Truy cập văn bản pháp luật</span>
-                    </li>
-                    <li>
-                        <i class="bi bi-check-circle-fill"></i>
-                        <span>Làm bài tập trắc nghiệm</span>
-                    </li>
-                    <li>
-                        <i class="bi bi-check-circle-fill"></i>
-                        <span>Hỗ trợ ưu tiên</span>
-                    </li>
-                </ul>
-                
-                <button class="btn btn-plan btn-plan-student" onclick="selectPlan('STUDENT')">
-                    <i class="bi bi-cart-plus me-2"></i>Chọn gói này
-                </button>
-            </div>
+        <div class="text-center">
+            <h1 class="hero-title">Chọn Gói Phù Hợp <span class="text-gradient">Với Bạn</span></h1>
+            <p class="hero-subtitle">Linh hoạt, minh bạch và phù hợp với mọi nhu cầu</p>
         </div>
     </div>
+</section>
 
-    <!-- Comparison Table -->
-    <div class="comparison-section">
-        <h3><i class="bi bi-table me-2"></i>So sánh chi tiết</h3>
-        
-        <div class="table-responsive">
-            <table class="comparison-table table">
-                <thead>
-                    <tr>
-                        <th>Tính năng</th>
-                        <th class="text-center">FREE</th>
-                        <th class="text-center">REGULAR</th>
-                        <th class="text-center">STUDENT</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>Chat AI pháp luật</strong></td>
-                        <td class="text-center">10 lượt</td>
-                        <td class="text-center">100 lượt</td>
-                        <td class="text-center">100 lượt</td>
-                    </tr>
-                    <tr>
-                        <td><strong>AI tạo đề thi</strong></td>
-                        <td class="text-center"><i class="bi bi-x-circle-fill cross-icon"></i></td>
-                        <td class="text-center"><i class="bi bi-x-circle-fill cross-icon"></i></td>
-                        <td class="text-center">20 lượt</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Truy cập văn bản pháp luật</strong></td>
-                        <td class="text-center"><i class="bi bi-check-circle-fill check-icon"></i></td>
-                        <td class="text-center"><i class="bi bi-check-circle-fill check-icon"></i></td>
-                        <td class="text-center"><i class="bi bi-check-circle-fill check-icon"></i></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Làm bài tập trắc nghiệm</strong></td>
-                        <td class="text-center"><i class="bi bi-check-circle-fill check-icon"></i></td>
-                        <td class="text-center"><i class="bi bi-check-circle-fill check-icon"></i></td>
-                        <td class="text-center"><i class="bi bi-check-circle-fill check-icon"></i></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Thời hạn sử dụng</strong></td>
-                        <td class="text-center">Vĩnh viễn</td>
-                        <td class="text-center">12 tháng</td>
-                        <td class="text-center">12 tháng</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Hỗ trợ khách hàng</strong></td>
-                        <td class="text-center">Cơ bản</td>
-                        <td class="text-center">Email</td>
-                        <td class="text-center">Ưu tiên</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+<!-- Pricing Section -->
+<section class="pricing-section">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Free Plan -->
+            <div class="col-lg-4 col-md-6">
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3 class="pricing-name">Miễn Phí</h3>
+                        <div class="pricing-price">
+                            <span class="price-currency">₫</span>
+                            <span class="price-amount">0</span>
+                        </div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>10 câu hỏi</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Truy cập cơ bản</li>
+                        <li class="text-muted"><i class="bi bi-x-circle me-2"></i>Quiz AI</li>
+                        <li class="text-muted"><i class="bi bi-x-circle me-2"></i>Tư vấn chuyên sâu</li>
+                    </ul>
+                    <button class="btn btn-outline-primary w-100" onclick="selectPlan('FREE')">
+                        <i class="bi bi-gift me-2"></i>Đã kích hoạt
+                    </button>
+                </div>
+            </div>
 
-    <!-- FAQ Section -->
-    <div class="comparison-section mt-4">
-        <h3><i class="bi bi-question-circle me-2"></i>Câu hỏi thường gặp</h3>
-        
-        <div class="accordion" id="faqAccordion">
-            <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                        Làm sao để thanh toán?
-                    </button>
-                </h2>
-                <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
-                    <div class="accordion-body">
-                        Hiện tại chúng tôi đang phát triển tính năng thanh toán tự động. Vui lòng liên hệ qua email hoặc hotline để được hỗ trợ mua gói.
+            <!-- Regular Plan -->
+            <div class="col-lg-4 col-md-6">
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3 class="pricing-name">Gói người dân</h3>
+                        <div class="pricing-price">
+                            <span class="price-currency">₫</span>
+                            <span class="price-amount">159,000</span>
+                        </div>
                     </div>
+                    <ul class="pricing-features">
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>100 câu hỏi</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Truy cập đầy đủ</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Hỗ trợ ưu tiên</li>
+                        <li class="text-muted"><i class="bi bi-x-circle me-2"></i>Tư vấn chuyên sâu</li>
+                    </ul>
+                    <button class="btn btn-primary w-100" onclick="selectPlan('REGULAR')">
+                        <i class="bi bi-cart-plus me-2"></i>Chọn Gói Này
+                    </button>
                 </div>
             </div>
-            
-            <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                        Credits có thể chuyển nhượng không?
-                    </button>
-                </h2>
-                <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                    <div class="accordion-body">
-                        Không, credits chỉ sử dụng cho tài khoản đã mua và không thể chuyển nhượng cho người khác.
+
+            <!-- Student Plan -->
+            <div class="col-lg-4 col-md-6">
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3 class="pricing-name">Gói tra cứu và học tập</h3>
+                        <div class="pricing-price">
+                            <span class="price-currency">₫</span>
+                            <span class="price-amount">249,000</span>
+                        </div>
                     </div>
-                </div>
-            </div>
-            
-            <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                        Nếu hết credits trước hạn thì sao?
+                    <ul class="pricing-features">
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>100 câu hỏi</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Truy cập cao cấp</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Tư vấn chuyên sâu</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Quiz AI - 20 đề (50 câu/đề)</li>
+                    </ul>
+                    <button class="btn btn-primary w-100" onclick="selectPlan('STUDENT')">
+                        <i class="bi bi-cart-plus me-2"></i>Chọn Gói Này
                     </button>
-                </h2>
-                <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                    <div class="accordion-body">
-                        Bạn có thể mua thêm gói mới bất cứ lúc nào. Credits mới sẽ được cộng thêm vào tài khoản và thời hạn sẽ được gia hạn thêm 12 tháng.
-                    </div>
-                </div>
-            </div>
-            
-            <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
-                        Có chính sách hoàn tiền không?
-                    </button>
-                </h2>
-                <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                    <div class="accordion-body">
-                        Chúng tôi có chính sách hoàn tiền trong vòng 7 ngày nếu bạn chưa sử dụng quá 10% credits đã mua.
-                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/scripts/script.js"></script>
-<script src="/scripts/api-client.js"></script>
-
 <script>
 async function selectPlan(planName) {
     if (planName === 'FREE') {
@@ -319,11 +145,11 @@ async function selectPlan(planName) {
     
     // Check if user is logged in
     const token = localStorage.getItem('accessToken');
-    console.log('Token check:', token ? 'Token exists' : 'No token found');
     
     if (!token) {
-        alert('Vui lòng đăng nhập để mua gói!');
-        window.location.href = '/html/login.html';
+        if (confirm('Vui lòng đăng nhập để mua gói! Bạn có muốn đăng nhập ngay không?')) {
+            window.location.href = '/html/login.html';
+        }
         return;
     }
     
@@ -334,8 +160,6 @@ async function selectPlan(planName) {
     button.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Đang xử lý...';
     
     try {
-        console.log('Calling payment API with plan:', planName);
-        
         // Call payment API
         const response = await fetch('/api/payment/create', {
             method: 'POST',
@@ -347,8 +171,6 @@ async function selectPlan(planName) {
                 planCode: planName
             })
         });
-        
-        console.log('Payment API response status:', response.status);
         
         if (!response.ok) {
             // If 401, token expired - redirect to login
@@ -365,7 +187,6 @@ async function selectPlan(planName) {
         }
         
         const data = await response.json();
-        console.log('Payment URL received:', data.paymentUrl);
         
         // Redirect to VNPay
         window.location.href = data.paymentUrl;

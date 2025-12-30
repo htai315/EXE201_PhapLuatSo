@@ -82,19 +82,29 @@ public class PaymentService {
     public void processPaymentCallback(String txnRef, String responseCode, 
                                       String transactionNo, String bankCode, String cardType,
                                       String vnpAmount) {
+        log.info("=== Processing Payment Callback ===");
+        log.info("TxnRef: {}", txnRef);
+        log.info("ResponseCode: {}", responseCode);
+        log.info("TransactionNo: {}", transactionNo);
+        log.info("Amount: {}", vnpAmount);
+        
         Payment payment = paymentRepo.findByVnpTxnRef(txnRef)
-                .orElseThrow(() -> new NotFoundException("Payment not found"));
+                .orElseThrow(() -> new NotFoundException("Payment not found: " + txnRef));
+        
+        log.info("Found payment: id={}, status={}, amount={}", payment.getId(), payment.getStatus(), payment.getAmount());
         
         // Check if already processed (prevent double callback)
         if ("SUCCESS".equals(payment.getStatus())) {
-            log.warn("Payment already processed: {}", txnRef);
+            log.warn("⚠️ Payment already processed: {}", txnRef);
             return;
         }
         
         // Validate amount (security check)
         BigDecimal receivedAmount = new BigDecimal(vnpAmount).divide(new BigDecimal(100));
+        log.info("Amount validation: expected={}, received={}", payment.getAmount(), receivedAmount);
+        
         if (payment.getAmount().compareTo(receivedAmount) != 0) {
-            log.error("Amount mismatch: expected={}, received={}", payment.getAmount(), receivedAmount);
+            log.error("❌ Amount mismatch: expected={}, received={}", payment.getAmount(), receivedAmount);
             payment.setStatus("FAILED");
             paymentRepo.save(payment);
             throw new IllegalStateException("Amount mismatch");
@@ -102,6 +112,8 @@ public class PaymentService {
         
         if ("00".equals(responseCode)) {
             // Payment success
+            log.info("✅ Payment SUCCESS - updating status and adding credits");
+            
             payment.setStatus("SUCCESS");
             payment.setPaidAt(LocalDateTime.now());
             payment.setVnpTransactionNo(transactionNo);
@@ -109,13 +121,18 @@ public class PaymentService {
             payment.setVnpCardType(cardType);
             paymentRepo.save(payment);
             
-            log.info("Payment SUCCESS: txnRef={}, transactionNo={}", txnRef, transactionNo);
+            log.info("Payment record updated: txnRef={}, transactionNo={}", txnRef, transactionNo);
             
             // Add credits to user
             Plan plan = payment.getPlan();
+            log.info("Plan details: code={}, chatCredits={}, quizCredits={}, duration={}", 
+                    plan.getCode(), plan.getChatCredits(), plan.getQuizGenCredits(), plan.getDurationMonths());
+            
             LocalDateTime expiresAt = plan.getDurationMonths() > 0 
                     ? LocalDateTime.now().plusMonths(plan.getDurationMonths())
                     : null;
+            
+            log.info("Adding credits to user: userId={}, expiresAt={}", payment.getUser().getId(), expiresAt);
             
             creditService.addCredits(
                     payment.getUser().getId(),
@@ -125,14 +142,15 @@ public class PaymentService {
                     expiresAt
             );
             
-            log.info("Credits added: user={}, chat={}, quiz={}", 
+            log.info("✅ Credits added successfully: user={}, chat={}, quiz={}", 
                     payment.getUser().getId(), plan.getChatCredits(), plan.getQuizGenCredits());
         } else {
             // Payment failed
+            log.warn("❌ Payment FAILED: txnRef={}, responseCode={}", txnRef, responseCode);
             payment.setStatus("FAILED");
             paymentRepo.save(payment);
-            
-            log.warn("Payment FAILED: txnRef={}, responseCode={}", txnRef, responseCode);
         }
+        
+        log.info("=== Payment Callback Processing Complete ===");
     }
 }
