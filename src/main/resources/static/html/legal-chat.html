@@ -226,7 +226,16 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!response.ok) {
-                throw new Error('Có lỗi xảy ra');
+                // Parse error response properly
+                let errorMessage = 'Có lỗi xảy ra';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorData.message || errorMessage;
+                } catch (parseError) {
+                    // If JSON parse fails, use status text
+                    errorMessage = response.statusText || errorMessage;
+                }
+                throw new Error(errorMessage);
             }
 
             const data = await response.json();
@@ -250,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             removeTypingIndicator(typingId);
-            addMessage('bot', 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau.');
+            addMessage('bot', error.message || 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau.');
             console.error('Error:', error);
         } finally {
             questionInput.disabled = false;

@@ -54,6 +54,31 @@ const API_CLIENT = {
     },
 
     /**
+     * Parse error response from API
+     * @param {Response} response - Fetch response
+     * @returns {Promise<Object>} - Error object with message
+     */
+    async parseErrorResponse(response) {
+        let errorMessage = 'Đã xảy ra lỗi';
+        try {
+            const data = await response.json();
+            errorMessage = data.error || data.message || errorMessage;
+            // Return error object with extracted message
+            return {
+                error: errorMessage,
+                code: data.code,
+                status: response.status
+            };
+        } catch (e) {
+            // If response is not JSON, use status text
+            return {
+                error: response.statusText || errorMessage,
+                status: response.status
+            };
+        }
+    },
+
+    /**
      * Refresh access token
      * @returns {Promise<boolean>} - true nếu refresh thành công
      */
@@ -112,47 +137,75 @@ const API_CLIENT = {
     },
 
     /**
-     * Helper: GET request
+     * Helper: GET request with error handling
      */
     async get(url) {
-        return this.fetchWithAuth(url, {
+        const response = await this.fetchWithAuth(url, {
             method: 'GET'
         });
+        
+        if (!response.ok) {
+            const error = await this.parseErrorResponse(response);
+            throw error;
+        }
+        
+        return response;
     },
 
     /**
-     * Helper: POST request
+     * Helper: POST request with error handling
      */
     async post(url, data) {
-        return this.fetchWithAuth(url, {
+        const response = await this.fetchWithAuth(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
         });
+        
+        if (!response.ok) {
+            const error = await this.parseErrorResponse(response);
+            throw error;
+        }
+        
+        return response;
     },
 
     /**
-     * Helper: PUT request
+     * Helper: PUT request with error handling
      */
     async put(url, data) {
-        return this.fetchWithAuth(url, {
+        const response = await this.fetchWithAuth(url, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
         });
+        
+        if (!response.ok) {
+            const error = await this.parseErrorResponse(response);
+            throw error;
+        }
+        
+        return response;
     },
 
     /**
-     * Helper: DELETE request
+     * Helper: DELETE request with error handling
      */
     async delete(url) {
-        return this.fetchWithAuth(url, {
+        const response = await this.fetchWithAuth(url, {
             method: 'DELETE'
         });
+        
+        if (!response.ok) {
+            const error = await this.parseErrorResponse(response);
+            throw error;
+        }
+        
+        return response;
     }
 };
 

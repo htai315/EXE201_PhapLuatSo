@@ -5,6 +5,7 @@ import com.htai.exe201phapluatso.auth.repo.UserRepo;
 import com.htai.exe201phapluatso.common.exception.BadRequestException;
 import com.htai.exe201phapluatso.common.exception.ForbiddenException;
 import com.htai.exe201phapluatso.common.exception.NotFoundException;
+import com.htai.exe201phapluatso.credit.service.CreditService;
 import com.htai.exe201phapluatso.quiz.dto.CreateQuestionRequest;
 import com.htai.exe201phapluatso.quiz.dto.CreateQuizSetRequest;
 import com.htai.exe201phapluatso.quiz.entity.QuizQuestion;
@@ -40,6 +41,7 @@ public class QuizService {
     private final QuizAttemptRepo attemptRepo;
     private final UserRepo userRepo;
     private final EntityManager entityManager;
+    private final CreditService creditService;
 
     public QuizService(
             QuizSetRepo quizSetRepo,
@@ -48,7 +50,8 @@ public class QuizService {
             QuizAttemptAnswerRepo attemptAnswerRepo,
             QuizAttemptRepo attemptRepo,
             UserRepo userRepo,
-            EntityManager entityManager
+            EntityManager entityManager,
+            CreditService creditService
     ) {
         this.quizSetRepo = quizSetRepo;
         this.questionRepo = questionRepo;
@@ -57,10 +60,15 @@ public class QuizService {
         this.attemptRepo = attemptRepo;
         this.userRepo = userRepo;
         this.entityManager = entityManager;
+        this.creditService = creditService;
     }
+    
     @Transactional
     public QuizSet createQuizSet(Long userId, CreateQuizSetRequest req) {
         User user = requireActiveStudent(userId);
+
+        // Manual quiz creation is FREE - no credit deduction
+        // Only AI quiz generation costs credits
 
         QuizSet set = new QuizSet();
         set.setCreatedBy(user);
@@ -274,13 +282,8 @@ public class QuizService {
 
     // -------- HELPERS --------
     private User requireActiveStudent(Long userId) {
-        User user = userRepo.findById(userId)
+        return userRepo.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-
-        // TODO: Implement credits checking
-        // For now, allow all users to create quiz sets
-        
-        return user;
     }
 
     private void validateOptions(List<CreateQuestionRequest.OptionDto> options) {

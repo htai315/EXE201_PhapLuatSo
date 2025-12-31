@@ -7,6 +7,7 @@ import com.htai.exe201phapluatso.auth.repo.CreditTransactionRepo;
 import com.htai.exe201phapluatso.auth.repo.UserCreditRepo;
 import com.htai.exe201phapluatso.auth.repo.UserRepo;
 import com.htai.exe201phapluatso.common.exception.ForbiddenException;
+import com.htai.exe201phapluatso.common.exception.InsufficientCreditsException;
 import com.htai.exe201phapluatso.common.exception.NotFoundException;
 import com.htai.exe201phapluatso.credit.dto.CreditBalanceResponse;
 import org.slf4j.Logger;
@@ -149,7 +150,7 @@ public class CreditService {
     }
 
     /**
-     * Check and deduct 1 quiz generation credit
+     * Check and deduct 1 quiz generation credit (AI quiz generation only)
      * Thread-safe with pessimistic locking
      * 
      * @param userId User ID
@@ -183,7 +184,7 @@ public class CreditService {
 
         // Log transaction
         logTransaction(userId, "USAGE", "QUIZ_GEN", -1, credits.getQuizGenCredits(), 
-                "Used 1 quiz generation credit");
+                "Used 1 AI quiz generation credit");
 
         log.info("Deducted 1 quiz gen credit from user {}. Balance: {} -> {}", 
                 userId, oldBalance, credits.getQuizGenCredits());

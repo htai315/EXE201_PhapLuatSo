@@ -956,8 +956,16 @@ async function selectPlan(planName) {
                 return;
             }
             
-            const error = await response.json();
-            throw new Error(error.message || 'Không thể tạo thanh toán');
+            // Parse error response properly
+            let errorMessage = 'Không thể tạo thanh toán';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorData.message || errorMessage;
+            } catch (parseError) {
+                // If JSON parse fails, use status text
+                errorMessage = response.statusText || errorMessage;
+            }
+            throw new Error(errorMessage);
         }
         
         const data = await response.json();
@@ -967,7 +975,7 @@ async function selectPlan(planName) {
         
     } catch (error) {
         console.error('Payment error:', error);
-        Toast.error('Lỗi: ' + error.message);
+        Toast.error(error.message || 'Không thể tạo thanh toán');
         button.disabled = false;
         button.innerHTML = originalText;
     }

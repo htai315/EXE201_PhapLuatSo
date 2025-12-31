@@ -29,7 +29,7 @@ const ERROR_HANDLER = {
 
     /**
      * Handle error và hiển thị thông báo
-     * @param {Error} error - Error object
+     * @param {Error|Object} error - Error object or error response
      * @param {string} userMessage - Message hiển thị cho user
      */
     handleError(error, userMessage = 'Đã xảy ra lỗi') {
@@ -40,8 +40,20 @@ const ERROR_HANDLER = {
             timestamp: new Date().toISOString()
         });
 
+        // Extract error message from various formats
+        let displayMessage = userMessage;
+        
+        // If error is an object with 'error' property (from API response)
+        if (error && typeof error === 'object' && error.error) {
+            displayMessage = error.error;
+        }
+        // If error has a message property
+        else if (error?.message) {
+            displayMessage = error.message;
+        }
+
         // Hiển thị thông báo cho user
-        this.showErrorAlert(userMessage);
+        this.showErrorAlert(displayMessage);
 
         // Optional: Send error to logging service (Sentry, LogRocket, etc.)
         // this.sendToLoggingService(error);

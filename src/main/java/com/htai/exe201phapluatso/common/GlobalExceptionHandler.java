@@ -2,9 +2,12 @@ package com.htai.exe201phapluatso.common;
 
 import com.htai.exe201phapluatso.common.exception.BadRequestException;
 import com.htai.exe201phapluatso.common.exception.ForbiddenException;
+import com.htai.exe201phapluatso.common.exception.InsufficientCreditsException;
 import com.htai.exe201phapluatso.common.exception.NotFoundException;
 import com.htai.exe201phapluatso.common.exception.UnauthorizedException;
 import jakarta.validation.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -16,6 +19,8 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<?> handleNotFound(NotFoundException ex) {
@@ -39,6 +44,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> handleUnauthorized(UnauthorizedException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("error", ex.getMessage()));
+    }
+
+    @ExceptionHandler(InsufficientCreditsException.class)
+    public ResponseEntity<?> handleInsufficientCredits(InsufficientCreditsException ex) {
+        log.warn("Insufficient credits: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED)
+                .body(Map.of(
+                    "error", ex.getMessage(),
+                    "code", "INSUFFICIENT_CREDITS"
+                ));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -69,7 +84,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<?> handleRuntime(RuntimeException ex) {
-        // TODO: log chi tiết ex ở server (file log / console) để phục vụ debug
+        log.error("Runtime exception occurred: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Đã xảy ra lỗi hệ thống, vui lòng thử lại sau"));
     }

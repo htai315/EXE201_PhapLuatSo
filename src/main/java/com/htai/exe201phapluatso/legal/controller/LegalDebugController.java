@@ -3,6 +3,7 @@ package com.htai.exe201phapluatso.legal.controller;
 import com.htai.exe201phapluatso.legal.entity.LegalArticle;
 import com.htai.exe201phapluatso.legal.repo.LegalArticleRepo;
 import com.htai.exe201phapluatso.legal.repo.LegalDocumentRepo;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Profile("!production")
 @RestController
 @RequestMapping("/api/legal/debug")
 public class LegalDebugController {
