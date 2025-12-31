@@ -16,8 +16,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
 
-    <!-- CSS chung của project -->
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/animations.css">
     <link rel="stylesheet" href="/css/quiz-common.css">
     <link rel="stylesheet" href="/css/quiz-pages.css">
     <link rel="stylesheet" href="/css/toast-notification.css">
@@ -60,6 +62,8 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                         <li><a class="dropdown-item" href="/html/profile.html"><i class="bi bi-person me-2"></i>Hồ sơ</a></li>
+                        <li><a class="dropdown-item" href="/html/payment-history.html"><i class="bi bi-clock-history me-2"></i>Lịch sử thanh toán</a></li>
+                        <li><a class="dropdown-item" href="/html/plans.html"><i class="bi bi-credit-card me-2"></i>Nâng cấp</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
                     </ul>
@@ -380,12 +384,7 @@
         ERROR_HANDLER.showLoading(true);
         try {
             // Sử dụng API_CLIENT với auto token refresh
-            const res = await API_CLIENT.delete(`${API_BASE}/${currentQuizSetId}`);
-            
-            if (!res.ok) {
-                const text = await res.text();
-                throw new Error(text || 'Không thể xóa bộ đề');
-            }
+            await API_CLIENT.delete(`${API_BASE}/${currentQuizSetId}`);
             
             Toast.success('Đã xóa bộ đề thành công');
             setTimeout(() => {
@@ -424,21 +423,13 @@
         ERROR_HANDLER.showLoading(true);
         try {
             // Sử dụng API_CLIENT với auto token refresh
-            const res = await API_CLIENT.delete(`${API_BASE}/${currentQuizSetId}/questions/${questionId}`);
-            
-            if (!res.ok) {
-                const text = await res.text();
-                throw new Error(text || 'Không thể xóa câu hỏi');
-            }
+            await API_CLIENT.delete(`${API_BASE}/${currentQuizSetId}/questions/${questionId}`);
             
             Toast.success('Đã xóa câu hỏi thành công');
             
             // Reload list
-            const qRes = await API_CLIENT.get(`${API_BASE}/${currentQuizSetId}/questions`);
-            if (qRes.ok) {
-                const questions = await qRes.json();
-                renderQuestions(questions);
-            }
+            const questions = await API_CLIENT.get(`${API_BASE}/${currentQuizSetId}/questions`);
+            renderQuestions(questions);
         } catch (err) {
             console.error(err);
             showAlert(err.message || 'Không thể xóa câu hỏi');

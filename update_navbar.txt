@@ -1,0 +1,32 @@
+# Danh sách các file cần cập nhật navbar:
+
+Đã cập nhật:
+- index.html ✓
+- about.html ✓  
+- contact.html ✓
+
+Cần cập nhật (bỏ menu Thanh toán):
+- legal-chat.html
+- legal-upload.html
+- my-quizzes.html
+- guide.html
+- profile.html
+- plans.html
+- payment-history.html
+- quiz-generate-ai.html
+- quiz-manager.html
+- quiz-history.html
+- quiz-take.html
+- quiz-add-question.html
+- quiz-add-quizset.html
+- quiz-edit-question.html
+
+Navbar chuẩn (cho các file trong /html/):
+- Trang chủ (/index.html)
+- Về chúng tôi (/html/about.html)
+- Chat AI (/html/legal-chat.html)
+- Bộ đề (/html/my-quizzes.html)
+- Văn bản PL (/html/legal-upload.html)
+- Hướng dẫn (/html/guide.html)
+- Liên hệ (/html/contact.html)
+- [Đăng nhập/Đăng ký buttons hoặc Avatar dropdown]

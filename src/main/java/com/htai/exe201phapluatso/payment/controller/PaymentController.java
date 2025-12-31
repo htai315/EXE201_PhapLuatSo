@@ -140,4 +140,19 @@ public class PaymentController {
         }
         return "";
     }
+
+    /**
+     * Get payment history for current user
+     * GET /api/payment/history
+     */
+    @GetMapping("/history")
+    public ResponseEntity<?> getPaymentHistory(Authentication authentication) {
+        AuthUserPrincipal principal = (AuthUserPrincipal) authentication.getPrincipal();
+        Long userId = principal.userId();
+        
+        log.info("Getting payment history for user: {}", userId);
+        
+        var history = paymentService.getPaymentHistory(userId);
+        return ResponseEntity.ok(history);
+    }
 }

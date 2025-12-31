@@ -16,8 +16,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
 
-    <!-- CSS chung của project -->
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/animations.css">
     <link rel="stylesheet" href="/css/quiz-take.css">
     <link rel="stylesheet" href="/css/toast-notification.css">
 </head>
@@ -58,6 +60,8 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                         <li><a class="dropdown-item" href="/html/profile.html"><i class="bi bi-person me-2"></i>Hồ sơ</a></li>
+                        <li><a class="dropdown-item" href="/html/payment-history.html"><i class="bi bi-clock-history me-2"></i>Lịch sử thanh toán</a></li>
+                        <li><a class="dropdown-item" href="/html/plans.html"><i class="bi bi-credit-card me-2"></i>Nâng cấp</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
                     </ul>
@@ -218,13 +222,8 @@
         ERROR_HANDLER.showLoading(true);
         try {
             // Sử dụng API_CLIENT với auto token refresh
-            const res = await API_CLIENT.get(`${API_BASE}/${setId}/exam`);
+            const data = await API_CLIENT.get(`${API_BASE}/${setId}/exam`);
             
-            if (!res.ok) {
-                const text = await res.text();
-                throw new Error(text || 'Không thể tải đề thi');
-            }
-            const data = await res.json();
             examQuestions = data.questions || [];
 
             // determine duration (flexible keys)
@@ -422,21 +421,8 @@
             };
 
             // Sử dụng API_CLIENT với auto token refresh
-            const res = await API_CLIENT.post(`${API_BASE}/${quizSetId}/exam/submit`, payload);
+            const data = await API_CLIENT.post(`${API_BASE}/${quizSetId}/exam/submit`, payload);
 
-            if (!res.ok) {
-                const text = await res.text();
-                let msg = 'Có lỗi xảy ra khi nộp bài';
-                try {
-                    const data = JSON.parse(text);
-                    msg = data.error || msg;
-                } catch (_) {
-                    if (text) msg = text;
-                }
-                throw new Error(msg);
-            }
-
-            const data = await res.json();
             showResult(data);
         } catch (err) {
             console.error(err);

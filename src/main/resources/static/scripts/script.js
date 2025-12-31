@@ -171,18 +171,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             return
         }
 
-        // Thử gọi /api/auth/me để lấy thông tin user
-        const res = await fetch("/api/auth/me", {
-            headers: { "Authorization": "Bearer " + accessToken }
-        })
-
-        if (!res.ok) {
+        // Thử gọi /api/auth/me để lấy thông tin user (dùng apiClient để auto-refresh)
+        const data = await window.apiClient.get("/api/auth/me").catch(() => null)
+        
+        if (!data) {
             // Token không hợp lệ / hết hạn
             showGuest()
             return
         }
-
-        const data = await res.json().catch(() => null)
         const avatarUrl = data && data.avatarUrl ? data.avatarUrl : 
                          `https://ui-avatars.com/api/?name=${encodeURIComponent(data?.fullName || 'User')}&size=80&background=1a4b84&color=fff`
 

@@ -34,20 +34,14 @@ async function loadAllHistory() {
     ERROR_HANDLER.showLoading(true);
     try {
         // Get all quiz sets first
-        const setsRes = await API_CLIENT.get(`${API_BASE}/my`);
-        if (!setsRes.ok) {
-            throw new Error('Không thể tải danh sách bộ đề');
-        }
-        const quizSets = await setsRes.json();
+        const quizSets = await API_CLIENT.get(`${API_BASE}/my`);
 
         // Get history for each quiz set
         allAttempts = [];
         for (const set of quizSets) {
             try {
-                const historyRes = await API_CLIENT.get(`${API_BASE}/${set.id}/exam/history`);
-                if (historyRes.ok) {
-                    const historyData = await historyRes.json();
-                    if (historyData.attempts && historyData.attempts.length > 0) {
+                const historyData = await API_CLIENT.get(`${API_BASE}/${set.id}/exam/history`);
+                if (historyData.attempts && historyData.attempts.length > 0) {
                         historyData.attempts.forEach(attempt => {
                             allAttempts.push({
                                 ...attempt,

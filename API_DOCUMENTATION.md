@@ -91,6 +91,51 @@ Authorization: Bearer <access_token>
 }
 ```
 
+### 1.5 Send Password Reset OTP
+**Endpoint:** `POST /api/auth/password-reset/send-otp`
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "message": "Mã OTP đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư."
+}
+```
+
+**Error Responses:**
+- `404 Not Found`: Email không tồn tại trong hệ thống
+- `400 Bad Request`: Tài khoản đăng nhập bằng Google không thể đặt lại mật khẩu
+
+### 1.6 Reset Password with OTP
+**Endpoint:** `POST /api/auth/password-reset/reset`
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "otp": "123456",
+  "newPassword": "newpassword123"
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "message": "Đặt lại mật khẩu thành công. Bạn có thể đăng nhập với mật khẩu mới."
+}
+```
+
+**Error Responses:**
+- `400 Bad Request`: OTP không hợp lệ hoặc đã được sử dụng
+- `400 Bad Request`: OTP đã hết hạn. Vui lòng yêu cầu OTP mới
+- `400 Bad Request`: Mật khẩu phải có ít nhất 6 ký tự
+
 ---
 
 ## 2. Quiz APIs
@@ -463,6 +508,39 @@ Authorization: Bearer <access_token>
 - ... other VNPay params
 
 **Response:** Redirect to `/html/payment-result.html?status=success`
+
+### 5.3 Get Payment History
+**Endpoint:** `GET /api/payment/history`
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response:** `200 OK`
+```json
+[
+  {
+    "id": 1,
+    "planCode": "STUDENT",
+    "planName": "Gói Sinh Viên",
+    "amount": 99000,
+    "status": "SUCCESS",
+    "paymentMethod": "VNPAY",
+    "vnpTxnRef": "PAY1735632000ABC123",
+    "vnpTransactionNo": "14567890",
+    "vnpBankCode": "NCB",
+    "vnpCardType": "ATM",
+    "createdAt": "2024-12-31T10:00:00",
+    "paidAt": "2024-12-31T10:05:00",
+    "chatCredits": 100,
+    "quizGenCredits": 20,
+    "durationMonths": 12
+  }
+]
+```
+
+**Status Values:**
+- `SUCCESS`: Thanh toán thành công
+- `PENDING`: Đang xử lý
+- `FAILED`: Thanh toán thất bại
 
 ---
 

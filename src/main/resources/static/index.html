@@ -205,27 +205,32 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav mx-auto align-items-lg-center">
+            <ul class="navbar-nav ms-auto align-items-lg-center">
                 <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/legal-chat.html">Chat AI</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/my-quizzes.html">Bộ đề</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/legal-upload.html">Văn bản PL</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/plans.html"><i class="bi bi-credit-card me-1"></i>Thanh toán</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
-            </ul>
-            <ul class="navbar-nav ms-auto align-items-lg-center">
-                <!-- Khi chưa đăng nhập -->
-                <li class="nav-item guest-only"><a class="btn btn-outline-primary btn-sm px-3 me-2" href="/html/login.html"><i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập</a></li>
-                <li class="nav-item guest-only"><a class="btn btn-primary btn-sm px-3" href="/html/register.html"><i class="bi bi-person-plus me-1"></i>Đăng Ký</a></li>
-                <!-- Khi đã đăng nhập - Avatar Dropdown -->
-                <li class="nav-item dropdown auth-only d-none">
+                <li class="nav-item ms-lg-3 guest-only">
+                    <a class="btn btn-outline-primary btn-sm px-3" href="/html/login.html">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập
+                    </a>
+                </li>
+                <li class="nav-item ms-lg-2 guest-only">
+                    <a class="btn btn-primary btn-sm px-3" href="/html/register.html">
+                        <i class="bi bi-person-plus me-1"></i>Đăng Ký
+                    </a>
+                </li>
+                <li class="nav-item dropdown ms-lg-3 auth-only d-none">
                     <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <img id="navUserAvatar" src="" alt="Avatar" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #1a4b84;">
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="/html/profile.html"><i class="bi bi-person-circle me-2"></i>Hồ sơ</a></li>
+                        <li><a class="dropdown-item" href="/html/profile.html"><i class="bi bi-person me-2"></i>Hồ sơ</a></li>
+                        <li><a class="dropdown-item" href="/html/payment-history.html"><i class="bi bi-clock-history me-2"></i>Lịch sử thanh toán</a></li>
+                        <li><a class="dropdown-item" href="/html/plans.html"><i class="bi bi-credit-card me-2"></i>Nâng cấp</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
                     </ul>
@@ -508,7 +513,7 @@
         <div class="row justify-content-center fade-in-delay">
             <div class="col-lg-10">
                 <div class="video-container">
-                    <video controls class="w-100 rounded-4 shadow-lg" poster="/img/Law.png">
+                    <video controls class="w-100 rounded-4 shadow-lg">
                         <source src="/img/VideoDemo.mp4" type="video/mp4">
                         Trình duyệt của bạn không hỗ trợ video.
                     </video>
@@ -900,6 +905,7 @@
 
 <!-- Custom JS -->
 <script src="/scripts/toast-notification.js"></script>
+<script src="/scripts/api-client.js"></script>
 <script src="/scripts/confirm-modal.js"></script>
 <script src="/scripts/script.js"></script>
 

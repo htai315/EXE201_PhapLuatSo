@@ -32,17 +32,7 @@ class CreditsCounter {
      */
     async fetchCredits() {
         try {
-            const response = await fetch('/api/credits/balance', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch credits');
-            }
-
-            this.credits = await response.json();
+            this.credits = await window.apiClient.get('/api/credits/balance');
         } catch (error) {
             console.error('Error fetching credits:', error);
             this.credits = null;

@@ -149,7 +149,7 @@ const API_CLIENT = {
             throw error;
         }
         
-        return response;
+        return response.json();
     },
 
     /**
@@ -169,7 +169,7 @@ const API_CLIENT = {
             throw error;
         }
         
-        return response;
+        return response.json();
     },
 
     /**
@@ -189,7 +189,7 @@ const API_CLIENT = {
             throw error;
         }
         
-        return response;
+        return response.json();
     },
 
     /**
@@ -205,9 +205,10 @@ const API_CLIENT = {
             throw error;
         }
         
-        return response;
+        return response.json();
     }
 };
 
 // Export cho global scope
-window.API_CLIENT = API_CLIENT;
+window.apiClient = API_CLIENT;
+window.API_CLIENT = API_CLIENT; // Backward compatibility

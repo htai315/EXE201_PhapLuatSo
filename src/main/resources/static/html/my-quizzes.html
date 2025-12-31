@@ -58,6 +58,8 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                         <li><a class="dropdown-item" href="/html/profile.html"><i class="bi bi-person me-2"></i>Hồ sơ</a></li>
+                        <li><a class="dropdown-item" href="/html/payment-history.html"><i class="bi bi-clock-history me-2"></i>Lịch sử thanh toán</a></li>
+                        <li><a class="dropdown-item" href="/html/plans.html"><i class="bi bi-credit-card me-2"></i>Nâng cấp</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
                     </ul>
@@ -156,16 +158,10 @@
     async function loadQuizSets() {
         ERROR_HANDLER.showLoading(true);
         try {
-            const res = await API_CLIENT.get(
+            paginationData = await API_CLIENT.get(
                 `${API_BASE}/my/paginated?page=${currentPage}&size=${PAGE_SIZE}`
             );
 
-            if (!res.ok) {
-                const text = await res.text();
-                throw new Error(text || 'Không thể tải danh sách bộ đề');
-            }
-
-            paginationData = await res.json();
             renderQuizSets();
             renderPagination();
         } catch (e) {

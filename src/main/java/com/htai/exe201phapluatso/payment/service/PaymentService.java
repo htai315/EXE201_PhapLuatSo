@@ -153,4 +153,34 @@ public class PaymentService {
         
         log.info("=== Payment Callback Processing Complete ===");
     }
+
+    /**
+     * Get payment history for user
+     */
+    public java.util.List<com.htai.exe201phapluatso.payment.dto.PaymentHistoryResponse> getPaymentHistory(Long userId) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        
+        java.util.List<Payment> payments = paymentRepo.findByUserOrderByCreatedAtDesc(user);
+        
+        return payments.stream()
+                .map(payment -> new com.htai.exe201phapluatso.payment.dto.PaymentHistoryResponse(
+                        payment.getId(),
+                        payment.getPlan().getCode(),
+                        payment.getPlan().getName(),
+                        payment.getAmount(),
+                        payment.getStatus(),
+                        payment.getPaymentMethod(),
+                        payment.getVnpTxnRef(),
+                        payment.getVnpTransactionNo(),
+                        payment.getVnpBankCode(),
+                        payment.getVnpCardType(),
+                        payment.getCreatedAt(),
+                        payment.getPaidAt(),
+                        payment.getPlan().getChatCredits(),
+                        payment.getPlan().getQuizGenCredits(),
+                        payment.getPlan().getDurationMonths()
+                ))
+                .toList();
+    }
 }

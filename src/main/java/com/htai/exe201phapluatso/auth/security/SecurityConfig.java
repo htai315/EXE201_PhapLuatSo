@@ -51,6 +51,7 @@ public class SecurityConfig {
                         // auth endpoints (public - không cần token)
                         .requestMatchers("/api/auth/register", "/api/auth/login", 
                                        "/api/auth/refresh", "/api/auth/logout",
+                                       "/api/auth/password-reset/**",
                                        "/oauth2/**", "/login/**").permitAll()
 
                         // payment IPN callback (public - VNPay server-to-server)
