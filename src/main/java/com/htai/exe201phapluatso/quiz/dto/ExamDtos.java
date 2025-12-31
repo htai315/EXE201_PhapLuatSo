@@ -41,6 +41,7 @@ public class ExamDtos {
             int totalQuestions,
             int correctCount,
             int scorePercent,
+            double scoreOutOf10,
             List<WrongQuestionDto> wrongQuestions
     ) {}
 
@@ -56,7 +57,8 @@ public class ExamDtos {
             LocalDateTime finishedAt,
             int totalQuestions,
             int correctCount,
-            int scorePercent
+            int scorePercent,
+            double scoreOutOf10
     ) {}
 
     public record ExamHistoryResponse(

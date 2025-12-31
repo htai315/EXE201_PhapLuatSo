@@ -20,6 +20,8 @@
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/quiz-common.css">
     <link rel="stylesheet" href="/css/quiz-pages.css">
+    <link rel="stylesheet" href="/css/toast-notification.css">
+    <link rel="stylesheet" href="/css/confirm-modal.css">
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
@@ -146,6 +148,8 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/scripts/toast-notification.js"></script>
+<script src="/scripts/confirm-modal.js"></script>
 <script src="/scripts/error-handler.js"></script>
 <script src="/scripts/api-client.js"></script>
 <script src="/scripts/script.js"></script>
@@ -179,13 +183,9 @@
     });
 
     function showAlert(message, type = 'danger') {
-        const alertArea = document.getElementById('alertArea');
-        alertArea.innerHTML = `
-            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        `;
+        // Use toast notification instead of alert area
+        const toastType = type === 'danger' ? 'error' : type;
+        Toast.show(message, toastType, 2000);
     }
 
     async function loadQuizSetAndQuestions(token, setId) {
@@ -372,7 +372,10 @@
 
     async function deleteCurrentSet() {
         if (!currentQuizSetId) return;
-        if (!confirm('Bạn có chắc muốn xóa toàn bộ Bộ đề này? Hành động không thể hoàn tác.')) return;
+        
+        // Use confirm modal instead of browser confirm
+        const confirmed = await confirmDelete('bộ đề này');
+        if (!confirmed) return;
         
         ERROR_HANDLER.showLoading(true);
         try {
@@ -383,7 +386,11 @@
                 const text = await res.text();
                 throw new Error(text || 'Không thể xóa bộ đề');
             }
-            window.location.href = '/html/my-quizzes.html';
+            
+            Toast.success('Đã xóa bộ đề thành công');
+            setTimeout(() => {
+                window.location.href = '/html/my-quizzes.html';
+            }, 500);
         } catch (err) {
             console.error(err);
             showAlert(err.message || 'Không thể xóa bộ đề');
@@ -409,7 +416,10 @@
 
     async function deleteQuestion(questionId) {
         if (!currentQuizSetId) return;
-        if (!confirm('Bạn có chắc muốn xóa câu hỏi này?')) return;
+        
+        // Use confirm modal instead of browser confirm
+        const confirmed = await confirmDelete('câu hỏi này');
+        if (!confirmed) return;
         
         ERROR_HANDLER.showLoading(true);
         try {
@@ -420,6 +430,8 @@
                 const text = await res.text();
                 throw new Error(text || 'Không thể xóa câu hỏi');
             }
+            
+            Toast.success('Đã xóa câu hỏi thành công');
             
             // Reload list
             const qRes = await API_CLIENT.get(`${API_BASE}/${currentQuizSetId}/questions`);

@@ -19,6 +19,7 @@
     <!-- CSS chung của project -->
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/quiz-take.css">
+    <link rel="stylesheet" href="/css/toast-notification.css">
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
@@ -169,6 +170,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/scripts/toast-notification.js"></script>
 <script src="/scripts/error-handler.js"></script>
 <script src="/scripts/api-client.js"></script>
 <script src="/scripts/script.js"></script>
@@ -207,13 +209,9 @@
     });
 
     function showAlert(message, type = 'danger') {
-        const alertArea = document.getElementById('alertArea');
-        alertArea.innerHTML = `
-            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        `;
+        // Use toast notification instead of alert area
+        const toastType = type === 'danger' ? 'error' : type;
+        Toast.show(message, toastType, 2000);
     }
 
     async function loadExam(token, setId) {
@@ -503,11 +501,12 @@
         const container = document.getElementById('examContent');
         const wrongs = result.wrongQuestions || [];
         const isPerfect = wrongs.length === 0;
+        const scoreOutOf10 = result.scoreOutOf10 || (result.correctCount / result.totalQuestions * 10).toFixed(1);
         
         container.innerHTML = `
             <div class="result-section">
                 <div class="result-header">
-                    <div class="result-score">${result.scorePercent}%</div>
+                    <div class="result-score">${scoreOutOf10}<span style="font-size: 2rem; opacity: 0.8;">/10</span></div>
                     <div class="result-label">Điểm số của bạn</div>
                 </div>
                 

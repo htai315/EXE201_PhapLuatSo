@@ -135,6 +135,7 @@ public class QuizExamService {
         }
 
         int scorePercent = (int) Math.round((correctCount * 100.0) / totalQuestions);
+        double scoreOutOf10 = Math.round((correctCount * 100.0) / totalQuestions) / 10.0;
 
         // Save attempt + answers
         User user = userRepo.findById(userId)
@@ -185,6 +186,7 @@ public class QuizExamService {
                 totalQuestions,
                 correctCount,
                 scorePercent,
+                scoreOutOf10,
                 wrongs
         );
     }
@@ -203,13 +205,17 @@ public class QuizExamService {
                 .findTop10ByUserIdAndQuizSetIdOrderByFinishedAtDesc(userId, quizSetId);
 
         List<ExamHistoryItemDto> items = attempts.stream()
-                .map(a -> new ExamHistoryItemDto(
-                        a.getId(),
-                        a.getFinishedAt(),
-                        a.getTotalQuestions(),
-                        a.getCorrectCount(),
-                        a.getScorePercent()
-                ))
+                .map(a -> {
+                    double scoreOutOf10 = Math.round((a.getCorrectCount() * 100.0) / a.getTotalQuestions()) / 10.0;
+                    return new ExamHistoryItemDto(
+                            a.getId(),
+                            a.getFinishedAt(),
+                            a.getTotalQuestions(),
+                            a.getCorrectCount(),
+                            a.getScorePercent(),
+                            scoreOutOf10
+                    );
+                })
                 .toList();
 
         return new ExamHistoryResponse(
