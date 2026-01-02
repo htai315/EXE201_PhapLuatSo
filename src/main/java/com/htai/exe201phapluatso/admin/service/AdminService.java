@@ -235,6 +235,7 @@ public class AdminService {
         return new PageImpl<>(responses, pageable, users.getTotalElements());
     }
 
+    @Transactional(readOnly = true)
     public AdminUserDetailResponse getUserDetail(Long userId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));

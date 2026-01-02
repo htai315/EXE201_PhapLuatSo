@@ -9,8 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadPayments();
 });
 
-// ==================== SIDEBAR ====================
-
 function initSidebar() {
     const sidebar = document.getElementById('adminSidebar');
     const toggleBtn = document.getElementById('toggleSidebar');
@@ -37,8 +35,6 @@ function initSidebar() {
     });
 }
 
-// ==================== AUTH ====================
-
 async function checkAuth() {
     const token = localStorage.getItem('accessToken');
     if (!token) {
@@ -48,15 +44,10 @@ async function checkAuth() {
 
     try {
         const user = await window.apiClient.get('/api/auth/me');
-        
-        console.log('User info:', user); // Debug log
-        
-        // Check if user has ADMIN role (handle both 'ADMIN' and 'ROLE_ADMIN')
         const isAdmin = user.role === 'ADMIN' || user.role === 'ROLE_ADMIN' || 
                        (user.roles && (user.roles.includes('ADMIN') || user.roles.includes('ROLE_ADMIN')));
         
         if (!isAdmin) {
-            console.error('Access denied: User is not admin. Role:', user.role);
             alert('Bạn không có quyền truy cập trang này');
             window.location.href = '/index.html';
             return;
@@ -70,24 +61,20 @@ async function checkAuth() {
 }
 
 function logout() {
-    localStorage.removeItem('accessToken'); // Changed from 'token' to 'accessToken'
+    localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     window.location.href = '/html/login.html';
 }
-
-// ==================== LOAD PAYMENT STATS ====================
 
 async function loadPaymentStats() {
     try {
         const stats = await window.apiClient.get('/api/admin/payments/stats');
 
-        // Payment counts
         document.getElementById('totalPayments').textContent = formatNumber(stats.totalPayments);
         document.getElementById('successfulPayments').textContent = formatNumber(stats.successfulPayments);
         document.getElementById('failedPayments').textContent = formatNumber(stats.failedPayments);
         document.getElementById('pendingPayments').textContent = formatNumber(stats.pendingPayments);
 
-        // Revenue
         document.getElementById('totalRevenue').textContent = formatCurrency(stats.totalRevenue);
         document.getElementById('revenueToday').textContent = formatCurrency(stats.revenueToday);
         document.getElementById('revenueThisWeek').textContent = formatCurrency(stats.revenueThisWeek);
@@ -98,8 +85,6 @@ async function loadPaymentStats() {
         showAdminToast('Không thể tải thống kê payments', 'error');
     }
 }
-
-// ==================== LOAD PAYMENTS ====================
 
 async function loadPayments(page = 0) {
     currentPage = page;
@@ -119,15 +104,13 @@ async function loadPayments(page = 0) {
         
         document.getElementById('paymentsTableBody').innerHTML = `
             <tr>
-                <td colspan="8" class="text-center text-danger">
+                <td colspan="5" class="text-center text-danger">
                     Không thể tải danh sách payments. Vui lòng thử lại.
                 </td>
             </tr>
         `;
     }
 }
-
-// ==================== RENDER TABLE ====================
 
 function renderPaymentsTable(payments) {
     const tbody = document.getElementById('paymentsTableBody');
@@ -180,15 +163,17 @@ function renderStatusBadge(status) {
     return badges[status] || `<span class="badge bg-secondary">${status}</span>`;
 }
 
-// ==================== PAGINATION ====================
-
 function renderPagination(response) {
     const pagination = document.getElementById('pagination');
     const { currentPage, totalPages, hasPrevious, hasNext } = response;
     
+    if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
     let html = '';
     
-    // Previous button
     html += `
         <li class="page-item ${!hasPrevious ? 'disabled' : ''}">
             <a class="page-link" href="#" onclick="loadPayments(${currentPage - 1}); return false;">
@@ -197,7 +182,6 @@ function renderPagination(response) {
         </li>
     `;
     
-    // Page numbers
     const startPage = Math.max(0, currentPage - 2);
     const endPage = Math.min(totalPages - 1, currentPage + 2);
     
@@ -209,7 +193,6 @@ function renderPagination(response) {
         `;
     }
     
-    // Next button
     html += `
         <li class="page-item ${!hasNext ? 'disabled' : ''}">
             <a class="page-link" href="#" onclick="loadPayments(${currentPage + 1}); return false;">
@@ -221,8 +204,6 @@ function renderPagination(response) {
     pagination.innerHTML = html;
 }
 
-// ==================== UTILITY FUNCTIONS ====================
-
 function formatNumber(num) {
     if (num === null || num === undefined) return '0';
     return num.toLocaleString('vi-VN');
@@ -231,12 +212,6 @@ function formatNumber(num) {
 function formatCurrency(amount) {
     if (amount === null || amount === undefined) return '0 ₫';
     return amount.toLocaleString('vi-VN') + ' ₫';
-}
-
-function formatDateTime(dateStr) {
-    if (!dateStr) return '-';
-    const date = new Date(dateStr);
-    return date.toLocaleString('vi-VN');
 }
 
 function formatDate(dateStr) {
@@ -259,11 +234,9 @@ function escapeHtml(text) {
 }
 
 function showAdminToast(message, type = 'info') {
-    // Use the global toast notification if available
     if (typeof window.showToast === 'function') {
         window.showToast(message, type);
     } else {
-        // Fallback to alert
         alert(message);
     }
 }

@@ -173,7 +173,7 @@ function renderUsersTable(users) {
                         <i class="bi bi-eye"></i>
                     </button>
                     ${user.active ? `
-                        <button class="btn btn-warning btn-action" onclick="showBanModal(${user.id}, '${escapeHtml(user.email)}')" title="Ban">
+                        <button class="btn btn-warning btn-action" onclick="showBanModal(${user.id}, '${escapeHtml(user.email)}', '${escapeHtml(user.fullName || '')}')" title="Ban">
                             <i class="bi bi-ban"></i>
                         </button>
                     ` : `
@@ -247,51 +247,151 @@ async function viewUserDetail(userId) {
     try {
         const user = await window.apiClient.get(`/api/admin/users/${userId}`);
         
+        const avatarInitial = user.fullName ? user.fullName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase();
+        const avatarContent = user.avatarUrl 
+            ? `<img src="${escapeHtml(user.avatarUrl)}" alt="Avatar">`
+            : avatarInitial;
+        
         const content = `
-            <div class="row">
+            <!-- User Header -->
+            <div class="user-detail-header">
+                <div class="user-detail-avatar">${avatarContent}</div>
+                <div class="user-detail-info">
+                    <h4>${escapeHtml(user.fullName || 'Chưa cập nhật')}</h4>
+                    <div class="user-email">${escapeHtml(user.email)}</div>
+                    <div class="user-badges">
+                        <span class="badge bg-secondary">${user.provider}</span>
+                        ${user.emailVerified ? '<span class="badge bg-info">Email Verified</span>' : '<span class="badge bg-warning">Chưa verify email</span>'}
+                        ${user.active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Banned</span>'}
+                    </div>
+                </div>
+            </div>
+            
+            ${!user.active ? `
+                <div class="ban-alert">
+                    <div class="ban-alert-title">
+                        <i class="bi bi-ban"></i>
+                        Tài khoản đã bị khóa
+                    </div>
+                    <div class="ban-alert-reason">${escapeHtml(user.banReason || 'Không có lý do')}</div>
+                    <div class="ban-alert-meta">
+                        <i class="bi bi-person"></i> ${user.bannedByUserName || 'Unknown'} · 
+                        <i class="bi bi-clock"></i> ${formatDateTime(user.bannedAt)}
+                    </div>
+                </div>
+            ` : ''}
+            
+            <div class="row g-3">
+                <!-- Basic Info -->
                 <div class="col-md-6">
-                    <h6><i class="bi bi-person"></i> Thông Tin Cơ Bản</h6>
-                    <table class="table table-sm">
-                        <tr><th>ID:</th><td>${user.id}</td></tr>
-                        <tr><th>Email:</th><td>${escapeHtml(user.email)}</td></tr>
-                        <tr><th>Tên:</th><td>${escapeHtml(user.fullName || '-')}</td></tr>
-                        <tr><th>Provider:</th><td>${user.provider}</td></tr>
-                        <tr><th>Email Verified:</th><td>${user.emailVerified ? 'Có' : 'Không'}</td></tr>
-                        <tr><th>Enabled:</th><td>${user.enabled ? 'Có' : 'Không'}</td></tr>
-                        <tr><th>Active:</th><td>${user.active ? 'Có' : 'Không'}</td></tr>
-                        <tr><th>Ngày tạo:</th><td>${formatDateTime(user.createdAt)}</td></tr>
-                    </table>
-                    
-                    ${!user.active ? `
-                        <div class="alert alert-danger">
-                            <strong>Bị Ban:</strong> ${escapeHtml(user.banReason || 'Không có lý do')}<br>
-                            <small>Bởi: ${user.bannedByUserName || 'Unknown'} - ${formatDateTime(user.bannedAt)}</small>
+                    <div class="user-detail-section">
+                        <div class="user-detail-section-title">
+                            <i class="bi bi-person-badge"></i>
+                            Thông Tin Cơ Bản
                         </div>
-                    ` : ''}
+                        <div class="user-detail-grid">
+                            <div class="user-detail-item">
+                                <span class="label">ID</span>
+                                <span class="value">#${user.id}</span>
+                            </div>
+                            <div class="user-detail-item">
+                                <span class="label">Provider</span>
+                                <span class="value">${user.provider}</span>
+                            </div>
+                            <div class="user-detail-item">
+                                <span class="label">Trạng thái</span>
+                                <span class="value ${user.enabled ? 'success' : 'danger'}">${user.enabled ? 'Enabled' : 'Disabled'}</span>
+                            </div>
+                            <div class="user-detail-item">
+                                <span class="label">Ngày tạo</span>
+                                <span class="value">${formatDateTime(user.createdAt)}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
+                <!-- Credits -->
                 <div class="col-md-6">
-                    <h6><i class="bi bi-coin"></i> Credits</h6>
-                    <table class="table table-sm">
-                        <tr><th>Chat Credits:</th><td>${user.chatCredits || 0}</td></tr>
-                        <tr><th>Quiz Gen Credits:</th><td>${user.quizGenCredits || 0}</td></tr>
-                        <tr><th>Hết hạn:</th><td>${user.creditsExpiresAt ? formatDateTime(user.creditsExpiresAt) : '-'}</td></tr>
-                    </table>
-                    
-                    <h6><i class="bi bi-graph-up"></i> Thống Kê</h6>
-                    <table class="table table-sm">
-                        <tr><th>Tổng Payments:</th><td>${user.totalPayments || 0}</td></tr>
-                        <tr><th>Tổng Doanh Thu:</th><td>${formatCurrency(user.totalRevenue || 0)}</td></tr>
-                        <tr><th>Quiz Sets:</th><td>${user.totalQuizSets || 0}</td></tr>
-                        <tr><th>Quiz Attempts:</th><td>${user.totalQuizAttempts || 0}</td></tr>
-                        <tr><th>Chat Sessions:</th><td>${user.totalChatSessions || 0}</td></tr>
-                        <tr><th>Chat Messages:</th><td>${user.totalChatMessages || 0}</td></tr>
-                    </table>
+                    <div class="user-detail-section">
+                        <div class="user-detail-section-title">
+                            <i class="bi bi-coin"></i>
+                            Credits
+                        </div>
+                        <div class="user-detail-grid">
+                            <div class="user-detail-item">
+                                <span class="label">Chat Credits</span>
+                                <span class="value highlight">${user.chatCredits || 0}</span>
+                            </div>
+                            <div class="user-detail-item">
+                                <span class="label">Quiz Gen Credits</span>
+                                <span class="value highlight">${user.quizGenCredits || 0}</span>
+                            </div>
+                            <div class="user-detail-item" style="grid-column: span 2;">
+                                <span class="label">Hết hạn</span>
+                                <span class="value">${user.creditsExpiresAt ? formatDateTime(user.creditsExpiresAt) : 'Không giới hạn'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Statistics -->
+            <div class="user-detail-section">
+                <div class="user-detail-section-title">
+                    <i class="bi bi-graph-up"></i>
+                    Thống Kê Hoạt Động
+                </div>
+                <div class="user-stats-grid">
+                    <div class="user-stat-card">
+                        <div class="stat-icon success">
+                            <i class="bi bi-credit-card"></i>
+                        </div>
+                        <div class="stat-value">${user.totalPayments || 0}</div>
+                        <div class="stat-label">Thanh toán</div>
+                    </div>
+                    <div class="user-stat-card">
+                        <div class="stat-icon primary">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+                        <div class="stat-value">${formatCurrencyShort(user.totalRevenue || 0)}</div>
+                        <div class="stat-label">Doanh thu</div>
+                    </div>
+                    <div class="user-stat-card">
+                        <div class="stat-icon warning">
+                            <i class="bi bi-collection"></i>
+                        </div>
+                        <div class="stat-value">${user.totalQuizSets || 0}</div>
+                        <div class="stat-label">Bộ đề</div>
+                    </div>
+                    <div class="user-stat-card">
+                        <div class="stat-icon info">
+                            <i class="bi bi-pencil-square"></i>
+                        </div>
+                        <div class="stat-value">${user.totalQuizAttempts || 0}</div>
+                        <div class="stat-label">Lần thi</div>
+                    </div>
+                    <div class="user-stat-card">
+                        <div class="stat-icon primary">
+                            <i class="bi bi-chat-dots"></i>
+                        </div>
+                        <div class="stat-value">${user.totalChatSessions || 0}</div>
+                        <div class="stat-label">Phiên chat</div>
+                    </div>
+                    <div class="user-stat-card">
+                        <div class="stat-icon success">
+                            <i class="bi bi-chat-text"></i>
+                        </div>
+                        <div class="stat-value">${user.totalChatMessages || 0}</div>
+                        <div class="stat-label">Tin nhắn</div>
+                    </div>
                 </div>
             </div>
         `;
         
         document.getElementById('userDetailContent').innerHTML = content;
+        
+        // Add class to modal for custom styling
+        document.getElementById('userDetailModal').classList.add('user-detail-modal');
         
         const modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
         modal.show();
@@ -304,10 +404,14 @@ async function viewUserDetail(userId) {
 
 // ==================== BAN USER ====================
 
-function showBanModal(userId, email) {
+function showBanModal(userId, email, fullName = null) {
     selectedUserId = userId;
     document.getElementById('banUserEmail').textContent = email;
     document.getElementById('banReason').value = '';
+    
+    // Set avatar initial
+    const avatarInitial = fullName ? fullName.charAt(0).toUpperCase() : email.charAt(0).toUpperCase();
+    document.getElementById('banUserAvatar').textContent = avatarInitial;
     
     const modal = new bootstrap.Modal(document.getElementById('banUserModal'));
     modal.show();
@@ -413,6 +517,17 @@ function formatTime(dateStr) {
 function formatCurrency(amount) {
     if (amount === null || amount === undefined) return '0 ₫';
     return amount.toLocaleString('vi-VN') + ' ₫';
+}
+
+function formatCurrencyShort(amount) {
+    if (amount === null || amount === undefined || amount === 0) return '0đ';
+    if (amount >= 1000000) {
+        return (amount / 1000000).toFixed(1).replace('.0', '') + 'M';
+    }
+    if (amount >= 1000) {
+        return (amount / 1000).toFixed(0) + 'K';
+    }
+    return amount.toLocaleString('vi-VN') + 'đ';
 }
 
 function escapeHtml(text) {

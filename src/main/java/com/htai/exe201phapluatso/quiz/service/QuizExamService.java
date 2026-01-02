@@ -16,16 +16,27 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
  * Service xử lý logic làm bài quiz (exam/practice)
  * OPTIMIZED: Sử dụng JOIN FETCH để tránh N+1 query problem
+ * ENHANCED: Random câu hỏi và shuffle đáp án
+ * SECURED: Lưu mapping đáp án đúng server-side để tránh gian lận
  */
 @Service
 public class QuizExamService {
 
     private static final int MAX_HISTORY_ITEMS = 10;
+    private static final List<String> OPTION_KEYS = List.of("A", "B", "C", "D");
+    
+    // Cache lưu mapping đáp án đúng đã shuffle cho mỗi session làm bài
+    // Key: "userId_quizSetId", Value: Map<questionId, correctKeyAfterShuffle>
+    private final ConcurrentHashMap<String, ExamSession> examSessions = new ConcurrentHashMap<>();
+    
+    // Session timeout: 2 giờ
+    private static final long SESSION_TIMEOUT_MS = 2 * 60 * 60 * 1000;
 
     private final QuizSetRepo quizSetRepo;
     private final QuizQuestionRepo questionRepo;
@@ -46,9 +57,31 @@ public class QuizExamService {
         this.answerRepo = answerRepo;
         this.userRepo = userRepo;
     }
+    
+    /**
+     * Inner class để lưu thông tin session làm bài
+     */
+    private static class ExamSession {
+        final Map<Long, String> correctKeyMapping; // questionId -> correctKey sau shuffle
+        final Map<Long, List<ExamOptionDto>> shuffledOptionsMapping; // questionId -> options đã shuffle
+        final long createdAt;
+        
+        ExamSession(Map<Long, String> correctKeyMapping, Map<Long, List<ExamOptionDto>> shuffledOptionsMapping) {
+            this.correctKeyMapping = correctKeyMapping;
+            this.shuffledOptionsMapping = shuffledOptionsMapping;
+            this.createdAt = System.currentTimeMillis();
+        }
+        
+        boolean isExpired() {
+            return System.currentTimeMillis() - createdAt > SESSION_TIMEOUT_MS;
+        }
+    }
 
     /**
-     * Bắt đầu làm bài quiz - OPTIMIZED: 1 query thay vì N+1
+     * Bắt đầu làm bài quiz - OPTIMIZED & ENHANCED & SECURED
+     * - Random thứ tự câu hỏi
+     * - Shuffle đáp án A, B, C, D
+     * - Lưu mapping đáp án đúng server-side
      */
     @Transactional(readOnly = true)
     public StartExamResponse startExam(Long userId, Long quizSetId) {
@@ -60,20 +93,25 @@ public class QuizExamService {
             throw new BadRequestException("Bộ đề hiện chưa có câu hỏi nào");
         }
 
-        // Options đã được fetch sẵn qua JOIN FETCH
-        List<ExamQuestionDto> questionDtos = questions.stream()
-                .map(question -> {
-                    List<ExamOptionDto> optionDtos = question.getOptions().stream()
-                            .map(o -> new ExamOptionDto(o.getOptionKey(), o.getOptionText()))
-                            .toList();
-                    return new ExamQuestionDto(
-                            question.getId(),
-                            question.getQuestionText(),
-                            question.getExplanation(),
-                            optionDtos
-                    );
-                })
+        // ENHANCED: Random thứ tự câu hỏi
+        List<QuizQuestion> shuffledQuestions = new ArrayList<>(questions);
+        Collections.shuffle(shuffledQuestions);
+
+        // SECURED: Tạo mapping đáp án đúng và options đã shuffle
+        Map<Long, String> correctKeyMapping = new HashMap<>();
+        Map<Long, List<ExamOptionDto>> shuffledOptionsMapping = new HashMap<>();
+        
+        // ENHANCED: Shuffle đáp án cho mỗi câu hỏi
+        List<ExamQuestionDto> questionDtos = shuffledQuestions.stream()
+                .map(q -> createShuffledQuestionDto(q, correctKeyMapping, shuffledOptionsMapping))
                 .toList();
+        
+        // Lưu session với mapping đáp án đúng và options đã shuffle
+        String sessionKey = buildSessionKey(userId, quizSetId);
+        examSessions.put(sessionKey, new ExamSession(correctKeyMapping, shuffledOptionsMapping));
+        
+        // Cleanup expired sessions
+        cleanupExpiredSessions();
 
         return new StartExamResponse(
                 quizSet.getId(),
@@ -84,7 +122,55 @@ public class QuizExamService {
     }
 
     /**
-     * Nộp bài quiz - OPTIMIZED: 1 query thay vì N+1
+     * Tạo DTO câu hỏi với đáp án đã được shuffle
+     * Gán lại key A, B, C, D theo thứ tự mới
+     * SECURED: Không gửi correctOptionKey về frontend
+     */
+    private ExamQuestionDto createShuffledQuestionDto(
+            QuizQuestion question, 
+            Map<Long, String> correctKeyMapping,
+            Map<Long, List<ExamOptionDto>> shuffledOptionsMapping
+    ) {
+        List<QuizQuestionOption> originalOptions = new ArrayList<>(question.getOptions());
+        
+        // Shuffle đáp án
+        Collections.shuffle(originalOptions);
+        
+        // Gán lại key A, B, C, D theo thứ tự mới
+        List<ExamOptionDto> shuffledOptions = new ArrayList<>();
+        String newCorrectKey = null;
+        
+        for (int i = 0; i < originalOptions.size() && i < OPTION_KEYS.size(); i++) {
+            QuizQuestionOption opt = originalOptions.get(i);
+            String newKey = OPTION_KEYS.get(i);
+            
+            shuffledOptions.add(new ExamOptionDto(newKey, opt.getOptionText()));
+            
+            // Track đáp án đúng với key mới
+            if (opt.isCorrect()) {
+                newCorrectKey = newKey;
+            }
+        }
+        
+        // Lưu mapping đáp án đúng và options đã shuffle server-side
+        if (newCorrectKey != null) {
+            correctKeyMapping.put(question.getId(), newCorrectKey);
+        }
+        shuffledOptionsMapping.put(question.getId(), shuffledOptions);
+        
+        // SECURED: Không gửi correctOptionKey về frontend (null)
+        return new ExamQuestionDto(
+                question.getId(),
+                question.getQuestionText(),
+                question.getExplanation(),
+                shuffledOptions,
+                null  // Ẩn đáp án đúng - sẽ validate server-side
+        );
+    }
+
+    /**
+     * Nộp bài quiz - OPTIMIZED & SECURED
+     * Validate đáp án từ server-side mapping thay vì tin tưởng frontend
      */
     @Transactional
     public SubmitExamResponse submitExam(Long userId, Long quizSetId, SubmitExamRequest req) {
@@ -100,12 +186,25 @@ public class QuizExamService {
             throw new BadRequestException("Bộ đề hiện chưa có câu hỏi nào");
         }
 
-        // Build options map từ data đã fetch sẵn
-        Map<Long, List<QuizQuestionOption>> optionsByQuestion = questions.stream()
-                .collect(Collectors.toMap(
-                        QuizQuestion::getId,
-                        QuizQuestion::getOptions
-                ));
+        // SECURED: Lấy mapping đáp án đúng từ session
+        String sessionKey = buildSessionKey(userId, quizSetId);
+        ExamSession session = examSessions.get(sessionKey);
+        
+        // Nếu không có session (hết hạn hoặc chưa start), tạo mapping mới từ DB
+        Map<Long, String> correctKeyMapping;
+        Map<Long, List<ExamOptionDto>> shuffledOptionsMapping;
+        if (session == null || session.isExpired()) {
+            // Fallback: sử dụng đáp án gốc từ DB (key A, B, C, D theo thứ tự gốc)
+            correctKeyMapping = buildOriginalCorrectKeyMapping(questions);
+            shuffledOptionsMapping = buildOriginalOptionsMapping(questions);
+        } else {
+            correctKeyMapping = session.correctKeyMapping;
+            shuffledOptionsMapping = session.shuffledOptionsMapping;
+        }
+
+        // Build map question by id
+        Map<Long, QuizQuestion> questionMap = questions.stream()
+                .collect(Collectors.toMap(QuizQuestion::getId, q -> q));
 
         int totalQuestions = questions.size();
         int correctCount = 0;
@@ -115,34 +214,38 @@ public class QuizExamService {
         Map<Long, SubmitExamRequest.AnswerDto> answersByQid = req.answers().stream()
                 .collect(Collectors.toMap(SubmitExamRequest.AnswerDto::questionId, a -> a, (a, b) -> a));
 
-        // Evaluate each question (unanswered counts as wrong)
+        // Evaluate each question
         for (QuizQuestion question : questions) {
             SubmitExamRequest.AnswerDto ans = answersByQid.get(question.getId());
             String selectedKey = ans != null ? normalizeKey(ans.selectedOptionKey()) : null;
+            
+            // SECURED: Lấy correctKey từ server-side mapping
+            String correctKey = correctKeyMapping.get(question.getId());
 
-            List<QuizQuestionOption> opts = optionsByQuestion.get(question.getId());
-            if (opts == null || opts.isEmpty()) {
+            List<QuizQuestionOption> opts = question.getOptions();
+            if (opts == null || opts.isEmpty() || correctKey == null) {
                 continue;
             }
 
-            Optional<QuizQuestionOption> correctOpt = opts.stream()
-                    .filter(QuizQuestionOption::isCorrect)
-                    .findFirst();
-
-            if (correctOpt.isEmpty()) {
-                continue;
-            }
-
-            String correctKey = correctOpt.get().getOptionKey();
+            // So sánh với correctKey từ server-side mapping
             boolean isCorrect = selectedKey != null && correctKey.equalsIgnoreCase(selectedKey);
+            
             if (isCorrect) {
                 correctCount++;
             } else {
+                // Lấy options đã shuffle từ session để hiển thị đúng thứ tự
+                List<ExamOptionDto> optionDtos = shuffledOptionsMapping.getOrDefault(
+                        question.getId(), 
+                        buildOriginalOptions(opts)
+                );
+                
                 wrongs.add(new WrongQuestionDto(
                         question.getId(),
                         question.getQuestionText(),
                         correctKey,
-                        selectedKey
+                        selectedKey,
+                        question.getExplanation(),
+                        optionDtos
                 ));
             }
         }
@@ -168,20 +271,13 @@ public class QuizExamService {
         for (QuizQuestion question : questions) {
             SubmitExamRequest.AnswerDto ans = answersByQid.get(question.getId());
             String selectedKey = ans != null ? normalizeKey(ans.selectedOptionKey()) : null;
+            String correctKey = correctKeyMapping.get(question.getId());
 
             if (selectedKey == null) {
                 continue;
             }
 
-            List<QuizQuestionOption> opts = optionsByQuestion.get(question.getId());
-            if (opts == null || opts.isEmpty()) {
-                continue;
-            }
-            Optional<QuizQuestionOption> correctOpt = opts.stream()
-                    .filter(QuizQuestionOption::isCorrect)
-                    .findFirst();
-            boolean isCorrect = correctOpt.isPresent() &&
-                    correctOpt.get().getOptionKey().equalsIgnoreCase(selectedKey);
+            boolean isCorrect = correctKey != null && correctKey.equalsIgnoreCase(selectedKey);
 
             QuizAttemptAnswer aa = new QuizAttemptAnswer();
             aa.setAttempt(attempt);
@@ -193,6 +289,9 @@ public class QuizExamService {
         if (!answers.isEmpty()) {
             answerRepo.saveAll(answers);
         }
+        
+        // Xóa session sau khi submit
+        examSessions.remove(sessionKey);
 
         return new SubmitExamResponse(
                 attempt.getId(),
@@ -202,6 +301,56 @@ public class QuizExamService {
                 scoreOutOf10,
                 wrongs
         );
+    }
+    
+    /**
+     * Build mapping đáp án đúng từ DB (fallback khi không có session)
+     */
+    private Map<Long, String> buildOriginalCorrectKeyMapping(List<QuizQuestion> questions) {
+        Map<Long, String> mapping = new HashMap<>();
+        for (QuizQuestion q : questions) {
+            for (QuizQuestionOption opt : q.getOptions()) {
+                if (opt.isCorrect()) {
+                    mapping.put(q.getId(), opt.getOptionKey());
+                    break;
+                }
+            }
+        }
+        return mapping;
+    }
+    
+    /**
+     * Build mapping options gốc từ DB (fallback khi không có session)
+     */
+    private Map<Long, List<ExamOptionDto>> buildOriginalOptionsMapping(List<QuizQuestion> questions) {
+        Map<Long, List<ExamOptionDto>> mapping = new HashMap<>();
+        for (QuizQuestion q : questions) {
+            mapping.put(q.getId(), buildOriginalOptions(q.getOptions()));
+        }
+        return mapping;
+    }
+    
+    /**
+     * Build options gốc từ DB
+     */
+    private List<ExamOptionDto> buildOriginalOptions(List<QuizQuestionOption> opts) {
+        return opts.stream()
+                .map(o -> new ExamOptionDto(o.getOptionKey(), o.getOptionText()))
+                .toList();
+    }
+    
+    /**
+     * Build session key
+     */
+    private String buildSessionKey(Long userId, Long quizSetId) {
+        return userId + "_" + quizSetId;
+    }
+    
+    /**
+     * Cleanup expired sessions
+     */
+    private void cleanupExpiredSessions() {
+        examSessions.entrySet().removeIf(entry -> entry.getValue().isExpired());
     }
 
     @Transactional(readOnly = true)
