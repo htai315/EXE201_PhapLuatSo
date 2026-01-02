@@ -90,4 +90,9 @@ public class Payment {
 
     public String getIpAddress() { return ipAddress; }
     public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }
+    
+    // Helper methods for admin
+    public String getOrderId() { return vnpTxnRef; }
+    public String getPlanCode() { return plan != null ? plan.getCode() : null; }
+    public String getTransactionNo() { return vnpTransactionNo; }
 }

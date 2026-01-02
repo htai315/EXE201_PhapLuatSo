@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,7 +56,7 @@ public class ChatHistoryService {
     @Transactional(readOnly = true)
     public List<ChatSessionDTO> getUserSessions(String userEmail, Integer page, Integer size, String search) {
         User user = userRepo.findByEmail(userEmail)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
 
         // Default pagination values
         int pageNum = (page != null && page >= 0) ? page : 0;
@@ -71,15 +72,41 @@ public class ChatHistoryService {
             sessionPage = sessionRepo.findByUserIdOrderByUpdatedAtDesc(user.getId(), pageable);
         }
 
-        return sessionPage.getContent().stream()
+        List<ChatSession> sessions = sessionPage.getContent();
+        if (sessions.isEmpty()) {
+            return List.of();
+        }
+        
+        // Batch query for message counts - FIX N+1
+        List<Long> sessionIds = sessions.stream().map(ChatSession::getId).collect(Collectors.toList());
+        Map<Long, Long> messageCounts = getMessageCountsMap(sessionIds);
+
+        return sessions.stream()
                 .map(session -> new ChatSessionDTO(
                         session.getId(),
                         session.getTitle(),
                         session.getCreatedAt(),
                         session.getUpdatedAt(),
-                        sessionRepo.countMessagesBySessionId(session.getId())
+                        messageCounts.getOrDefault(session.getId(), 0L)
                 ))
                 .collect(Collectors.toList());
+    }
+    
+    /**
+     * Get message counts for multiple sessions in one query
+     */
+    private Map<Long, Long> getMessageCountsMap(List<Long> sessionIds) {
+        if (sessionIds.isEmpty()) {
+            return Map.of();
+        }
+        List<Object[]> results = sessionRepo.countMessagesBySessionIds(sessionIds);
+        Map<Long, Long> map = new java.util.HashMap<>();
+        for (Object[] row : results) {
+            Long sessionId = ((Number) row[0]).longValue();
+            Long count = ((Number) row[1]).longValue();
+            map.put(sessionId, count);
+        }
+        return map;
     }
     
     /**
@@ -88,7 +115,7 @@ public class ChatHistoryService {
     @Transactional(readOnly = true)
     public long getUserSessionsCount(String userEmail, String search) {
         User user = userRepo.findByEmail(userEmail)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
         
         if (search != null && !search.trim().isEmpty()) {
             Pageable pageable = PageRequest.of(0, 1);
@@ -118,7 +145,7 @@ public class ChatHistoryService {
     @Transactional
     public SendMessageResponse sendMessage(String userEmail, Long sessionId, String question) {
         User user = userRepo.findByEmail(userEmail)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
 
         ChatSession session;
         if (sessionId == null) {
@@ -198,10 +225,10 @@ public class ChatHistoryService {
 
     private ChatSession getSessionAndCheckOwnership(String userEmail, Long sessionId) {
         ChatSession session = sessionRepo.findById(sessionId)
-                .orElseThrow(() -> new NotFoundException("Session not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy phiên chat"));
 
         if (!session.getUser().getEmail().equals(userEmail)) {
-            throw new ForbiddenException("You don't have access to this session");
+            throw new ForbiddenException("Bạn không có quyền truy cập phiên chat này");
         }
 
         return session;

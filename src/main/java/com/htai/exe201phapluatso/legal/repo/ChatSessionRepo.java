@@ -28,4 +28,31 @@ public interface ChatSessionRepo extends JpaRepository<ChatSession, Long> {
     
     @Query("SELECT COUNT(m) FROM ChatMessage m WHERE m.session.id = :sessionId")
     long countMessagesBySessionId(Long sessionId);
+    
+    /**
+     * Batch count messages by session IDs (avoid N+1)
+     * Returns list of [sessionId, count]
+     */
+    @Query(value = """
+        SELECT session_id, COUNT(*) as count
+        FROM chat_messages
+        WHERE session_id IN :sessionIds
+        GROUP BY session_id
+        """, nativeQuery = true)
+    List<Object[]> countMessagesBySessionIds(@Param("sessionIds") List<Long> sessionIds);
+    
+    // Admin dashboard queries
+    long countByUserId(Long userId);
+    
+    /**
+     * Batch count chat sessions by user IDs (avoid N+1)
+     * Returns list of [userId, count]
+     */
+    @Query(value = """
+        SELECT user_id, COUNT(*) as count
+        FROM chat_sessions
+        WHERE user_id IN :userIds
+        GROUP BY user_id
+        """, nativeQuery = true)
+    List<Object[]> countByUserIds(@Param("userIds") List<Long> userIds);
 }

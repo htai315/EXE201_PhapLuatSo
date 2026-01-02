@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import jakarta.persistence.LockModeType;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -41,4 +42,12 @@ public interface UserCreditRepo extends JpaRepository<UserCredit, Long> {
      */
     @Query("SELECT CASE WHEN COUNT(uc) > 0 THEN true ELSE false END FROM UserCredit uc WHERE uc.user.id = :userId")
     boolean existsByUserId(@Param("userId") Long userId);
+    
+    // ==================== BATCH QUERIES FOR ADMIN ====================
+    
+    /**
+     * Find credits for multiple users in a single query (avoid N+1)
+     */
+    @Query("SELECT uc FROM UserCredit uc WHERE uc.user.id IN :userIds")
+    List<UserCredit> findByUserIdIn(@Param("userIds") List<Long> userIds);
 }

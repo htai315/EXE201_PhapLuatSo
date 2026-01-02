@@ -56,12 +56,11 @@ public class VNPayService {
         
         // Build query string (same as hash data - URL encode all values)
         String queryUrl = VNPayUtil.buildQueryString(vnpParams);
-        log.debug("Query string: {}", queryUrl);
         
         // Add signature to query string
         String paymentUrl = vnPayConfig.getVnpayUrl() + "?" + queryUrl + "&vnp_SecureHash=" + vnpSecureHash;
         
-        log.info("Payment URL created: {}", paymentUrl);
+        log.info("Payment URL created for txnRef: {}", txnRef);
         
         return paymentUrl;
     }

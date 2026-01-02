@@ -27,6 +27,20 @@ const API_CLIENT = {
             headers
         });
 
+        // Nếu 403 Forbidden với ACCOUNT_BANNED → hiển thị thông báo và logout
+        if (response.status === 403) {
+            try {
+                const clonedResponse = response.clone();
+                const data = await clonedResponse.json();
+                if (data.error === 'ACCOUNT_BANNED') {
+                    this.handleAccountBanned(data.message);
+                    return response;
+                }
+            } catch (e) {
+                // Not JSON or other error, continue normal flow
+            }
+        }
+
         // Nếu 401 Unauthorized → thử refresh token
         if (response.status === 401) {
             console.log('Access token expired, attempting refresh...');
@@ -51,6 +65,87 @@ const API_CLIENT = {
         }
 
         return response;
+    },
+
+    /**
+     * Handle account banned - show toast message and logout
+     * @param {string} message - Ban message from server
+     */
+    handleAccountBanned(message) {
+        // Prevent multiple calls
+        if (this._handlingBan) return;
+        this._handlingBan = true;
+        
+        // Clear tokens
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('userName');
+        
+        const banMessage = message || 'Tài khoản của bạn đã bị khóa.';
+        
+        // Use existing Toast component with same style as other toasts
+        this.showBanToast(banMessage);
+        
+        // Redirect to login after 2 seconds
+        setTimeout(() => {
+            this._handlingBan = false;
+            window.location.href = '/html/login.html';
+        }, 2000);
+    },
+    
+    /**
+     * Show ban toast notification using same style as existing toasts
+     */
+    showBanToast(message) {
+        // Try to use existing Toast component first
+        if (window.Toast && typeof window.Toast.error === 'function') {
+            window.Toast.error(message, 2000);
+            return;
+        }
+        
+        // Fallback: Create toast with same style as toast-notification.css
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            container.className = 'toast-container';
+            container.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:12px;pointer-events:none;';
+            document.body.appendChild(container);
+        }
+        
+        const toast = document.createElement('div');
+        toast.className = 'toast toast-error';
+        toast.style.cssText = `
+            display:flex;align-items:center;gap:12px;min-width:320px;max-width:420px;
+            padding:16px 20px;background:linear-gradient(135deg,#ffffff 0%,#fef2f2 100%);
+            border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.15);
+            border-left:4px solid #ef4444;pointer-events:auto;
+            opacity:0;transform:translateX(400px);transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+        `;
+        
+        toast.innerHTML = `
+            <div class="toast-icon" style="flex-shrink:0;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:linear-gradient(135deg,#ef4444 0%,#dc2626 100%);color:white;">
+                <i class="bi bi-x-circle-fill" style="font-size:1.25rem;"></i>
+            </div>
+            <div class="toast-content" style="flex:1;min-width:0;">
+                <div class="toast-message" style="font-size:0.95rem;font-weight:500;color:#0f172a;line-height:1.5;">${message}</div>
+            </div>
+        `;
+        
+        container.appendChild(toast);
+        
+        // Trigger animation
+        setTimeout(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(0)';
+        }, 10);
+        
+        // Auto remove
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(400px)';
+            setTimeout(() => toast.remove(), 300);
+        }, 2000);
     },
 
     /**
@@ -169,7 +264,17 @@ const API_CLIENT = {
             throw error;
         }
         
-        return response.json();
+        // Handle empty response (201 Created with no body, etc.)
+        const text = await response.text();
+        if (!text) {
+            return null;
+        }
+        
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            return text;
+        }
     },
 
     /**
@@ -189,7 +294,17 @@ const API_CLIENT = {
             throw error;
         }
         
-        return response.json();
+        // Handle empty response (204 No Content or empty body)
+        const text = await response.text();
+        if (!text) {
+            return null;
+        }
+        
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            return text;
+        }
     },
 
     /**
@@ -205,7 +320,17 @@ const API_CLIENT = {
             throw error;
         }
         
-        return response.json();
+        // Handle empty response (204 No Content or empty body)
+        const text = await response.text();
+        if (!text) {
+            return null;
+        }
+        
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            return text;
+        }
     }
 };
 

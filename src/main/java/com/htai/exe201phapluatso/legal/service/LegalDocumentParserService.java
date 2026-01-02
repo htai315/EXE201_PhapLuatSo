@@ -3,6 +3,8 @@ package com.htai.exe201phapluatso.legal.service;
 import com.htai.exe201phapluatso.ai.service.DocumentParserService;
 import com.htai.exe201phapluatso.common.exception.BadRequestException;
 import com.htai.exe201phapluatso.legal.entity.LegalArticle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,6 +15,8 @@ import java.util.regex.Pattern;
 
 @Service
 public class LegalDocumentParserService {
+
+    private static final Logger log = LoggerFactory.getLogger(LegalDocumentParserService.class);
 
     private final DocumentParserService documentParser;
 
@@ -78,7 +82,7 @@ public class LegalDocumentParserService {
                     article.setContent(content);
                     articles.add(article);
                 } else {
-                    System.out.println("⚠ Skipped Điều " + currentArticleNum + " (content too short: " + content.length() + " chars)");
+                    log.debug("Skipped Điều {} (content too short: {} chars)", currentArticleNum, content.length());
                 }
             }
             
@@ -100,37 +104,31 @@ public class LegalDocumentParserService {
                 article.setContent(content);
                 articles.add(article);
             } else {
-                System.out.println("⚠ Skipped last article Điều " + currentArticleNum + " (content too short: " + content.length() + " chars)");
+                log.debug("Skipped last article Điều {} (content too short: {} chars)", currentArticleNum, content.length());
             }
         }
         
-        // Detailed logging
-        System.out.println("========== PARSING RESULTS ==========");
-        System.out.println("✓ Pattern used: Điều \\s+(\\d+)\\.\\s*([^\\n]+)");
-        System.out.println("✓ Total matches found: " + matchCount);
-        System.out.println("✓ Articles saved: " + articles.size());
-        System.out.println("✓ Articles skipped: " + (matchCount - articles.size()));
+        // Logging
+        log.info("Parsing results: matches={}, saved={}, skipped={}", 
+                matchCount, articles.size(), matchCount - articles.size());
         
         if (!foundNumbers.isEmpty()) {
-            System.out.println("✓ Article number range: " + foundNumbers.get(0) + " to " + foundNumbers.get(foundNumbers.size() - 1));
+            log.info("Article number range: {} to {}", foundNumbers.get(0), foundNumbers.get(foundNumbers.size() - 1));
         }
         
-        if (articles.size() > 0) {
-            System.out.println("✓ First article: Điều " + articles.get(0).getArticleNumber() + " - " + articles.get(0).getArticleTitle());
+        if (!articles.isEmpty()) {
+            log.info("First article: Điều {} - {}", articles.get(0).getArticleNumber(), articles.get(0).getArticleTitle());
             if (articles.size() > 1) {
-                System.out.println("✓ Last article: Điều " + articles.get(articles.size() - 1).getArticleNumber() + " - " + articles.get(articles.size() - 1).getArticleTitle());
+                log.info("Last article: Điều {} - {}", 
+                        articles.get(articles.size() - 1).getArticleNumber(), 
+                        articles.get(articles.size() - 1).getArticleTitle());
             }
         }
-        System.out.println("====================================");
         
         if (articles.isEmpty()) {
             throw new BadRequestException(
-                "Không tìm thấy điều luật nào trong file.\n" +
-                "Vui lòng kiểm tra:\n" +
-                "- File PDF có text layer (không phải ảnh scan)\n" +
-                "- Có pattern 'Điều 1.', 'Điều 2.' trong file\n" +
-                "- Encoding đúng (UTF-8)\n" +
-                "Total matches found: " + matchCount
+                "Không tìm thấy điều luật nào trong file. " +
+                "Vui lòng kiểm tra file PDF có text layer và có pattern 'Điều 1.', 'Điều 2.' trong file."
             );
         }
         

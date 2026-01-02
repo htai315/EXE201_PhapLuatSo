@@ -47,11 +47,16 @@ public class PaymentService {
      */
     @Transactional
     public String createPayment(Long userId, String planCode, String ipAddress) {
+        // Validate input
+        if (planCode == null || planCode.isBlank()) {
+            throw new com.htai.exe201phapluatso.common.exception.BadRequestException("Mã gói không được để trống");
+        }
+        
         User user = userRepo.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
         
         Plan plan = planRepo.findByCode(planCode)
-                .orElseThrow(() -> new NotFoundException("Plan not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy gói: " + planCode));
         
         // Generate unique transaction reference
         String txnRef = "PAY" + System.currentTimeMillis() + UUID.randomUUID().toString().substring(0, 8);
@@ -159,7 +164,7 @@ public class PaymentService {
      */
     public java.util.List<com.htai.exe201phapluatso.payment.dto.PaymentHistoryResponse> getPaymentHistory(Long userId) {
         User user = userRepo.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
         
         java.util.List<Payment> payments = paymentRepo.findByUserOrderByCreatedAtDesc(user);
         

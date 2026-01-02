@@ -23,12 +23,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Service quản lý Quiz Sets và Questions
+ * OPTIMIZED: Sử dụng batch queries để tránh N+1 problem
+ */
 @Service
 public class QuizService {
 
@@ -67,13 +73,11 @@ public class QuizService {
     public QuizSet createQuizSet(Long userId, CreateQuizSetRequest req) {
         User user = requireActiveStudent(userId);
 
-        // Manual quiz creation is FREE - no credit deduction
-        // Only AI quiz generation costs credits
-
         QuizSet set = new QuizSet();
         set.setCreatedBy(user);
-        set.setTitle(req.title());
-        set.setDescription(req.description());
+        // Sanitize input
+        set.setTitle(sanitize(req.title()));
+        set.setDescription(sanitize(req.description()));
         set.setStatus("DRAFT");
         set.setVisibility("PRIVATE");
         set.setCreatedAt(LocalDateTime.now());
@@ -84,49 +88,43 @@ public class QuizService {
     @Transactional
     public void addQuestion(Long userId, Long quizSetId, CreateQuestionRequest req) {
         QuizSet quizSet = quizSetRepo.findById(quizSetId)
-                .orElseThrow(() -> new NotFoundException("Quiz set not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy bộ đề"));
 
-        // Check ownership
         if (!quizSet.getCreatedBy().getId().equals(userId)) {
-            throw new ForbiddenException("You are not the owner of this quiz set");
+            throw new ForbiddenException("Bạn không phải chủ sở hữu bộ đề này");
         }
 
         validateOptions(req.options());
 
-        // Calculate sort order (next available order in the quiz set)
         List<QuizQuestion> existingQuestions = questionRepo.findByQuizSetIdOrderBySortOrderAsc(quizSetId);
         int nextSortOrder = existingQuestions.isEmpty() 
                 ? 0 
                 : existingQuestions.get(existingQuestions.size() - 1).getSortOrder() + 1;
 
-        // Create question
         QuizQuestion question = new QuizQuestion();
         question.setQuizSet(quizSet);
-        question.setQuestionText(req.questionText());
-        question.setExplanation(req.explanation());
+        question.setQuestionText(sanitize(req.questionText()));
+        question.setExplanation(sanitize(req.explanation()));
         question.setSortOrder(nextSortOrder);
         question = questionRepo.save(question);
 
-        // Create options (batch save)
         List<QuizQuestionOption> options = new ArrayList<>();
         for (var opt : req.options()) {
             QuizQuestionOption option = new QuizQuestionOption();
             option.setQuestion(question);
-            option.setOptionKey(opt.optionKey());
-            option.setOptionText(opt.optionText());
+            option.setOptionKey(opt.optionKey().trim().toUpperCase());
+            option.setOptionText(sanitize(opt.optionText()));
             option.setCorrect(opt.isCorrect());
             options.add(option);
         }
         optionRepo.saveAll(options);
 
-        // Update quiz set updated_at
         quizSet.setUpdatedAt(LocalDateTime.now());
         quizSetRepo.save(quizSet);
     }
 
     @Transactional(readOnly = true)
     public List<QuizSet> getQuizSetsForUser(Long userId) {
-        // Đảm bảo user còn hiệu lực giống như khi tạo bộ đề
         requireActiveStudent(userId);
         return quizSetRepo.findByCreatedById(userId);
     }
@@ -137,10 +135,8 @@ public class QuizService {
             int page, 
             int size
     ) {
-        // Validate user
         requireActiveStudent(userId);
         
-        // Create pageable with sorting by updatedAt DESC (newest first)
         org.springframework.data.domain.Pageable pageable = 
                 org.springframework.data.domain.PageRequest.of(
                         page, 
@@ -151,13 +147,30 @@ public class QuizService {
         return quizSetRepo.findByCreatedById(userId, pageable);
     }
 
+    /**
+     * Batch count questions cho nhiều quiz sets - OPTIMIZED
+     * Tránh N+1 query khi hiển thị danh sách quiz sets
+     */
+    @Transactional(readOnly = true)
+    public Map<Long, Long> countQuestionsForQuizSets(List<Long> quizSetIds) {
+        if (quizSetIds == null || quizSetIds.isEmpty()) {
+            return Map.of();
+        }
+        
+        return questionRepo.countByQuizSetIds(quizSetIds).stream()
+                .collect(Collectors.toMap(
+                        row -> toLong(row[0]),
+                        row -> toLong(row[1])
+                ));
+    }
+
     @Transactional(readOnly = true)
     public QuizSet getOwnedQuizSet(Long userId, Long quizSetId) {
         QuizSet quizSet = quizSetRepo.findById(quizSetId)
-                .orElseThrow(() -> new NotFoundException("Quiz set not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy bộ đề"));
 
         if (!quizSet.getCreatedBy().getId().equals(userId)) {
-            throw new ForbiddenException("You are not the owner of this quiz set");
+            throw new ForbiddenException("Bạn không phải chủ sở hữu bộ đề này");
         }
 
         return quizSet;
@@ -165,15 +178,11 @@ public class QuizService {
 
     @Transactional(readOnly = true)
     public List<QuestionResponse> getQuestionsForSet(Long userId, Long quizSetId) {
-        // Sẽ ném NotFound/Forbidden nếu không hợp lệ
         getOwnedQuizSet(userId, quizSetId);
 
-        // FIX N+1 QUERY: Sử dụng JOIN FETCH để load questions + options trong 1 query
-        // Trước: N+1 queries (1 query cho questions + N queries cho options)
-        // Sau: 1 query duy nhất
+        // FIX N+1: Sử dụng JOIN FETCH để load questions + options trong 1 query
         List<QuizQuestion> questions = questionRepo.findByQuizSetIdWithOptions(quizSetId);
         
-        // Map to response DTOs - options đã được fetch sẵn
         return questions.stream()
                 .map(q -> QuestionResponse.from(q, q.getOptions()))
                 .toList();
@@ -181,44 +190,37 @@ public class QuizService {
 
     @Transactional
     public void deleteQuizSet(Long userId, Long quizSetId) {
-        log.info("Attempting to delete quiz set {} by user {}", quizSetId, userId);
+        log.info("Đang xóa bộ đề {} bởi user {}", quizSetId, userId);
         
         QuizSet quizSet = getOwnedQuizSet(userId, quizSetId);
-        log.info("Quiz set found: {}", quizSet.getTitle());
+        log.info("Tìm thấy bộ đề: {}", quizSet.getTitle());
         
         try {
             // SQL Server không cho phép multiple cascade paths
-            // Cascade path: quiz_sets -> quiz_attempts -> quiz_attempt_answers (OK)
-            // Nhưng: quiz_sets -> quiz_questions -> quiz_attempt_answers (CONFLICT!)
-            // 
             // Giải pháp: Xóa attempt_answers trước khi cascade xóa questions
             List<Long> questionIds = questionRepo.findByQuizSetIdOrderBySortOrderAsc(quizSetId)
                     .stream()
                     .map(QuizQuestion::getId)
                     .toList();
             
-            log.info("Found {} questions in quiz set", questionIds.size());
+            log.info("Tìm thấy {} câu hỏi trong bộ đề", questionIds.size());
             
             if (!questionIds.isEmpty()) {
-                log.info("Deleting attempt answers for questions: {}", questionIds);
+                log.info("Đang xóa câu trả lời cho các câu hỏi: {}", questionIds);
                 attemptAnswerRepo.deleteByQuestionIds(questionIds);
-                entityManager.flush(); // Đảm bảo delete được thực thi ngay
-                log.info("Attempt answers deleted successfully");
+                entityManager.flush();
+                log.info("Đã xóa câu trả lời thành công");
             }
             
-            // Clear persistence context để tránh lỗi TransientPropertyValueException
             entityManager.clear();
             
-            // Giờ có thể xóa quiz_set, database sẽ tự động cascade:
-            // - quiz_sets -> quiz_attempts (CASCADE - đã xóa answers ở trên)
-            // - quiz_sets -> quiz_questions -> quiz_question_options (CASCADE)
-            log.info("Deleting quiz set {}", quizSetId);
-            quizSetRepo.deleteById(quizSetId); // Dùng deleteById thay vì delete(entity)
+            log.info("Đang xóa bộ đề {}", quizSetId);
+            quizSetRepo.deleteById(quizSetId);
             entityManager.flush();
-            log.info("Quiz set deleted successfully");
+            log.info("Đã xóa bộ đề thành công");
             
         } catch (Exception e) {
-            log.error("Error deleting quiz set {}: {}", quizSetId, e.getMessage(), e);
+            log.error("Lỗi khi xóa bộ đề {}: {}", quizSetId, e.getMessage(), e);
             throw e;
         }
     }
@@ -228,16 +230,14 @@ public class QuizService {
         QuizSet quizSet = getOwnedQuizSet(userId, quizSetId);
 
         QuizQuestion question = questionRepo.findById(questionId)
-                .orElseThrow(() -> new NotFoundException("Question not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy câu hỏi"));
 
         if (!question.getQuizSet().getId().equals(quizSet.getId())) {
-            throw new BadRequestException("Question does not belong to this quiz set");
+            throw new BadRequestException("Câu hỏi không thuộc bộ đề này");
         }
 
-        // Xóa các attempt answers liên quan trước (nếu câu hỏi đã được làm)
         attemptAnswerRepo.deleteByQuestionId(questionId);
-        
-        questionRepo.delete(question); // options ON DELETE CASCADE
+        questionRepo.delete(question);
     }
 
     @Transactional
@@ -245,29 +245,27 @@ public class QuizService {
         QuizSet quizSet = getOwnedQuizSet(userId, quizSetId);
 
         QuizQuestion question = questionRepo.findById(questionId)
-                .orElseThrow(() -> new NotFoundException("Question not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy câu hỏi"));
 
         if (!question.getQuizSet().getId().equals(quizSet.getId())) {
-            throw new BadRequestException("Question does not belong to this quiz set");
+            throw new BadRequestException("Câu hỏi không thuộc bộ đề này");
         }
 
         validateOptions(req.options());
 
-        // update question fields
-        question.setQuestionText(req.questionText());
-        question.setExplanation(req.explanation());
+        question.setQuestionText(sanitize(req.questionText()));
+        question.setExplanation(sanitize(req.explanation()));
         question.setUpdatedAt(LocalDateTime.now());
         questionRepo.save(question);
 
-        // remove old options and recreate (delete by query to avoid unique index conflicts)
         optionRepo.deleteByQuestionId(questionId);
 
         List<QuizQuestionOption> newOptions = new ArrayList<>();
         for (var opt : req.options()) {
             QuizQuestionOption option = new QuizQuestionOption();
             option.setQuestion(question);
-            option.setOptionKey(opt.optionKey());
-            option.setOptionText(opt.optionText());
+            option.setOptionKey(opt.optionKey().trim().toUpperCase());
+            option.setOptionText(sanitize(opt.optionText()));
             option.setCorrect(opt.isCorrect());
             newOptions.add(option);
         }
@@ -280,23 +278,24 @@ public class QuizService {
         return questionRepo.countByQuizSetId(quizSetId);
     }
 
-    // -------- HELPERS --------
+    // ==================== HELPERS ====================
+    
     private User requireActiveStudent(Long userId) {
         return userRepo.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
     }
 
     private void validateOptions(List<CreateQuestionRequest.OptionDto> options) {
         if (options == null || options.size() != 4) {
-            throw new BadRequestException("Must have exactly 4 options");
+            throw new BadRequestException("Phải có đúng 4 đáp án");
         }
 
         Set<String> keys = options.stream()
-                .map(CreateQuestionRequest.OptionDto::optionKey)
+                .map(o -> o.optionKey().trim().toUpperCase())
                 .collect(Collectors.toSet());
 
         if (!keys.equals(Set.of("A", "B", "C", "D"))) {
-            throw new BadRequestException("Options must have keys: A, B, C, D");
+            throw new BadRequestException("Đáp án phải có các key: A, B, C, D");
         }
 
         long correctCount = options.stream()
@@ -304,7 +303,26 @@ public class QuizService {
                 .count();
 
         if (correctCount != 1) {
-            throw new BadRequestException("Must have exactly 1 correct option");
+            throw new BadRequestException("Phải có đúng 1 đáp án đúng");
         }
+    }
+
+    /**
+     * Sanitize input: trim và xử lý null
+     */
+    private String sanitize(String input) {
+        if (input == null) return null;
+        return input.trim();
+    }
+
+    /**
+     * Convert Object to Long (handles BigDecimal, Integer, etc.)
+     */
+    private Long toLong(Object value) {
+        if (value == null) return 0L;
+        if (value instanceof Long) return (Long) value;
+        if (value instanceof BigDecimal) return ((BigDecimal) value).longValue();
+        if (value instanceof Number) return ((Number) value).longValue();
+        return 0L;
     }
 }

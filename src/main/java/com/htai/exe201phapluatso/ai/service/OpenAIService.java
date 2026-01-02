@@ -4,10 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.htai.exe201phapluatso.ai.dto.AIQuestionDTO;
 import com.htai.exe201phapluatso.common.exception.BadRequestException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -23,6 +25,8 @@ import java.util.Map;
 @Service
 public class OpenAIService {
 
+    private static final Logger log = LoggerFactory.getLogger(OpenAIService.class);
+
     private final WebClient webClient;
     private final ObjectMapper objectMapper;
 
@@ -33,6 +37,9 @@ public class OpenAIService {
     private String model;
 
     private static final String OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
+    private static final int MAX_RETRIES = 2;
+    private static final Duration RETRY_DELAY = Duration.ofSeconds(2);
+    private static final Duration API_TIMEOUT = Duration.ofSeconds(180);
 
     public OpenAIService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
         this.webClient = webClientBuilder
@@ -45,12 +52,12 @@ public class OpenAIService {
      * Generate text response from OpenAI (for chatbot)
      */
     public String generateText(String prompt) {
-        return callOpenAI(prompt, 0);  // 0 = không log số câu hỏi
+        return callOpenAIWithRetry(prompt, 0);
     }
 
     public List<AIQuestionDTO> generateQuestions(String documentText, int count) {
         String prompt = buildPrompt(documentText, count);
-        String response = callOpenAI(prompt, count);  // Truyền count vào
+        String response = callOpenAIWithRetry(prompt, count);
         return parseResponse(response);
     }
 
@@ -86,53 +93,83 @@ public class OpenAIService {
             """, count, documentText);
     }
 
-    private String callOpenAI(String prompt, int questionCount) {
-        try {
-            Map<String, Object> requestBody = Map.of(
-                "model", model,
-                "messages", List.of(
-                    Map.of(
-                        "role", "user",
-                        "content", prompt
-                    )
-                ),
-                "temperature", 0.7,
-                "max_tokens", 16000  // Tăng lên để đủ cho 20 câu hỏi
-            );
-
-            System.out.println("Calling OpenAI API with model: " + model);
-            if (questionCount > 0) {
-                System.out.println("Requesting " + questionCount + " questions");  // Log số câu yêu cầu
+    /**
+     * Call OpenAI API with retry mechanism
+     */
+    private String callOpenAIWithRetry(String prompt, int questionCount) {
+        Exception lastException = null;
+        
+        for (int attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                if (attempt > 0) {
+                    log.info("Retry attempt {} for OpenAI API call", attempt);
+                    Thread.sleep(RETRY_DELAY.toMillis() * attempt);
+                }
+                return callOpenAI(prompt, questionCount);
+            } catch (WebClientResponseException e) {
+                lastException = e;
+                // Don't retry on 4xx errors (client errors)
+                if (e.getStatusCode().is4xxClientError()) {
+                    log.error("OpenAI API client error (no retry): {}", e.getStatusCode());
+                    break;
+                }
+                log.warn("OpenAI API error on attempt {}: {}", attempt + 1, e.getMessage());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new BadRequestException("Bị gián đoạn khi gọi OpenAI API");
+            } catch (Exception e) {
+                lastException = e;
+                log.warn("OpenAI API exception on attempt {}: {}", attempt + 1, e.getMessage());
             }
-            
-            String response = webClient.post()
-                    .uri(OPENAI_API_URL)
-                    .header("Content-Type", "application/json")
-                    .header("Authorization", "Bearer " + apiKey)
-                    .bodyValue(requestBody)
-                    .retrieve()
-                    .onStatus(
-                        status -> status.is4xxClientError() || status.is5xxServerError(),
-                        clientResponse -> clientResponse.bodyToMono(String.class)
-                            .map(body -> {
-                                System.err.println("OpenAI API Error: " + body);
-                                return new BadRequestException("OpenAI API Error (" + clientResponse.statusCode() + "): " + body);
-                            })
-                    )
-                    .bodyToMono(String.class)
-                    .timeout(Duration.ofSeconds(180)) // Tăng timeout lên 3 phút cho generate câu hỏi
-                    .block();
-
-            if (response == null) {
-                throw new BadRequestException("Không nhận được phản hồi từ OpenAI");
-            }
-
-            System.out.println("OpenAI response received");
-            return extractTextFromResponse(response);
-        } catch (Exception e) {
-            System.err.println("Exception calling OpenAI: " + e.getMessage());
-            throw new BadRequestException("Lỗi khi gọi OpenAI API: " + e.getMessage());
         }
+        
+        throw new BadRequestException("Lỗi khi gọi OpenAI API sau " + (MAX_RETRIES + 1) + " lần thử: " + 
+            (lastException != null ? lastException.getMessage() : "Unknown error"));
+    }
+
+    private String callOpenAI(String prompt, int questionCount) {
+        Map<String, Object> requestBody = Map.of(
+            "model", model,
+            "messages", List.of(
+                Map.of(
+                    "role", "user",
+                    "content", prompt
+                )
+            ),
+            "temperature", 0.7,
+            "max_tokens", 16000
+        );
+
+        log.info("Calling OpenAI API with model: {}", model);
+        if (questionCount > 0) {
+            log.info("Requesting {} questions", questionCount);
+        }
+        
+        String response = webClient.post()
+                .uri(OPENAI_API_URL)
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + apiKey)
+                .bodyValue(requestBody)
+                .retrieve()
+                .onStatus(
+                    status -> status.is4xxClientError() || status.is5xxServerError(),
+                    clientResponse -> clientResponse.bodyToMono(String.class)
+                        .map(body -> {
+                            // Don't log full body - may contain sensitive info
+                            log.error("OpenAI API Error: status={}", clientResponse.statusCode());
+                            return new BadRequestException("Lỗi OpenAI API: " + clientResponse.statusCode());
+                        })
+                )
+                .bodyToMono(String.class)
+                .timeout(API_TIMEOUT)
+                .block();
+
+        if (response == null) {
+            throw new BadRequestException("Không nhận được phản hồi từ OpenAI");
+        }
+
+        log.info("OpenAI response received successfully");
+        return extractTextFromResponse(response);
     }
 
     private String extractTextFromResponse(String response) {
@@ -149,7 +186,7 @@ public class OpenAIService {
 
             return text;
         } catch (Exception e) {
-            throw new BadRequestException("Không thể parse response từ OpenAI: " + e.getMessage());
+            throw new BadRequestException("Không thể parse response từ OpenAI");
         }
     }
 
@@ -181,11 +218,13 @@ public class OpenAIService {
                 throw new BadRequestException("OpenAI không tạo được câu hỏi nào");
             }
 
-            System.out.println("Parsed " + questions.size() + " questions from OpenAI response");
+            log.info("Parsed {} questions from OpenAI response", questions.size());
 
             return questions;
+        } catch (BadRequestException e) {
+            throw e;
         } catch (Exception e) {
-            throw new BadRequestException("Không thể parse câu hỏi từ OpenAI: " + e.getMessage());
+            throw new BadRequestException("Không thể parse câu hỏi từ OpenAI");
         }
     }
 }

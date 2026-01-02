@@ -5,9 +5,12 @@ import com.htai.exe201phapluatso.auth.repo.UserRepo;
 import com.htai.exe201phapluatso.common.exception.BadRequestException;
 import com.htai.exe201phapluatso.common.exception.ForbiddenException;
 import com.htai.exe201phapluatso.common.exception.NotFoundException;
+import com.htai.exe201phapluatso.quiz.dto.PagedExamHistoryResponse;
 import com.htai.exe201phapluatso.quiz.dto.ExamDtos.*;
 import com.htai.exe201phapluatso.quiz.entity.*;
 import com.htai.exe201phapluatso.quiz.repo.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,12 +18,17 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Service xử lý logic làm bài quiz (exam/practice)
+ * OPTIMIZED: Sử dụng JOIN FETCH để tránh N+1 query problem
+ */
 @Service
 public class QuizExamService {
 
+    private static final int MAX_HISTORY_ITEMS = 10;
+
     private final QuizSetRepo quizSetRepo;
     private final QuizQuestionRepo questionRepo;
-    private final QuizQuestionOptionRepo optionRepo;
     private final QuizAttemptRepo attemptRepo;
     private final QuizAttemptAnswerRepo answerRepo;
     private final UserRepo userRepo;
@@ -28,42 +36,44 @@ public class QuizExamService {
     public QuizExamService(
             QuizSetRepo quizSetRepo,
             QuizQuestionRepo questionRepo,
-            QuizQuestionOptionRepo optionRepo,
             QuizAttemptRepo attemptRepo,
             QuizAttemptAnswerRepo answerRepo,
             UserRepo userRepo
     ) {
         this.quizSetRepo = quizSetRepo;
         this.questionRepo = questionRepo;
-        this.optionRepo = optionRepo;
         this.attemptRepo = attemptRepo;
         this.answerRepo = answerRepo;
         this.userRepo = userRepo;
     }
 
+    /**
+     * Bắt đầu làm bài quiz - OPTIMIZED: 1 query thay vì N+1
+     */
     @Transactional(readOnly = true)
     public StartExamResponse startExam(Long userId, Long quizSetId) {
         QuizSet quizSet = requireCanPractice(userId, quizSetId);
 
-        List<QuizQuestion> questions = questionRepo.findByQuizSetIdOrderBySortOrderAsc(quizSetId);
+        // FIX N+1: Sử dụng JOIN FETCH để load questions + options trong 1 query
+        List<QuizQuestion> questions = questionRepo.findByQuizSetIdWithOptions(quizSetId);
         if (questions.isEmpty()) {
             throw new BadRequestException("Bộ đề hiện chưa có câu hỏi nào");
         }
 
-        List<ExamQuestionDto> questionDtos = new ArrayList<>();
-        for (QuizQuestion question : questions) {
-            List<QuizQuestionOption> options =
-                    optionRepo.findByQuestionIdOrderByOptionKeyAsc(question.getId());
-            List<ExamOptionDto> optionDtos = options.stream()
-                    .map(o -> new ExamOptionDto(o.getOptionKey(), o.getOptionText()))
-                    .toList();
-            questionDtos.add(new ExamQuestionDto(
-                    question.getId(),
-                    question.getQuestionText(),
-                    question.getExplanation(),
-                    optionDtos
-            ));
-        }
+        // Options đã được fetch sẵn qua JOIN FETCH
+        List<ExamQuestionDto> questionDtos = questions.stream()
+                .map(question -> {
+                    List<ExamOptionDto> optionDtos = question.getOptions().stream()
+                            .map(o -> new ExamOptionDto(o.getOptionKey(), o.getOptionText()))
+                            .toList();
+                    return new ExamQuestionDto(
+                            question.getId(),
+                            question.getQuestionText(),
+                            question.getExplanation(),
+                            optionDtos
+                    );
+                })
+                .toList();
 
         return new StartExamResponse(
                 quizSet.getId(),
@@ -73,6 +83,9 @@ public class QuizExamService {
         );
     }
 
+    /**
+     * Nộp bài quiz - OPTIMIZED: 1 query thay vì N+1
+     */
     @Transactional
     public SubmitExamResponse submitExam(Long userId, Long quizSetId, SubmitExamRequest req) {
         QuizSet quizSet = requireCanPractice(userId, quizSetId);
@@ -81,18 +94,18 @@ public class QuizExamService {
             throw new BadRequestException("Danh sách câu trả lời không hợp lệ");
         }
 
-        // Load all questions of the set
-        List<QuizQuestion> questions = questionRepo.findByQuizSetIdOrderBySortOrderAsc(quizSetId);
+        // FIX N+1: Load questions với options trong 1 query
+        List<QuizQuestion> questions = questionRepo.findByQuizSetIdWithOptions(quizSetId);
         if (questions.isEmpty()) {
             throw new BadRequestException("Bộ đề hiện chưa có câu hỏi nào");
         }
 
-        // Load all options for questions
-        Map<Long, List<QuizQuestionOption>> optionsByQuestion = new HashMap<>();
-        for (QuizQuestion q : questions) {
-            List<QuizQuestionOption> opts = optionRepo.findByQuestionIdOrderByOptionKeyAsc(q.getId());
-            optionsByQuestion.put(q.getId(), opts);
-        }
+        // Build options map từ data đã fetch sẵn
+        Map<Long, List<QuizQuestionOption>> optionsByQuestion = questions.stream()
+                .collect(Collectors.toMap(
+                        QuizQuestion::getId,
+                        QuizQuestion::getOptions
+                ));
 
         int totalQuestions = questions.size();
         int correctCount = 0;
@@ -194,7 +207,7 @@ public class QuizExamService {
     @Transactional(readOnly = true)
     public ExamHistoryResponse getHistory(Long userId, Long quizSetId) {
         QuizSet quizSet = quizSetRepo.findById(quizSetId)
-                .orElseThrow(() -> new NotFoundException("Quiz set not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy bộ đề"));
 
         if (!quizSet.getCreatedBy().getId().equals(userId)
                 && !"PUBLIC".equalsIgnoreCase(quizSet.getVisibility())) {
@@ -225,13 +238,48 @@ public class QuizExamService {
         );
     }
 
+    /**
+     * Lấy lịch sử làm bài của user có phân trang - OPTIMIZED: 1 query với JOIN FETCH
+     */
+    @Transactional(readOnly = true)
+    public PagedExamHistoryResponse getAllHistory(Long userId, int page, int size) {
+        Page<QuizAttempt> pagedAttempts = attemptRepo.findByUserIdWithQuizSet(
+                userId, 
+                PageRequest.of(page, size)
+        );
+
+        List<PagedExamHistoryResponse.AttemptItem> items = pagedAttempts.getContent().stream()
+                .map(a -> {
+                    double scoreOutOf10 = Math.round((a.getCorrectCount() * 100.0) / a.getTotalQuestions()) / 10.0;
+                    return new PagedExamHistoryResponse.AttemptItem(
+                            a.getId(),
+                            a.getQuizSet().getId(),
+                            a.getQuizSet().getTitle(),
+                            a.getFinishedAt(),
+                            a.getTotalQuestions(),
+                            a.getCorrectCount(),
+                            a.getScorePercent(),
+                            scoreOutOf10
+                    );
+                })
+                .toList();
+
+        return new PagedExamHistoryResponse(
+                items,
+                pagedAttempts.getNumber(),
+                pagedAttempts.getSize(),
+                pagedAttempts.getTotalElements(),
+                pagedAttempts.getTotalPages(),
+                pagedAttempts.isFirst(),
+                pagedAttempts.isLast()
+        );
+    }
+
     private QuizSet requireCanPractice(Long userId, Long quizSetId) {
         QuizSet quizSet = quizSetRepo.findById(quizSetId)
-                .orElseThrow(() -> new NotFoundException("Quiz set not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy bộ đề"));
 
-        // Cho phép:
-        // - chủ sở hữu bộ đề
-        // - hoặc bộ đề PUBLIC
+        // Cho phép: chủ sở hữu hoặc bộ đề PUBLIC
         if (!quizSet.getCreatedBy().getId().equals(userId)
                 && !"PUBLIC".equalsIgnoreCase(quizSet.getVisibility())) {
             throw new ForbiddenException("Bạn không có quyền làm bộ đề này");

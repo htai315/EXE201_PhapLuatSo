@@ -214,9 +214,8 @@ public class LegalSearchService {
      */
     private List<LegalArticle> getFallbackArticles(int limit) {
         log.info("Using fallback: returning recent articles");
-        return articleRepo.findAll().stream()
-                .limit(limit)
-                .collect(Collectors.toList());
+        // Use paginated query instead of findAll() to avoid loading all articles
+        return articleRepo.findRecentArticles(org.springframework.data.domain.PageRequest.of(0, limit));
     }
 
     /**

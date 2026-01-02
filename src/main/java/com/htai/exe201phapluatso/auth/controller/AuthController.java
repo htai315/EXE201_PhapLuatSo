@@ -24,7 +24,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
         auth.register(req);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(new MessageResponse("Đăng ký thành công! Vui lòng đăng nhập."));
     }
 
     @PostMapping("/login")

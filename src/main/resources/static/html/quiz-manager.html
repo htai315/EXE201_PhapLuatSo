@@ -42,7 +42,6 @@
                 <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/legal-chat.html">Chat AI</a></li>
                 <li class="nav-item"><a class="nav-link active" href="/html/my-quizzes.html">Bộ đề</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/legal-upload.html">Văn bản PL</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
                 <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
                 <li class="nav-item ms-lg-3 guest-only">
@@ -195,31 +194,20 @@
     async function loadQuizSetAndQuestions(token, setId) {
         ERROR_HANDLER.showLoading(true);
         try {
-            // Sử dụng API_CLIENT với auto token refresh
-            const [setRes, qRes] = await Promise.all([
+            // API_CLIENT.get() trả về data trực tiếp (đã parse JSON)
+            // và throw error nếu response không ok
+            const [setData, questions] = await Promise.all([
                 API_CLIENT.get(`${API_BASE}/${setId}`),
                 API_CLIENT.get(`${API_BASE}/${setId}/questions`)
             ]);
 
-            if (!setRes.ok) {
-                const text = await setRes.text();
-                throw new Error(text || 'Không thể tải thông tin bộ đề');
-            }
-
-            const setData = await setRes.json();
             currentQuizSetData = setData;
             renderQuizSet(setData);
-
-            if (!qRes.ok) {
-                const text = await qRes.text();
-                throw new Error(text || 'Không thể tải danh sách câu hỏi');
-            }
-            const questions = await qRes.json();
             renderQuestions(questions);
 
         } catch (err) {
             console.error(err);
-            showAlert(err.message || 'Có lỗi xảy ra khi tải dữ liệu');
+            showAlert(err.error || err.message || 'Có lỗi xảy ra khi tải dữ liệu');
         } finally {
             ERROR_HANDLER.showLoading(false);
         }
@@ -427,12 +415,12 @@
             
             Toast.success('Đã xóa câu hỏi thành công');
             
-            // Reload list
+            // Reload list - API_CLIENT.get() trả về data trực tiếp
             const questions = await API_CLIENT.get(`${API_BASE}/${currentQuizSetId}/questions`);
             renderQuestions(questions);
         } catch (err) {
             console.error(err);
-            showAlert(err.message || 'Không thể xóa câu hỏi');
+            showAlert(err.error || err.message || 'Không thể xóa câu hỏi');
         } finally {
             ERROR_HANDLER.showLoading(false);
         }

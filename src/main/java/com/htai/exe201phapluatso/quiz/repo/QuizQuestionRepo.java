@@ -23,6 +23,18 @@ public interface QuizQuestionRepo extends JpaRepository<QuizQuestion, Long> {
     
     long countByQuizSetId(Long quizSetId);
     
+    /**
+     * Batch count questions by quiz set IDs (avoid N+1 in list views)
+     * Returns list of [quizSetId, count]
+     */
+    @Query(value = """
+        SELECT quiz_set_id, COUNT(*) as count
+        FROM quiz_questions
+        WHERE quiz_set_id IN :quizSetIds
+        GROUP BY quiz_set_id
+        """, nativeQuery = true)
+    List<Object[]> countByQuizSetIds(@Param("quizSetIds") List<Long> quizSetIds);
+    
     @Modifying
     @Query("DELETE FROM QuizQuestion q WHERE q.quizSet.id = :quizSetId")
     void deleteByQuizSetId(@Param("quizSetId") Long quizSetId);

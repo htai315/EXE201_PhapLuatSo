@@ -5,25 +5,32 @@ import com.htai.exe201phapluatso.auth.oauth2.OAuth2AuthenticationFailureHandler;
 import com.htai.exe201phapluatso.auth.oauth2.OAuth2AuthenticationSuccessHandler;
 import com.htai.exe201phapluatso.auth.repo.UserRepo;
 import com.htai.exe201phapluatso.auth.service.JwtService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
-    @Autowired
-    private CustomOAuth2UserService customOAuth2UserService;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler;
+    private final OAuth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler;
 
-    @Autowired
-    private OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler;
-
-    @Autowired
-    private OAuth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler;
+    // Constructor injection (best practice)
+    public SecurityConfig(
+            CustomOAuth2UserService customOAuth2UserService,
+            OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler,
+            OAuth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler
+    ) {
+        this.customOAuth2UserService = customOAuth2UserService;
+        this.oauth2AuthenticationSuccessHandler = oauth2AuthenticationSuccessHandler;
+        this.oauth2AuthenticationFailureHandler = oauth2AuthenticationFailureHandler;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(
@@ -35,6 +42,7 @@ public class SecurityConfig {
         JwtAuthFilter jwtFilter = new JwtAuthFilter(jwtService, userRepo);
 
         http
+                // CSRF disabled - OK for stateless REST API with JWT authentication
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
@@ -56,6 +64,9 @@ public class SecurityConfig {
 
                         // payment IPN callback (public - VNPay server-to-server)
                         .requestMatchers("/api/payment/vnpay-ipn").permitAll()
+
+                        // admin endpoints (protected - ADMIN role required)
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         // auth endpoints (protected - cần token)
                         .requestMatchers("/api/auth/me", "/api/auth/test").authenticated()

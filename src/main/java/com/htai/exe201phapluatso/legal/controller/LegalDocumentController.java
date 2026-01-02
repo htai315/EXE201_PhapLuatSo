@@ -7,6 +7,7 @@ import com.htai.exe201phapluatso.legal.dto.UploadLegalDocumentResponse;
 import com.htai.exe201phapluatso.legal.service.LegalDocumentService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,6 +30,7 @@ public class LegalDocumentController {
      * POST /api/legal/documents/upload
      */
     @PostMapping("/upload")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UploadLegalDocumentResponse> uploadDocument(
             Authentication authentication,
             @RequestParam("file") MultipartFile file,
@@ -59,20 +61,22 @@ public class LegalDocumentController {
     }
 
     /**
-     * Get all legal documents
+     * Get all legal documents (Admin only)
      * GET /api/legal/documents
      */
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<LegalDocumentDTO>> getAllDocuments() {
         List<LegalDocumentDTO> documents = legalDocumentService.getAllDocuments();
         return ResponseEntity.ok(documents);
     }
 
     /**
-     * Get paginated legal documents with search
+     * Get paginated legal documents with search (Admin only)
      * GET /api/legal/documents/paginated?page=0&size=10&search=luật
      */
     @GetMapping("/paginated")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> getDocumentsPaginated(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -93,10 +97,11 @@ public class LegalDocumentController {
     }
 
     /**
-     * Get documents statistics
+     * Get documents statistics (Admin only)
      * GET /api/legal/documents/stats
      */
     @GetMapping("/stats")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> getDocumentsStats() {
         Map<String, Object> stats = legalDocumentService.getDocumentsStats();
         return ResponseEntity.ok(stats);
@@ -107,6 +112,7 @@ public class LegalDocumentController {
      * DELETE /api/legal/documents/{id}
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteDocument(@PathVariable Long id) {
         legalDocumentService.deleteDocument(id);
         return ResponseEntity.noContent().build();

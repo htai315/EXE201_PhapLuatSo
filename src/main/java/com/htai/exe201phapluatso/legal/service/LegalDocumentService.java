@@ -2,6 +2,7 @@ package com.htai.exe201phapluatso.legal.service;
 
 import com.htai.exe201phapluatso.auth.entity.User;
 import com.htai.exe201phapluatso.auth.repo.UserRepo;
+import com.htai.exe201phapluatso.common.exception.BadRequestException;
 import com.htai.exe201phapluatso.common.exception.NotFoundException;
 import com.htai.exe201phapluatso.legal.dto.LegalDocumentDTO;
 import com.htai.exe201phapluatso.legal.dto.UploadLegalDocumentRequest;
@@ -10,6 +11,8 @@ import com.htai.exe201phapluatso.legal.entity.LegalArticle;
 import com.htai.exe201phapluatso.legal.entity.LegalDocument;
 import com.htai.exe201phapluatso.legal.repo.LegalArticleRepo;
 import com.htai.exe201phapluatso.legal.repo.LegalDocumentRepo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,15 +28,17 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 public class LegalDocumentService {
+
+    private static final Logger log = LoggerFactory.getLogger(LegalDocumentService.class);
 
     private final LegalDocumentRepo documentRepo;
     private final LegalArticleRepo articleRepo;
@@ -41,6 +46,10 @@ public class LegalDocumentService {
     private final UserRepo userRepo;
 
     private static final String UPLOAD_DIR = "uploads/legal/";
+    private static final long MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+    private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
+        "application/pdf"
+    );
 
     public LegalDocumentService(
             LegalDocumentRepo documentRepo,
@@ -60,22 +69,25 @@ public class LegalDocumentService {
             MultipartFile file,
             UploadLegalDocumentRequest request
     ) {
-        // 1. Get user
+        // 1. Validate file
+        validateFile(file);
+        
+        // 2. Get user
         User user = userRepo.findByEmail(userEmail)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
 
-        // 2. Save file to disk
+        // 3. Save file to disk
         String filePath = saveFile(file);
 
-        // 3. Parse PDF and extract articles
+        // 4. Parse PDF and extract articles
         List<LegalArticle> articles = parserService.parseDocument(file);
 
-        // 4. Create document entity
+        // 5. Create document entity
         LegalDocument document = new LegalDocument();
-        document.setDocumentName(request.documentName());
-        document.setDocumentCode(request.documentCode());
-        document.setDocumentType(request.documentType());
-        document.setIssuingBody(request.issuingBody());
+        document.setDocumentName(sanitizeInput(request.documentName()));
+        document.setDocumentCode(sanitizeInput(request.documentCode()));
+        document.setDocumentType(sanitizeInput(request.documentType()));
+        document.setIssuingBody(sanitizeInput(request.issuingBody()));
         
         if (request.effectiveDate() != null && !request.effectiveDate().isEmpty()) {
             document.setEffectiveDate(LocalDate.parse(request.effectiveDate()));
@@ -86,22 +98,62 @@ public class LegalDocumentService {
         document.setCreatedBy(user);
         document.setCreatedAt(LocalDateTime.now());
 
-        // 5. Link articles to document
+        // 6. Link articles to document
         for (LegalArticle article : articles) {
             article.setDocument(document);
         }
         document.setArticles(articles);
 
-        // 6. Save to database
+        // 7. Save to database
         document = documentRepo.save(document);
+        
+        log.info("Document uploaded: {} with {} articles by user {}", 
+                document.getDocumentName(), document.getTotalArticles(), userEmail);
 
-        // 7. Return response
+        // 8. Return response
         return new UploadLegalDocumentResponse(
                 document.getId(),
                 document.getDocumentName(),
                 document.getTotalArticles(),
                 "Đã import thành công " + document.getTotalArticles() + " điều luật"
         );
+    }
+    
+    /**
+     * Validate uploaded file
+     */
+    private void validateFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new BadRequestException("File không được để trống");
+        }
+        
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new BadRequestException("File không được vượt quá 20MB");
+        }
+        
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType)) {
+            throw new BadRequestException("Chỉ hỗ trợ file PDF");
+        }
+        
+        // Validate filename to prevent path traversal
+        String filename = file.getOriginalFilename();
+        if (filename != null && (filename.contains("..") || filename.contains("/") || filename.contains("\\"))) {
+            throw new BadRequestException("Tên file không hợp lệ");
+        }
+    }
+    
+    /**
+     * Sanitize input to prevent XSS
+     */
+    private String sanitizeInput(String input) {
+        if (input == null) return null;
+        return input
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&#x27;")
+            .trim();
     }
 
     /**
@@ -115,20 +167,19 @@ public class LegalDocumentService {
                 Files.createDirectories(uploadPath);
             }
 
-            // Generate unique filename
-            String originalFilename = file.getOriginalFilename();
-            String extension = originalFilename != null && originalFilename.contains(".")
-                    ? originalFilename.substring(originalFilename.lastIndexOf("."))
-                    : ".pdf";
-            String filename = UUID.randomUUID() + extension;
+            // Generate unique filename (ignore original filename for security)
+            String filename = UUID.randomUUID() + ".pdf";
 
             // Save file
             Path filePath = uploadPath.resolve(filename);
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            
+            log.info("File saved: {}", filePath);
 
             return UPLOAD_DIR + filename;
         } catch (IOException e) {
-            throw new RuntimeException("Không thể lưu file: " + e.getMessage());
+            log.error("Error saving file", e);
+            throw new BadRequestException("Không thể lưu file. Vui lòng thử lại.");
         }
     }
 
@@ -193,12 +244,12 @@ public class LegalDocumentService {
             Path filePath = Paths.get(document.getFilePath());
             Files.deleteIfExists(filePath);
         } catch (IOException e) {
-            // Log error but don't fail the operation
-            System.err.println("Could not delete file: " + e.getMessage());
+            log.error("Could not delete file: {}", document.getFilePath(), e);
         }
         
         // Delete from database (cascade will delete articles)
         documentRepo.delete(document);
+        log.info("Document deleted: {}", id);
     }
 
     /**

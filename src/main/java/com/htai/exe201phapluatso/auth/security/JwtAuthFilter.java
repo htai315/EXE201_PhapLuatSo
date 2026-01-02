@@ -1,5 +1,6 @@
 package com.htai.exe201phapluatso.auth.security;
 
+import com.htai.exe201phapluatso.auth.entity.User;
 import com.htai.exe201phapluatso.auth.repo.UserRepo;
 import com.htai.exe201phapluatso.auth.service.JwtService;
 import io.jsonwebtoken.Claims;
@@ -7,6 +8,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,6 +20,8 @@ import java.io.IOException;
 import java.util.List;
 
 public class JwtAuthFilter extends OncePerRequestFilter {
+
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthFilter.class);
 
     private final JwtService jwtService;
     private final UserRepo userRepo;
@@ -49,9 +54,23 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 return;
             }
 
-            var user = userRepo.findById(uid).orElse(null);
+            // Check user status directly from DB (no cache - instant ban/unban effect)
+            User user = userRepo.findById(uid).orElse(null);
+            
             if (user == null || !user.isEnabled()) {
+                // User deleted or disabled
                 chain.doFilter(request, response);
+                return;
+            }
+            
+            if (!user.isActive()) {
+                // User is banned - return 403 with ban message
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setContentType("application/json;charset=UTF-8");
+                String message = user.getBanReason() != null 
+                    ? "Tài khoản của bạn đã bị khóa. Lý do: " + user.getBanReason()
+                    : "Tài khoản của bạn đã bị khóa.";
+                response.getWriter().write("{\"error\":\"ACCOUNT_BANNED\",\"message\":\"" + message + "\"}");
                 return;
             }
 
@@ -67,7 +86,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             var auth = new UsernamePasswordAuthenticationToken(principal, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(auth);
 
-        } catch (Exception ignored) {
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            log.debug("JWT token expired");
+        } catch (io.jsonwebtoken.JwtException e) {
+            log.debug("Invalid JWT token: {}", e.getMessage());
+        } catch (Exception e) {
+            log.warn("Error processing JWT token", e);
         }
 
         chain.doFilter(request, response);
