@@ -12,7 +12,8 @@ public class ExamDtos {
             Long id,
             String questionText,
             String explanation,
-            List<ExamOptionDto> options
+            List<ExamOptionDto> options,
+            String correctOptionKey  // Key đáp án đúng sau khi shuffle
     ) {}
 
     public record ExamOptionDto(
@@ -32,7 +33,8 @@ public class ExamDtos {
     ) {
         public record AnswerDto(
                 Long questionId,
-                String selectedOptionKey
+                String selectedOptionKey,
+                String correctOptionKey  // Key đáp án đúng (đã shuffle) để validate
         ) {}
     }
 
@@ -49,7 +51,9 @@ public class ExamDtos {
             Long questionId,
             String questionText,
             String correctOptionKey,
-            String selectedOptionKey
+            String selectedOptionKey,
+            String explanation,
+            List<ExamOptionDto> options
     ) {}
 
     public record ExamHistoryItemDto(

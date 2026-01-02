@@ -534,6 +534,21 @@ body {
     background: #fef2f2;
 }
 
+/* Explanation Box */
+.explanation-box {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    padding: 1rem;
+    font-size: 0.9rem;
+    color: #92400e;
+}
+
+.explanation-box p {
+    color: #78350f;
+    line-height: 1.6;
+}
+
 
 
 /* ===== Responsive Design ===== */

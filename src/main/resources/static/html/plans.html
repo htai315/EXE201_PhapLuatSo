@@ -143,6 +143,24 @@
 <script src="/scripts/confirm-modal.js"></script>
 <script src="/scripts/script.js"></script>
 <script>
+// Check for plan parameter in URL and auto-select after login
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const planFromUrl = urlParams.get('plan');
+    
+    if (planFromUrl && ['REGULAR', 'STUDENT'].includes(planFromUrl)) {
+        // User was redirected here after login with a pending plan
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+            // Auto-trigger the plan selection
+            Toast.info('Đang xử lý gói bạn đã chọn...');
+            setTimeout(() => {
+                selectPlan(planFromUrl);
+            }, 500);
+        }
+    }
+});
+
 async function selectPlan(planName) {
     if (planName === 'FREE') {
         Toast.info('Bạn đã có gói FREE miễn phí khi đăng ký!');
@@ -153,21 +171,28 @@ async function selectPlan(planName) {
     const token = localStorage.getItem('accessToken');
     
     if (!token) {
-        const confirmed = await ConfirmModal.info(
-            'Vui lòng đăng nhập để mua gói!',
-            'Yêu cầu đăng nhập'
-        );
-        if (confirmed) {
-            window.location.href = '/html/login.html';
-        }
+        // Redirect to login with returnUrl
+        Toast.info('Vui lòng đăng nhập để mua gói!');
+        setTimeout(() => {
+            window.location.href = '/html/login.html?returnUrl=' + encodeURIComponent('/html/plans.html?plan=' + planName);
+        }, 1000);
         return;
     }
     
-    // Show loading
-    const button = event.target;
-    const originalText = button.innerHTML;
-    button.disabled = true;
-    button.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Đang xử lý...';
+    // Find the button that was clicked
+    let button = event?.target;
+    if (!button || button.tagName !== 'BUTTON') {
+        // Find button by plan name
+        const buttons = document.querySelectorAll('button[onclick*="' + planName + '"]');
+        button = buttons.length > 0 ? buttons[0] : null;
+    }
+    
+    let originalText = '';
+    if (button) {
+        originalText = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Đang xử lý...';
+    }
     
     try {
         // Call payment API
@@ -189,7 +214,7 @@ async function selectPlan(planName) {
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('refreshToken');
                 setTimeout(() => {
-                    window.location.href = '/html/login.html';
+                    window.location.href = '/html/login.html?returnUrl=' + encodeURIComponent('/html/plans.html?plan=' + planName);
                 }, 1000);
                 return;
             }
@@ -214,8 +239,10 @@ async function selectPlan(planName) {
     } catch (error) {
         console.error('Payment error:', error);
         Toast.error(error.message || 'Không thể tạo thanh toán');
-        button.disabled = false;
-        button.innerHTML = originalText;
+        if (button) {
+            button.disabled = false;
+            button.innerHTML = originalText;
+        }
     }
 }
 </script>

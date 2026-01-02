@@ -193,16 +193,29 @@ public class AdminService {
      * Get all users with pagination - OPTIMIZED
      * Reduced from N+1 (4 queries per user) to 4 batch queries total
      */
-    public Page<AdminUserListResponse> getAllUsers(Pageable pageable, String search) {
+    public Page<AdminUserListResponse> getAllUsers(Pageable pageable, String search, String status) {
         Specification<User> spec = (root, query, cb) -> {
-            if (search == null || search.trim().isEmpty()) {
-                return cb.conjunction();
+            List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
+            
+            // Search filter
+            if (search != null && !search.trim().isEmpty()) {
+                String searchPattern = "%" + search.toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("email")), searchPattern),
+                        cb.like(cb.lower(root.get("fullName")), searchPattern)
+                ));
             }
-            String searchPattern = "%" + search.toLowerCase() + "%";
-            return cb.or(
-                    cb.like(cb.lower(root.get("email")), searchPattern),
-                    cb.like(cb.lower(root.get("fullName")), searchPattern)
-            );
+            
+            // Status filter
+            if (status != null && !status.trim().isEmpty()) {
+                if ("active".equalsIgnoreCase(status)) {
+                    predicates.add(cb.isTrue(root.get("active")));
+                } else if ("banned".equalsIgnoreCase(status)) {
+                    predicates.add(cb.isFalse(root.get("active")));
+                }
+            }
+            
+            return predicates.isEmpty() ? cb.conjunction() : cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
         };
 
         Page<User> users = userRepo.findAll(spec, pageable);
@@ -235,6 +248,7 @@ public class AdminService {
         return new PageImpl<>(responses, pageable, users.getTotalElements());
     }
 
+    @Transactional(readOnly = true)
     public AdminUserDetailResponse getUserDetail(Long userId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));

@@ -120,6 +120,7 @@ public class AdminController {
      * @param page Page number (default: 0)
      * @param size Page size (default: 20)
      * @param search Search query (email or name)
+     * @param status Filter by status: active, banned (optional)
      * @param sort Sort field (default: createdAt)
      * @param direction Sort direction (default: DESC)
      */
@@ -128,6 +129,7 @@ public class AdminController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "createdAt") String sort,
             @RequestParam(defaultValue = "DESC") String direction
     ) {
@@ -136,7 +138,7 @@ public class AdminController {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ? Sort.Direction.ASC : Sort.Direction.DESC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, validatedSort));
         
-        Page<AdminUserListResponse> users = adminService.getAllUsers(pageable, search);
+        Page<AdminUserListResponse> users = adminService.getAllUsers(pageable, search, status);
         
         Map<String, Object> response = new HashMap<>();
         response.put("users", users.getContent());

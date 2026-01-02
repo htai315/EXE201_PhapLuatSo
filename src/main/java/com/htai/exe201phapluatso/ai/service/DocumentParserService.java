@@ -22,7 +22,7 @@ public class DocumentParserService {
     private static final Logger log = LoggerFactory.getLogger(DocumentParserService.class);
 
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-    private static final int MAX_TEXT_LENGTH = 100000; // 100K characters - reduced for better AI processing
+    private static final int MAX_TEXT_LENGTH = 150000; // 150K characters (~40 pages) - balanced for cost/quality
     
     // Allowed content types
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(

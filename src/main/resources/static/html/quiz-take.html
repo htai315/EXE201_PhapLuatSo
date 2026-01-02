@@ -416,6 +416,7 @@
                 answers: examQuestions.map(q => ({
                     questionId: q.id,
                     selectedOptionKey: answers[q.id] || null
+                    // SECURED: Không gửi correctOptionKey - server tự validate
                 }))
             };
 
@@ -525,8 +526,9 @@
                             Các câu trả lời sai
                         </h5>
                         ${wrongs.map((w, index) => {
-                            const q = examQuestions.find(q => q.id === w.questionId) || {};
-                            const optionsHtml = (q.options || []).map(opt => {
+                            // Sử dụng options từ response nếu có
+                            const options = w.options || [];
+                            const optionsHtml = options.map(opt => {
                                 const isCorrect = opt.optionKey === w.correctOptionKey;
                                 const isSelected = opt.optionKey === w.selectedOptionKey;
                                 let classes = 'option-item';
@@ -541,6 +543,20 @@
                                     </div>
                                 `;
                             }).join('');
+                            
+                            // Hiển thị explanation nếu có
+                            const explanationHtml = w.explanation ? `
+                                <div class="explanation-box mt-3">
+                                    <div class="d-flex align-items-start gap-2">
+                                        <i class="bi bi-lightbulb-fill text-warning" style="font-size: 1.2rem;"></i>
+                                        <div>
+                                            <strong class="text-warning">Giải thích:</strong>
+                                            <p class="mb-0 mt-1">${w.explanation}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : '';
+                            
                             return `
                                 <div class="wrong-question-item">
                                     <div class="d-flex align-items-start gap-2 mb-2">
@@ -567,6 +583,7 @@
                                     <div class="d-flex flex-column gap-2">
                                         ${optionsHtml}
                                     </div>
+                                    ${explanationHtml}
                                 </div>
                             `;
                         }).join('')}

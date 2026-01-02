@@ -517,8 +517,17 @@
         localStorage.setItem("accessToken", data.accessToken);
         localStorage.setItem("refreshToken", data.refreshToken);
 
-        // Chuyển về trang chính
-        window.location.href = "/index.html";
+        // Check if there's a returnUrl to redirect to
+        const urlParams = new URLSearchParams(window.location.search);
+        const returnUrl = urlParams.get('returnUrl');
+        
+        if (returnUrl && returnUrl.startsWith('/')) {
+          // Redirect to the return URL (only allow relative URLs for security)
+          window.location.href = returnUrl;
+        } else {
+          // Chuyển về trang chính
+          window.location.href = "/index.html";
+        }
       } catch (error) {
         console.error("Login error", error);
         const errorMessage = error.error || error.message || 'Đăng nhập thất bại';

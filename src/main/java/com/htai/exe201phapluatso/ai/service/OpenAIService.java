@@ -15,12 +15,15 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * OpenAI Service - AI provider for the application
  * Uses GPT-4o-mini model for:
  * - Legal chatbot (RAG-based Q&A)
  * - Quiz question generation from documents
+ * 
+ * Supports chunking for large question counts (>25 questions)
  */
 @Service
 public class OpenAIService {
@@ -40,6 +43,9 @@ public class OpenAIService {
     private static final int MAX_RETRIES = 2;
     private static final Duration RETRY_DELAY = Duration.ofSeconds(2);
     private static final Duration API_TIMEOUT = Duration.ofSeconds(180);
+    
+    // Batch size for chunking - optimal for GPT-4o-mini output limit
+    public static final int BATCH_SIZE = 20;
 
     public OpenAIService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
         this.webClient = webClientBuilder
@@ -55,27 +61,76 @@ public class OpenAIService {
         return callOpenAIWithRetry(prompt, 0);
     }
 
+    /**
+     * Generate questions - single batch (for small counts)
+     */
     public List<AIQuestionDTO> generateQuestions(String documentText, int count) {
-        String prompt = buildPrompt(documentText, count);
+        return generateQuestionsWithContext(documentText, count, null);
+    }
+    
+    /**
+     * Generate questions with context of existing questions to avoid duplicates
+     * Used for chunking strategy when generating large number of questions
+     * 
+     * @param documentText The document content
+     * @param count Number of questions to generate
+     * @param existingQuestions List of already generated questions (null for first batch)
+     * @return List of generated questions
+     */
+    public List<AIQuestionDTO> generateQuestionsWithContext(
+            String documentText, 
+            int count, 
+            List<AIQuestionDTO> existingQuestions
+    ) {
+        String prompt = buildPromptWithContext(documentText, count, existingQuestions);
         String response = callOpenAIWithRetry(prompt, count);
         return parseResponse(response);
     }
 
-    private String buildPrompt(String documentText, int count) {
-        return String.format("""
+    /**
+     * Build prompt with context of existing questions to avoid duplicates
+     */
+    private String buildPromptWithContext(String documentText, int count, List<AIQuestionDTO> existingQuestions) {
+        StringBuilder promptBuilder = new StringBuilder();
+        
+        promptBuilder.append(String.format("""
             Bạn là chuyên gia tạo câu hỏi trắc nghiệm về pháp luật Việt Nam.
             
-            Từ tài liệu sau, hãy tạo %d câu hỏi trắc nghiệm.
+            NHIỆM VỤ: Tạo CHÍNH XÁC %d câu hỏi trắc nghiệm từ tài liệu bên dưới.
             
-            YÊU CẦU:
+            YÊU CẦU BẮT BUỘC:
+            - PHẢI tạo ĐÚNG %d câu hỏi, không hơn không kém
             - Mỗi câu hỏi có 4 đáp án (A, B, C, D)
             - Chỉ có 1 đáp án đúng
             - Có giải thích chi tiết cho đáp án đúng
             - Câu hỏi phải rõ ràng, không mơ hồ
             - Đáp án sai phải hợp lý, không quá dễ loại trừ
             - Câu hỏi phải dựa trên nội dung tài liệu
+            """, count, count));
+        
+        // Add context about existing questions to avoid duplicates
+        if (existingQuestions != null && !existingQuestions.isEmpty()) {
+            String existingTopics = existingQuestions.stream()
+                    .map(AIQuestionDTO::question)
+                    .limit(10) // Only include first 10 to save tokens
+                    .collect(Collectors.joining("\n- ", "\n- ", ""));
             
-            QUAN TRỌNG: Trả về ĐÚNG format JSON sau, không thêm text nào khác:
+            promptBuilder.append(String.format("""
+            
+            QUAN TRỌNG - TRÁNH TRÙNG LẶP:
+            Đã có %d câu hỏi được tạo trước đó. KHÔNG tạo câu hỏi trùng hoặc tương tự với các chủ đề sau:%s
+            
+            Hãy tạo câu hỏi về các khía cạnh KHÁC của tài liệu.
+            """, existingQuestions.size(), existingTopics));
+        }
+        
+        promptBuilder.append(String.format("""
+            
+            LƯU Ý QUAN TRỌNG: 
+            - Bạn PHẢI trả về ĐÚNG %d câu hỏi trong mảng JSON
+            - Đếm lại trước khi trả về để đảm bảo đủ số lượng
+            
+            FORMAT JSON (trả về ĐÚNG format này, không thêm text nào khác):
             [
               {
                 "question": "Câu hỏi ở đây?",
@@ -89,8 +144,11 @@ public class OpenAIService {
             ]
             
             TÀI LIỆU:
-            %s
-            """, count, documentText);
+            """, count));
+        
+        promptBuilder.append(documentText);
+        
+        return promptBuilder.toString();
     }
 
     /**

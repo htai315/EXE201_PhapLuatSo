@@ -187,30 +187,48 @@
 
 <!-- Ban User Modal -->
 <div class="modal fade" id="banUserModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-ban me-2"></i>
-                    Ban User
-                </h5>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content ban-modal-content">
+            <div class="modal-header ban-modal-header">
+                <div class="ban-modal-icon">
+                    <i class="bi bi-shield-exclamation"></i>
+                </div>
+                <h5 class="modal-title">Khóa Tài Khoản</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-warning">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    Bạn đang ban user: <strong id="banUserEmail"></strong>
+                <div class="ban-user-info">
+                    <div class="ban-user-avatar" id="banUserAvatar">U</div>
+                    <div class="ban-user-details">
+                        <span class="ban-user-label">Bạn đang khóa tài khoản:</span>
+                        <span class="ban-user-email" id="banUserEmail">user@example.com</span>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label for="banReason" class="form-label">Lý do ban <span class="text-danger">*</span></label>
-                    <textarea class="form-control" id="banReason" rows="3" placeholder="Nhập lý do ban user..."></textarea>
+                
+                <div class="ban-warning-box">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <div>
+                        <strong>Lưu ý:</strong> User sẽ không thể đăng nhập sau khi bị khóa. Bạn có thể mở khóa bất cứ lúc nào.
+                    </div>
+                </div>
+                
+                <div class="ban-form-group">
+                    <label for="banReason" class="ban-form-label">
+                        <i class="bi bi-chat-left-text"></i>
+                        Lý do khóa tài khoản <span class="text-danger">*</span>
+                    </label>
+                    <textarea class="form-control ban-textarea" id="banReason" rows="4" placeholder="Nhập lý do khóa tài khoản (ví dụ: Vi phạm điều khoản sử dụng, spam, hành vi không phù hợp...)"></textarea>
+                    <div class="ban-form-hint">Lý do này sẽ được hiển thị cho user khi họ cố gắng đăng nhập.</div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-danger" onclick="confirmBanUser()">
-                    <i class="bi bi-ban me-1"></i>
-                    Xác Nhận Ban
+            <div class="modal-footer ban-modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg me-1"></i>
+                    Hủy bỏ
+                </button>
+                <button type="button" class="btn btn-danger btn-ban-confirm" onclick="confirmBanUser()">
+                    <i class="bi bi-shield-lock me-1"></i>
+                    Xác Nhận Khóa
                 </button>
             </div>
         </div>

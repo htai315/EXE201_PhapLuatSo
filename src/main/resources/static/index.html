@@ -921,13 +921,12 @@ async function selectPlan(planName) {
     const token = localStorage.getItem('accessToken');
     
     if (!token) {
-        const confirmed = await ConfirmModal.info(
-            'Vui lòng đăng nhập để mua gói!',
-            'Yêu cầu đăng nhập'
-        );
-        if (confirmed) {
-            window.location.href = '/html/login.html';
-        }
+        // Lưu plan muốn mua để sau khi login sẽ redirect về trang plans
+        sessionStorage.setItem('pendingPlan', planName);
+        Toast.info('Vui lòng đăng nhập để mua gói!');
+        setTimeout(() => {
+            window.location.href = '/html/login.html?returnUrl=' + encodeURIComponent('/html/plans.html?plan=' + planName);
+        }, 1000);
         return;
     }
     
