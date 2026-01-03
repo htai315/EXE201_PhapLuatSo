@@ -316,6 +316,7 @@ public class AdminService {
         user.setActive(false);
         userRepo.save(user);
 
+
         logger.info("User {} deleted by admin {}", user.getEmail(), adminUser.getEmail());
         logAdminActivity(adminUser, "DELETE_USER", "USER", userId, "Deleted user: " + user.getEmail());
     }
