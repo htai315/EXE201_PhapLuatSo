@@ -3,8 +3,8 @@ package com.htai.exe201phapluatso.payment.controller;
 import com.htai.exe201phapluatso.auth.security.AuthUserPrincipal;
 import com.htai.exe201phapluatso.payment.dto.CreatePaymentRequest;
 import com.htai.exe201phapluatso.payment.dto.CreatePaymentResponse;
-import com.htai.exe201phapluatso.payment.service.PaymentService;
-import com.htai.exe201phapluatso.payment.service.VNPayService;
+import com.htai.exe201phapluatso.payment.entity.Payment;
+import com.htai.exe201phapluatso.payment.service.PayOSService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,127 +18,114 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/payment")
 public class PaymentController {
-    
-    private static final Logger log = LoggerFactory.getLogger(PaymentController.class);
-    
-    private final PaymentService paymentService;
-    private final VNPayService vnPayService;
 
-    public PaymentController(PaymentService paymentService, VNPayService vnPayService) {
-        this.paymentService = paymentService;
-        this.vnPayService = vnPayService;
+    private static final Logger log = LoggerFactory.getLogger(PaymentController.class);
+
+    private final PayOSService payOSService;
+
+    public PaymentController(PayOSService payOSService) {
+        this.payOSService = payOSService;
     }
 
     /**
-     * Create payment and get VNPay URL
+     * Create payment and get PayOS checkout URL + QR Code
      * POST /api/payment/create
      */
     @PostMapping("/create")
     public ResponseEntity<CreatePaymentResponse> createPayment(
             @RequestBody CreatePaymentRequest request,
-            Authentication authentication,
-            HttpServletRequest httpRequest
+            Authentication authentication
     ) {
         AuthUserPrincipal principal = (AuthUserPrincipal) authentication.getPrincipal();
         Long userId = principal.userId();
-        
-        String ipAddress = getClientIP(httpRequest);
-        
-        log.info("Creating payment: user={}, plan={}, ip={}", userId, request.planCode(), ipAddress);
-        
-        String paymentUrl = paymentService.createPayment(userId, request.planCode(), ipAddress);
-        
-        // Extract txnRef from URL for frontend reference
-        String txnRef = extractTxnRef(paymentUrl);
-        
-        return ResponseEntity.ok(new CreatePaymentResponse(paymentUrl, txnRef));
-    }
 
+        // Input validation
+        if (request == null || request.planCode() == null || request.planCode().isBlank()) {
+            throw new IllegalArgumentException("Plan code is required");
+        }
 
-    /**
-     * VNPay IPN callback (server-to-server)
-     * GET /api/payment/vnpay-ipn
-     */
-    @GetMapping("/vnpay-ipn")
-    public ResponseEntity<Map<String, String>> vnpayIPN(@RequestParam Map<String, String> params) {
-        log.info("========== VNPay IPN CALLBACK START ==========");
-        log.info("Received params: {}", params);
-        log.info("Param count: {}", params.size());
-        
-        Map<String, String> response = new HashMap<>();
-        
-        // Verify signature
-        log.info("Verifying signature...");
-        boolean signatureValid = vnPayService.verifySignature(params);
-        log.info("Signature valid: {}", signatureValid);
-        
-        if (!signatureValid) {
-            log.error("❌ Invalid VNPay signature");
-            response.put("RspCode", "97");
-            response.put("Message", "Invalid signature");
-            return ResponseEntity.ok(response);
-        }
-        
-        String txnRef = params.get("vnp_TxnRef");
-        String responseCode = params.get("vnp_ResponseCode");
-        String transactionNo = params.get("vnp_TransactionNo");
-        String bankCode = params.get("vnp_BankCode");
-        String cardType = params.get("vnp_CardType");
-        String vnpAmount = params.get("vnp_Amount");
-        
-        log.info("Transaction details: txnRef={}, responseCode={}, transactionNo={}, amount={}", 
-                txnRef, responseCode, transactionNo, vnpAmount);
-        
-        try {
-            log.info("Processing payment callback...");
-            paymentService.processPaymentCallback(txnRef, responseCode, transactionNo, bankCode, cardType, vnpAmount);
-            
-            log.info("✅ Payment processed successfully");
-            response.put("RspCode", "00");
-            response.put("Message", "Success");
-        } catch (Exception e) {
-            log.error("❌ Error processing payment callback", e);
-            response.put("RspCode", "99");
-            response.put("Message", "Error: " + e.getMessage());
-        }
-        
-        log.info("========== VNPay IPN CALLBACK END ==========");
+        log.info("Creating PayOS payment: user={}, plan={}", userId, request.planCode());
+
+        CreatePaymentResponse response = payOSService.createPayment(userId, request.planCode());
+
         return ResponseEntity.ok(response);
     }
 
     /**
-     * Get client IP address (convert IPv6 localhost to IPv4)
+     * PayOS Webhook callback
+     * POST /api/payment/webhook
+     * Fixed: Handle PayOS test webhook and real webhooks
      */
-    private String getClientIP(HttpServletRequest request) {
-        String xfHeader = request.getHeader("X-Forwarded-For");
-        String ip;
-        if (xfHeader == null) {
-            ip = request.getRemoteAddr();
-        } else {
-            ip = xfHeader.split(",")[0];
+    @PostMapping("/webhook")
+    public ResponseEntity<Map<String, String>> handleWebhook(
+            @RequestBody Map<String, Object> webhookData,
+            HttpServletRequest request
+    ) {
+        log.info("========== PayOS WEBHOOK RECEIVED ==========");
+        log.info("Remote IP: {}", request.getRemoteAddr());
+        log.info("Webhook data: {}", webhookData);
+
+        Map<String, String> response = new HashMap<>();
+
+        try {
+            // Check if this is a PayOS test webhook
+            // Test webhook has data.orderCode = 123 (fixed test value)
+            Object dataObj = webhookData.get("data");
+            if (dataObj instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> data = (Map<String, Object>) dataObj;
+                Object orderCodeObj = data.get("orderCode");
+                // PayOS test webhook always uses orderCode = 123
+                if (orderCodeObj != null && "123".equals(orderCodeObj.toString())) {
+                    log.info("PayOS test webhook detected (orderCode=123) - responding with success");
+                    response.put("code", "00");
+                    response.put("message", "Success");
+                    return ResponseEntity.ok(response);
+                }
+            }
+
+            // For real webhooks, verify signature
+            if (!payOSService.verifyWebhookSignature(webhookData)) {
+                log.warn("Invalid webhook signature from IP: {}", request.getRemoteAddr());
+                response.put("code", "99");
+                response.put("message", "Invalid signature");
+                return ResponseEntity.status(400).body(response);
+            }
+
+            payOSService.handleWebhook(webhookData);
+            response.put("code", "00");
+            response.put("message", "Success");
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("Webhook processing failed", e);
+            response.put("code", "99");
+            response.put("message", "Error: " + e.getMessage());
+            // Return 200 to prevent PayOS from retrying (we've logged the error)
+            return ResponseEntity.ok(response);
         }
-        
-        // Convert IPv6 localhost to IPv4 to avoid colon characters in signature
-        if ("0:0:0:0:0:0:0:1".equals(ip) || "::1".equals(ip)) {
-            return "127.0.0.1";
-        }
-        
-        return ip;
     }
 
     /**
-     * Extract txnRef from payment URL
+     * Check payment status by orderCode
+     * GET /api/payment/status/{orderCode}
      */
-    private String extractTxnRef(String url) {
+    @GetMapping("/status/{orderCode}")
+    public ResponseEntity<Map<String, Object>> checkPaymentStatus(@PathVariable long orderCode) {
+        log.info("Checking payment status: orderCode={}", orderCode);
+
         try {
-            String[] parts = url.split("vnp_TxnRef=");
-            if (parts.length > 1) {
-                return parts[1].split("&")[0];
-            }
+            Map<String, Object> response = payOSService.getPaymentStatusDetails(orderCode);
+            log.info("Payment status response: orderCode={}, status={}", orderCode, response.get("status"));
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.warn("Could not extract txnRef from URL", e);
+            log.error("Error checking payment status: orderCode={}", orderCode, e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("orderCode", orderCode);
+            errorResponse.put("status", "ERROR");
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.ok(errorResponse);
         }
-        return "";
     }
 
     /**
@@ -149,10 +136,39 @@ public class PaymentController {
     public ResponseEntity<?> getPaymentHistory(Authentication authentication) {
         AuthUserPrincipal principal = (AuthUserPrincipal) authentication.getPrincipal();
         Long userId = principal.userId();
-        
+
         log.info("Getting payment history for user: {}", userId);
-        
-        var history = paymentService.getPaymentHistory(userId);
+
+        var history = payOSService.getPaymentHistory(userId);
         return ResponseEntity.ok(history);
+    }
+
+    /**
+     * Cancel a pending payment
+     * Fixed: Added user authorization check
+     * POST /api/payment/cancel/{orderCode}
+     */
+    @PostMapping("/cancel/{orderCode}")
+    public ResponseEntity<Map<String, String>> cancelPayment(
+            @PathVariable long orderCode,
+            Authentication authentication
+    ) {
+        AuthUserPrincipal principal = (AuthUserPrincipal) authentication.getPrincipal();
+        Long userId = principal.userId();
+
+        log.info("Cancelling payment: orderCode={}, user={}", orderCode, userId);
+
+        Map<String, String> response = new HashMap<>();
+        try {
+            payOSService.cancelPayment(orderCode, userId);
+            response.put("status", "success");
+            response.put("message", "Payment cancelled");
+        } catch (Exception e) {
+            log.error("Failed to cancel payment", e);
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+        }
+
+        return ResponseEntity.ok(response);
     }
 }

@@ -2,7 +2,9 @@ package com.htai.exe201phapluatso.payment.repo;
 
 import com.htai.exe201phapluatso.payment.entity.Payment;
 import com.htai.exe201phapluatso.auth.entity.User;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -13,8 +15,23 @@ import java.util.Optional;
 public interface PaymentRepo extends JpaRepository<Payment, Long> {
     Optional<Payment> findByVnpTxnRef(String vnpTxnRef);
     
+    Optional<Payment> findByOrderCode(Long orderCode);
+    
+    // Pessimistic lock for webhook processing
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Payment p WHERE p.orderCode = :orderCode")
+    Optional<Payment> findByOrderCodeWithLock(@Param("orderCode") Long orderCode);
+    
     @Query("SELECT p FROM Payment p LEFT JOIN FETCH p.plan WHERE p.user = :user ORDER BY p.createdAt DESC")
     List<Payment> findByUserOrderByCreatedAtDesc(@Param("user") User user);
+    
+    // Find pending payments for duplicate check
+    @Query("SELECT p FROM Payment p WHERE p.user = :user AND p.status = :status ORDER BY p.createdAt DESC")
+    List<Payment> findByUserAndStatusOrderByCreatedAtDesc(@Param("user") User user, @Param("status") String status);
+    
+    // Find stale pending payments for cleanup
+    @Query("SELECT p FROM Payment p WHERE p.status = :status AND p.createdAt < :date")
+    List<Payment> findByStatusAndCreatedAtBefore(@Param("status") String status, @Param("date") LocalDateTime date);
     
     @Query("SELECT p FROM Payment p WHERE p.user = :user AND p.status = 'SUCCESS' ORDER BY p.createdAt DESC")
     List<Payment> findSuccessfulPaymentsByUser(@Param("user") User user);

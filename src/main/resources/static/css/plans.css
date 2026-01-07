@@ -258,3 +258,186 @@ body {
         padding: 3rem 0 2rem;
     }
 }
+
+
+/* ===== PAYMENT QR MODAL STYLES ===== */
+
+#qrModal .modal-content {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+#qrModal .modal-header {
+    background: linear-gradient(135deg, #1a4b84 0%, #0f3054 100%);
+    border-bottom: none;
+    padding: 1.25rem 1.5rem;
+}
+
+#qrModal .modal-header .modal-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#qrModal .modal-header .btn-close-white {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+#qrModal .modal-header .btn-close-white:hover {
+    opacity: 1;
+}
+
+#qrModal .modal-body {
+    padding: 2rem;
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+}
+
+/* QR Code Container */
+#qrCodeContainer {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    display: inline-block;
+    margin-bottom: 1.5rem;
+}
+
+#qrCodeImage {
+    border-radius: 12px;
+    max-width: 260px;
+    width: 100%;
+    height: auto;
+}
+
+#qrLoading {
+    min-height: 260px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#qrLoading .spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Info Alert */
+#qrModal .alert-info {
+    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+    border: none;
+    border-radius: 12px;
+    color: #0369a1;
+    font-weight: 500;
+    padding: 1rem 1.25rem;
+}
+
+#qrModal .alert-info i {
+    font-size: 1.1rem;
+}
+
+/* Payment Amount */
+#paymentAmount {
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #1a4b84 0%, #10b981 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1.5rem;
+}
+
+/* Checkout Button */
+#checkoutLink {
+    background: linear-gradient(135deg, #1a4b84 0%, #0f3054 100%);
+    border: none;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(26, 75, 132, 0.3);
+}
+
+#checkoutLink:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(26, 75, 132, 0.4);
+    background: linear-gradient(135deg, #0f3054 0%, #1a4b84 100%);
+}
+
+#checkoutLink i {
+    font-size: 1.1rem;
+}
+
+/* Order Code Display */
+#qrModal .border-top {
+    border-color: #e2e8f0 !important;
+}
+
+#orderCodeDisplay {
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    color: #1a4b84;
+    background: #f1f5f9;
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
+}
+
+/* Payment Status Check */
+#paymentStatusCheck {
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#paymentStatusCheck .spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+#paymentStatusCheck small {
+    font-weight: 500;
+}
+
+/* Modal Animation */
+#qrModal.fade .modal-dialog {
+    transform: scale(0.9) translateY(-20px);
+    transition: transform 0.3s ease-out;
+}
+
+#qrModal.show .modal-dialog {
+    transform: scale(1) translateY(0);
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    #qrModal .modal-body {
+        padding: 1.5rem;
+    }
+    
+    #qrCodeContainer {
+        padding: 1rem;
+    }
+    
+    #qrCodeImage {
+        max-width: 220px;
+    }
+    
+    #paymentAmount {
+        font-size: 1.25rem;
+    }
+    
+    #checkoutLink {
+        padding: 0.875rem 1.25rem;
+        font-size: 0.95rem;
+    }
+}

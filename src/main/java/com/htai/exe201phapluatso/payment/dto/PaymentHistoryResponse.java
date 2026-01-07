@@ -10,6 +10,8 @@ public record PaymentHistoryResponse(
         BigDecimal amount,
         String status,
         String paymentMethod,
+        String orderCode,
+        String transactionId,
         String vnpTxnRef,
         String vnpTransactionNo,
         String vnpBankCode,

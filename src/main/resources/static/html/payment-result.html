@@ -3,16 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kết Quả Thanh Toán - AI Luật</title>
+    <title>Kết Quả Thanh Toán - Pháp Luật Số</title>
 
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="icon" type="image/png" href="/img/Law.png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/payment-result.css">
-
 </head>
 <body>
 
@@ -78,54 +76,56 @@
                 </button>
             </div>
         </div>
+
+        <!-- Pending state -->
+        <div id="pendingState" style="display: none;">
+            <div class="result-icon pending">
+                <i class="bi bi-hourglass-split"></i>
+            </div>
+            <h1 class="result-title pending">Đang Chờ Thanh Toán</h1>
+            <p class="result-message">
+                Giao dịch của bạn đang được xử lý.<br>
+                Vui lòng hoàn tất thanh toán hoặc đợi trong giây lát.
+            </p>
+            
+            <div class="d-flex gap-3 justify-content-center mt-4">
+                <button class="btn btn-primary" onclick="checkStatus()">
+                    <i class="bi bi-arrow-clockwise me-2"></i>Kiểm tra lại
+                </button>
+                <button class="btn btn-home" onclick="goHome()">
+                    <i class="bi bi-house-door me-2"></i>Về Trang Chủ
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// Parse URL parameters
+// Get URL parameters
 function getUrlParams() {
     const params = new URLSearchParams(window.location.search);
     return {
-        vnp_ResponseCode: params.get('vnp_ResponseCode'),
-        vnp_TxnRef: params.get('vnp_TxnRef'),
-        vnp_Amount: params.get('vnp_Amount'),
-        vnp_BankCode: params.get('vnp_BankCode'),
-        vnp_TransactionNo: params.get('vnp_TransactionNo'),
-        vnp_PayDate: params.get('vnp_PayDate')
+        orderCode: params.get('orderCode'),
+        status: params.get('status'),
+        code: params.get('code') // PayOS response code
     };
 }
 
-// Format amount (VNPay returns amount * 100)
+// Format amount
 function formatAmount(amount) {
     if (!amount) return '0';
-    const actualAmount = parseInt(amount) / 100;
-    return actualAmount.toLocaleString('vi-VN') + ' VNĐ';
+    return parseInt(amount).toLocaleString('vi-VN') + ' VNĐ';
 }
 
-// Format date
-function formatDate(dateStr) {
-    if (!dateStr || dateStr.length !== 14) return dateStr;
-    // Format: YYYYMMDDHHmmss -> DD/MM/YYYY HH:mm:ss
-    const year = dateStr.substring(0, 4);
-    const month = dateStr.substring(4, 6);
-    const day = dateStr.substring(6, 8);
-    const hour = dateStr.substring(8, 10);
-    const minute = dateStr.substring(10, 12);
-    const second = dateStr.substring(12, 14);
-    return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
-}
-
-// Fetch updated credit balance
+// Fetch credit balance
 async function fetchCreditBalance() {
     try {
         const token = localStorage.getItem('accessToken');
         if (!token) return null;
         
         const response = await fetch('/api/credits/balance', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+            headers: { 'Authorization': `Bearer ${token}` }
         });
         
         if (response.ok) {
@@ -137,8 +137,21 @@ async function fetchCreditBalance() {
     return null;
 }
 
+// Check payment status from backend
+async function checkPaymentStatus(orderCode) {
+    try {
+        const response = await fetch(`/api/payment/status/${orderCode}`);
+        if (response.ok) {
+            return await response.json();
+        }
+    } catch (error) {
+        console.error('Error checking payment status:', error);
+    }
+    return null;
+}
+
 // Show success state
-async function showSuccess(params) {
+async function showSuccess(paymentData) {
     document.getElementById('loadingState').style.display = 'none';
     document.getElementById('successState').style.display = 'block';
     
@@ -155,25 +168,29 @@ async function showSuccess(params) {
     // Display payment details
     const detailsHtml = `
         <div class="detail-row">
-            <span class="detail-label">Mã giao dịch:</span>
-            <span class="detail-value">${params.vnp_TxnRef || 'N/A'}</span>
+            <span class="detail-label">Mã đơn hàng:</span>
+            <span class="detail-value">${paymentData.orderCode || 'N/A'}</span>
         </div>
         <div class="detail-row">
             <span class="detail-label">Số tiền:</span>
-            <span class="detail-value">${formatAmount(params.vnp_Amount)}</span>
+            <span class="detail-value">${formatAmount(paymentData.amount)}</span>
         </div>
         <div class="detail-row">
-            <span class="detail-label">Ngân hàng:</span>
-            <span class="detail-value">${params.vnp_BankCode || 'N/A'}</span>
+            <span class="detail-label">Gói:</span>
+            <span class="detail-value">${paymentData.planCode || 'N/A'}</span>
         </div>
+        ${paymentData.chatCredits ? `
         <div class="detail-row">
-            <span class="detail-label">Mã GD VNPay:</span>
-            <span class="detail-value">${params.vnp_TransactionNo || 'N/A'}</span>
+            <span class="detail-label">Chat Credits:</span>
+            <span class="detail-value">+${paymentData.chatCredits}</span>
         </div>
+        ` : ''}
+        ${paymentData.quizCredits ? `
         <div class="detail-row">
-            <span class="detail-label">Thời gian:</span>
-            <span class="detail-value">${formatDate(params.vnp_PayDate)}</span>
+            <span class="detail-label">Quiz Credits:</span>
+            <span class="detail-value">+${paymentData.quizCredits}</span>
         </div>
+        ` : ''}
     `;
     document.getElementById('paymentDetails').innerHTML = detailsHtml;
     
@@ -182,46 +199,20 @@ async function showSuccess(params) {
 }
 
 // Show failed state
-function showFailed(params) {
+function showFailed(message) {
     document.getElementById('loadingState').style.display = 'none';
     document.getElementById('failedState').style.display = 'block';
     
-    // Get error message based on response code
-    const errorMessages = {
-        '07': 'Giao dịch bị nghi ngờ gian lận',
-        '09': 'Thẻ chưa đăng ký Internet Banking',
-        '10': 'Xác thực thông tin thẻ không đúng quá 3 lần',
-        '11': 'Đã hết hạn chờ thanh toán',
-        '12': 'Thẻ bị khóa',
-        '13': 'Sai mật khẩu xác thực giao dịch (OTP)',
-        '24': 'Khách hàng hủy giao dịch',
-        '51': 'Tài khoản không đủ số dư',
-        '65': 'Tài khoản vượt quá hạn mức giao dịch',
-        '75': 'Ngân hàng thanh toán đang bảo trì',
-        '79': 'Nhập sai mật khẩu thanh toán quá số lần quy định',
-        '99': 'Lỗi không xác định'
-    };
-    
-    const errorMsg = errorMessages[params.vnp_ResponseCode] || 'Lỗi không xác định';
-    document.getElementById('failedMessage').innerHTML = 
-        `Rất tiếc, giao dịch của bạn không thành công.<br><strong>Lý do:</strong> ${errorMsg}`;
-    
-    // Display failed details
-    const detailsHtml = `
-        <div class="detail-row">
-            <span class="detail-label">Mã giao dịch:</span>
-            <span class="detail-value">${params.vnp_TxnRef || 'N/A'}</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-label">Mã lỗi:</span>
-            <span class="detail-value">${params.vnp_ResponseCode}</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-label">Thời gian:</span>
-            <span class="detail-value">${formatDate(params.vnp_PayDate)}</span>
-        </div>
-    `;
-    document.getElementById('failedDetails').innerHTML = detailsHtml;
+    if (message) {
+        document.getElementById('failedMessage').innerHTML = 
+            `Rất tiếc, giao dịch của bạn không thành công.<br><strong>Lý do:</strong> ${message}`;
+    }
+}
+
+// Show pending state
+function showPending() {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('pendingState').style.display = 'block';
 }
 
 // Countdown timer
@@ -249,86 +240,51 @@ function retryPayment() {
     window.location.href = '/html/plans.html';
 }
 
-// Process payment callback
-async function processPaymentCallback() {
-    try {
-        // Get all URL params
-        const urlParams = new URLSearchParams(window.location.search);
-        const params = {};
-        for (const [key, value] of urlParams.entries()) {
-            params[key] = value;
-        }
-        
-        console.log('=== PAYMENT CALLBACK START ===');
-        console.log('URL Params:', params);
-        console.log('Full URL:', window.location.href);
-        
-        // Build the API URL
-        const apiUrl = '/api/payment/vnpay-ipn?' + urlParams.toString();
-        console.log('Calling API:', apiUrl);
-        
-        // Call backend IPN endpoint to process payment and add credits
-        const response = await fetch(apiUrl, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        console.log('Response status:', response.status);
-        console.log('Response ok:', response.ok);
-        
-        const result = await response.json();
-        console.log('Backend processing result:', result);
-        
-        if (result.RspCode === '00') {
-            console.log('✅ Payment processed successfully on backend');
-            console.log('Credits should be added now');
-        } else {
-            console.error('❌ Backend processing failed:', result.Message);
-        }
-        
-        console.log('=== PAYMENT CALLBACK END ===');
-        
-        return result;
-    } catch (error) {
-        console.error('❌ Error calling backend:', error);
-        console.error('Error details:', error.message);
-        return null;
+// Check status button handler
+async function checkStatus() {
+    const params = getUrlParams();
+    if (params.orderCode) {
+        document.getElementById('pendingState').style.display = 'none';
+        document.getElementById('loadingState').style.display = 'block';
+        await processPayment();
+    }
+}
+
+// Main processing function
+async function processPayment() {
+    const params = getUrlParams();
+    
+    console.log('Payment result params:', params);
+    
+    if (!params.orderCode) {
+        showFailed('Không tìm thấy mã đơn hàng');
+        return;
+    }
+    
+    // Check payment status from backend
+    const paymentData = await checkPaymentStatus(params.orderCode);
+    
+    if (!paymentData) {
+        showFailed('Không thể kiểm tra trạng thái thanh toán');
+        return;
+    }
+    
+    console.log('Payment data:', paymentData);
+    
+    if (paymentData.status === 'SUCCESS') {
+        await showSuccess(paymentData);
+    } else if (paymentData.status === 'FAILED') {
+        showFailed('Thanh toán không thành công');
+    } else {
+        // Still pending - show pending state
+        showPending();
     }
 }
 
 // Main execution
 window.addEventListener('DOMContentLoaded', async () => {
-    console.log('=== PAGE LOADED ===');
-    console.log('Window location:', window.location.href);
-    
-    const params = getUrlParams();
-    
-    console.log('Payment result params:', params);
-    console.log('Response code:', params.vnp_ResponseCode);
-    
-    // Check response code
-    if (params.vnp_ResponseCode === '00') {
-        console.log('✅ Payment successful - calling backend...');
-        
-        // Call backend to process payment and add credits
-        const result = await processPaymentCallback();
-        console.log('Callback result:', result);
-        
-        // Show success
-        await showSuccess(params);
-    } else {
-        console.log('❌ Payment failed - calling backend...');
-        
-        // Failed - still call backend to update payment status
-        await processPaymentCallback();
-        
-        // Show failed
-        showFailed(params);
-    }
-    
-    console.log('=== PAGE PROCESSING COMPLETE ===');
+    console.log('Payment result page loaded');
+    await processPayment();
 });
 </script>
 

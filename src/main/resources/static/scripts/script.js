@@ -19,6 +19,11 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
             return
         }
         
+        // Bỏ qua nếu href là URL đầy đủ (http/https) - link đã được thay đổi động
+        if (href.startsWith("http://") || href.startsWith("https://")) {
+            return
+        }
+        
         e.preventDefault()
         const target = document.querySelector(href)
         if (target) {

@@ -545,25 +545,17 @@
 
                     <div class="payment-details">
                         <div class="detail-item">
-                            <div class="label">Mã Giao Dịch</div>
-                            <div class="value">${payment.vnpTxnRef}</div>
+                            <div class="label">Mã Đơn Hàng</div>
+                            <div class="value">${payment.orderCode || payment.vnpTxnRef || 'N/A'}</div>
                         </div>
-                        ${payment.vnpTransactionNo ? `
+                        <div class="detail-item">
+                            <div class="label">Phương Thức</div>
+                            <div class="value">${payment.paymentMethod || 'PAYOS'}</div>
+                        </div>
+                        ${payment.transactionId ? `
                             <div class="detail-item">
-                                <div class="label">Mã VNPay</div>
-                                <div class="value">${payment.vnpTransactionNo}</div>
-                            </div>
-                        ` : ''}
-                        ${payment.vnpBankCode ? `
-                            <div class="detail-item">
-                                <div class="label">Ngân Hàng</div>
-                                <div class="value">${payment.vnpBankCode}</div>
-                            </div>
-                        ` : ''}
-                        ${payment.vnpCardType ? `
-                            <div class="detail-item">
-                                <div class="label">Loại Thẻ</div>
-                                <div class="value">${payment.vnpCardType}</div>
+                                <div class="label">Mã Giao Dịch</div>
+                                <div class="value">${payment.transactionId}</div>
                             </div>
                         ` : ''}
                         <div class="detail-item">

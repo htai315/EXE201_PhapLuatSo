@@ -25,8 +25,14 @@ public class Payment {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
-    @Column(name = "vnp_txn_ref", unique = true, nullable = false, length = 100)
+    @Column(name = "vnp_txn_ref", length = 100)
     private String vnpTxnRef;
+
+    @Column(name = "order_code", unique = true)
+    private Long orderCode;
+
+    @Column(name = "transaction_id", length = 100)
+    private String transactionId;
 
     @Column(name = "vnp_transaction_no", length = 100)
     private String vnpTransactionNo;
@@ -51,6 +57,9 @@ public class Payment {
 
     @Column(name = "ip_address", length = 50)
     private String ipAddress;
+
+    @Column(name = "webhook_processed")
+    private Boolean webhookProcessed = false;
 
     // Getters and Setters
     public Long getId() { return id; }
@@ -90,9 +99,18 @@ public class Payment {
 
     public String getIpAddress() { return ipAddress; }
     public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }
+
+    public Long getOrderCode() { return orderCode; }
+    public void setOrderCode(Long orderCode) { this.orderCode = orderCode; }
+
+    public String getTransactionId() { return transactionId; }
+    public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
+
+    public Boolean getWebhookProcessed() { return webhookProcessed; }
+    public void setWebhookProcessed(Boolean webhookProcessed) { this.webhookProcessed = webhookProcessed; }
     
     // Helper methods for admin
-    public String getOrderId() { return vnpTxnRef; }
+    public String getOrderId() { return orderCode != null ? String.valueOf(orderCode) : vnpTxnRef; }
     public String getPlanCode() { return plan != null ? plan.getCode() : null; }
-    public String getTransactionNo() { return vnpTransactionNo; }
+    public String getTransactionNo() { return transactionId != null ? transactionId : vnpTransactionNo; }
 }

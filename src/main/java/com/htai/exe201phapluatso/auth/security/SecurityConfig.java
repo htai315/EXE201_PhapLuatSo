@@ -64,6 +64,12 @@ public class SecurityConfig {
 
                         // payment IPN callback (public - VNPay server-to-server)
                         .requestMatchers("/api/payment/vnpay-ipn").permitAll()
+                        
+                        // PayOS webhook callback (public - server-to-server)
+                        .requestMatchers("/api/payment/webhook").permitAll()
+                        
+                        // Payment status check (public - for redirect page)
+                        .requestMatchers("/api/payment/status/**").permitAll()
 
                         // admin endpoints (protected - ADMIN role required)
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
