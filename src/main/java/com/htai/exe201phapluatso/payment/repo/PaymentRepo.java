@@ -17,16 +17,20 @@ public interface PaymentRepo extends JpaRepository<Payment, Long> {
     
     Optional<Payment> findByOrderCode(Long orderCode);
     
-    // Pessimistic lock for webhook processing
+    // Fetch with plan to avoid LazyInitializationException
+    @Query("SELECT p FROM Payment p LEFT JOIN FETCH p.plan WHERE p.orderCode = :orderCode")
+    Optional<Payment> findByOrderCodeWithPlan(@Param("orderCode") Long orderCode);
+    
+    // Pessimistic lock for webhook processing (with plan eagerly loaded)
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT p FROM Payment p WHERE p.orderCode = :orderCode")
+    @Query("SELECT p FROM Payment p LEFT JOIN FETCH p.plan WHERE p.orderCode = :orderCode")
     Optional<Payment> findByOrderCodeWithLock(@Param("orderCode") Long orderCode);
     
     @Query("SELECT p FROM Payment p LEFT JOIN FETCH p.plan WHERE p.user = :user ORDER BY p.createdAt DESC")
     List<Payment> findByUserOrderByCreatedAtDesc(@Param("user") User user);
     
-    // Find pending payments for duplicate check
-    @Query("SELECT p FROM Payment p WHERE p.user = :user AND p.status = :status ORDER BY p.createdAt DESC")
+    // Find pending payments for duplicate check (with plan eagerly loaded)
+    @Query("SELECT p FROM Payment p LEFT JOIN FETCH p.plan WHERE p.user = :user AND p.status = :status ORDER BY p.createdAt DESC")
     List<Payment> findByUserAndStatusOrderByCreatedAtDesc(@Param("user") User user, @Param("status") String status);
     
     // Find stale pending payments for cleanup

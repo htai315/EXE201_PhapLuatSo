@@ -25,7 +25,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class PayOSService {
@@ -38,8 +37,7 @@ public class PayOSService {
     private final PlanRepo planRepo;
     private final CreditService creditService;
     private final QRCodeService qrCodeService;
-
-    private final AtomicLong orderCodeCounter = new AtomicLong(System.currentTimeMillis() % 1000000);
+    private final OrderCodeGenerator orderCodeGenerator;
 
     @Value("${payos.return-url}")
     private String returnUrl;
@@ -74,7 +72,8 @@ public class PayOSService {
             UserRepo userRepo,
             PlanRepo planRepo,
             CreditService creditService,
-            QRCodeService qrCodeService
+            QRCodeService qrCodeService,
+            OrderCodeGenerator orderCodeGenerator
     ) {
         this.payOS = payOS;
         this.paymentRepo = paymentRepo;
@@ -82,6 +81,7 @@ public class PayOSService {
         this.planRepo = planRepo;
         this.creditService = creditService;
         this.qrCodeService = qrCodeService;
+        this.orderCodeGenerator = orderCodeGenerator;
     }
 
     @Transactional
@@ -96,16 +96,12 @@ public class PayOSService {
         Plan plan = planRepo.findByCode(planCode)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy gói: " + planCode));
 
-        // Eagerly load plan data to avoid LazyInitializationException
-        String planName = plan.getName();
-        int planPrice = plan.getPrice();
-
-        if (planPrice <= 0) {
+        if (plan.getPrice() <= 0) {
             throw new BadRequestException("Gói không hợp lệ");
         }
 
         // ========== REUSE LOGIC START ==========
-        // Kiểm tra xem có pending payment cùng gói không
+        // Kiểm tra xem có pending payment cùng gói không (plan đã được JOIN FETCH)
         List<Payment> pendingPayments = paymentRepo.findByUserAndStatusOrderByCreatedAtDesc(user, "PENDING");
         
         if (!pendingPayments.isEmpty() && reusePendingPayment) {
@@ -158,8 +154,8 @@ public class PayOSService {
                                     checkoutUrl,
                                     String.valueOf(matchingPending.getOrderCode()),
                                     qrCode,
-                                    (long) planPrice,
-                                    planName
+                                    (long) plan.getPrice(),
+                                    plan.getName()
                             );
                         } else {
                             // Payment đã expired/cancelled → Tạo mới
@@ -186,13 +182,13 @@ public class PayOSService {
         }
         // ========== REUSE LOGIC END ==========
 
-        // Tạo payment mới
-        long orderCode = generateUniqueOrderCode();
+        // Tạo payment mới với unique order code từ database sequence
+        long orderCode = orderCodeGenerator.generateOrderCode();
 
         Payment payment = new Payment();
         payment.setUser(user);
         payment.setPlan(plan);
-        payment.setAmount(BigDecimal.valueOf(planPrice));
+        payment.setAmount(BigDecimal.valueOf(plan.getPrice()));
         payment.setOrderCode(orderCode);
         payment.setVnpTxnRef("PAYOS_" + orderCode);
         payment.setStatus("PENDING");
@@ -201,21 +197,21 @@ public class PayOSService {
         paymentRepo.save(payment);
 
         log.info("Created payment: orderCode={}, user={}, plan={}, amount={}",
-                orderCode, userId, planCode, planPrice);
+                orderCode, userId, planCode, plan.getPrice());
 
         try {
             String description = "Don hang " + orderCode;
             
             log.info("========== CREATING PAYOS PAYMENT ==========");
             log.info("OrderCode: {}", orderCode);
-            log.info("Amount: {}", planPrice);
+            log.info("Amount: {}", plan.getPrice());
             log.info("Description: {}", description);
             log.info("ReturnUrl: {}", returnUrl);
             log.info("CancelUrl: {}", cancelUrl);
             
             CreatePaymentLinkRequest request = CreatePaymentLinkRequest.builder()
                     .orderCode(orderCode)
-                    .amount((long) planPrice)
+                    .amount((long) plan.getPrice())
                     .description(description)
                     .cancelUrl(cancelUrl)
                     .returnUrl(returnUrl)
@@ -246,8 +242,8 @@ public class PayOSService {
                     paymentLink.getCheckoutUrl(),
                     String.valueOf(orderCode),
                     qrCode,
-                    (long) planPrice,
-                    planName
+                    (long) plan.getPrice(),
+                    plan.getName()
             );
 
         } catch (Exception e) {
@@ -286,25 +282,6 @@ public class PayOSService {
         }
         
         throw lastException;
-    }
-
-    private long generateUniqueOrderCode() {
-        long timestamp = System.currentTimeMillis() % 10000000L;
-        long counter = orderCodeCounter.incrementAndGet() % 1000;
-        long orderCode = timestamp * 1000 + counter;
-        
-        int attempts = 0;
-        while (paymentRepo.findByOrderCode(orderCode).isPresent() && attempts < 10) {
-            counter = orderCodeCounter.incrementAndGet() % 1000;
-            orderCode = timestamp * 1000 + counter;
-            attempts++;
-        }
-        
-        if (attempts >= 10) {
-            orderCode = System.currentTimeMillis() % 9007199254740991L;
-        }
-        
-        return orderCode;
     }
 
     @Transactional
@@ -395,7 +372,7 @@ public class PayOSService {
 
     @Transactional(readOnly = true)
     public Payment getPaymentByOrderCode(long orderCode) {
-        return paymentRepo.findByOrderCode(orderCode)
+        return paymentRepo.findByOrderCodeWithPlan(orderCode)
                 .orElseThrow(() -> new NotFoundException("Payment not found: " + orderCode));
     }
 
