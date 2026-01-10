@@ -60,6 +60,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/register", "/api/auth/login", 
                                        "/api/auth/refresh", "/api/auth/logout",
                                        "/api/auth/password-reset/**",
+                                       "/api/auth/verify-email", "/api/auth/resend-verification",
                                        "/oauth2/**", "/login/**").permitAll()
 
                         // payment IPN callback (public - VNPay server-to-server)

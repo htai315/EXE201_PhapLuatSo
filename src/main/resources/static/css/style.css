@@ -141,92 +141,11 @@ img {
 /* Submitted state */
 .exam-submitted .option-item { pointer-events:none; opacity:0.85 }
 /* ===== Auth (Login/Register) ===== */
-.auth-section {
-    background: linear-gradient(135deg, #0d2d54, #1a4b84);
-}
+/* Auth styles are now defined inline in each auth page for better control */
+/* Keeping minimal shared styles only */
 
-.auth-card {
-    background: var(--color-white);
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: var(--shadow-lg);
-    border: 1px solid var(--color-gray-light);
-}
-
-.auth-card-large {
-    padding: 2.5rem 2.75rem;
-    min-height: 540px;
-}
-
-.auth-title {
-    font-family: var(--font-display);
-    font-size: 1.75rem;
-    margin-bottom: 0.25rem;
-    color: var(--color-dark);
-}
-
-.auth-subtitle {
-    color: var(--color-gray);
-    margin-bottom: 1rem;
-}
-
-.divider-text {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    background: transparent;
-    color: var(--color-gray);
-    font-weight: 600;
-}
-
-.auth-card .btn-outline-dark {
-    border-color: #e6e6e6;
-}
-
-.auth-card img {
-    filter: none;
-}
-
-/* Auth overall layout */
 .auth-layout {
     max-width: 1120px;
-}
-
-/* Auth hero text (login/register left column) */
-.auth-hero-text {
-    max-width: 520px;
-}
-
-.auth-hero-title {
-    font-family: var(--font-display);
-    font-size: 2.25rem;
-    font-weight: 700;
-    color: var(--color-white);
-}
-
-.auth-hero-subtitle {
-    font-size: 1rem;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.auth-hero-list {
-    list-style: none;
-    padding-left: 0;
-    margin: 0;
-    color: var(--color-white);
-}
-
-.auth-hero-list li {
-    display: flex;
-    align-items: center;
-    font-size: 0.95rem;
-    margin-bottom: 0.5rem;
-}
-
-.auth-logo-img {
-    height: 40px;
-    width: 40px;
-    border-radius: 50%;
-    object-fit: contain;
 }
 
 /* ===== Chat styles ===== */

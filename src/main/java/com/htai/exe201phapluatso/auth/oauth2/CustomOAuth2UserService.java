@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,9 +37,14 @@ public class CustomOAuth2UserService extends OidcUserService {
         
         try {
             return processOAuth2User(userRequest, oidcUser);
+        } catch (OAuth2AuthenticationException ex) {
+            logger.error("OAuth2 authentication error: {}", ex.getMessage());
+            throw ex;
         } catch (Exception ex) {
             logger.error("Error processing OAuth2 user", ex);
-            throw new OAuth2AuthenticationException(ex.getMessage());
+            String errorMessage = ex.getMessage() != null ? ex.getMessage() : "Unknown OAuth2 error";
+            OAuth2Error error = new OAuth2Error("oauth2_error", errorMessage, null);
+            throw new OAuth2AuthenticationException(error, ex);
         }
     }
 
@@ -47,7 +53,8 @@ public class CustomOAuth2UserService extends OidcUserService {
         OAuth2UserInfo userInfo = new GoogleOAuth2UserInfo(oidcUser.getAttributes());
         
         if (userInfo.getEmail() == null || userInfo.getEmail().isEmpty()) {
-            throw new OAuth2AuthenticationException("Email not found from OAuth2 provider");
+            OAuth2Error error = new OAuth2Error("email_not_found", "Email not found from OAuth2 provider", null);
+            throw new OAuth2AuthenticationException(error);
         }
 
         Optional<User> userOptional = userRepo.findByEmail(userInfo.getEmail());
@@ -58,9 +65,13 @@ public class CustomOAuth2UserService extends OidcUserService {
             
             // Update existing user
             if (!user.getProvider().equals(registrationId.toUpperCase())) {
-                throw new OAuth2AuthenticationException(
-                    "Email already registered with " + user.getProvider() + " provider"
+                String providerName = user.getProvider().equals("LOCAL") ? "email và mật khẩu" : user.getProvider();
+                OAuth2Error error = new OAuth2Error(
+                    "email_already_registered",
+                    "Email này đã được đăng ký thủ công. Vui lòng đăng nhập bằng " + providerName + ".",
+                    null
                 );
+                throw new OAuth2AuthenticationException(error);
             }
             
             user = updateExistingUser(user, userInfo);

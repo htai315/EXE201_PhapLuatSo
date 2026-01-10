@@ -7,12 +7,17 @@ import com.htai.exe201phapluatso.common.exception.BadRequestException;
 import com.htai.exe201phapluatso.common.exception.ForbiddenException;
 import com.htai.exe201phapluatso.common.exception.NotFoundException;
 import com.htai.exe201phapluatso.common.exception.UnauthorizedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepo userRepo;
     private final RoleRepo roleRepo;
@@ -22,6 +27,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final TokenService tokenService;
+    private final EmailVerificationService emailVerificationService;
 
     @Value("${app.jwt.access-minutes}")
     private long accessMinutes;
@@ -33,7 +39,8 @@ public class AuthService {
             RefreshTokenRepo refreshTokenRepo,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
-            TokenService tokenService
+            TokenService tokenService,
+            @Lazy EmailVerificationService emailVerificationService
     ) {
         this.userRepo = userRepo;
         this.roleRepo = roleRepo;
@@ -42,6 +49,7 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.tokenService = tokenService;
+        this.emailVerificationService = emailVerificationService;
     }
 
     // -------- LOCAL REGISTER --------
@@ -64,17 +72,23 @@ public class AuthService {
         u.setEnabled(true);
         u.getRoles().add(userRole);
 
-        userRepo.save(u);
+        User saved = userRepo.save(u);
+
+        // Gửi email verification
+        emailVerificationService.createAndSendVerificationToken(saved);
 
         // Database trigger will automatically create FREE credits (10 chat credits)
     }
 
     // -------- LOCAL LOGIN --------
     public TokenResponse login(LoginRequest req) {
+        long startTime = System.currentTimeMillis();
         String email = req.email().toLowerCase().trim();
 
+        long dbStart = System.currentTimeMillis();
         User u = userRepo.findByEmail(email)
                 .orElseThrow(() -> new UnauthorizedException("Email hoặc mật khẩu không đúng"));
+        log.debug("LOGIN: DB query took {}ms", System.currentTimeMillis() - dbStart);
 
         if (!u.isEnabled()) {
             throw new ForbiddenException("Tài khoản đã bị khóa");
@@ -82,11 +96,28 @@ public class AuthService {
         if (u.getPasswordHash() == null) {
             throw new BadRequestException("Tài khoản này đăng nhập bằng Google");
         }
-        if (!passwordEncoder.matches(req.password(), u.getPasswordHash())) {
+        
+        long bcryptStart = System.currentTimeMillis();
+        boolean passwordMatch = passwordEncoder.matches(req.password(), u.getPasswordHash());
+        log.debug("LOGIN: BCrypt verify took {}ms", System.currentTimeMillis() - bcryptStart);
+        
+        if (!passwordMatch) {
             throw new UnauthorizedException("Email hoặc mật khẩu không đúng");
         }
+        
+        // Kiểm tra email đã xác thực chưa (chỉ với LOCAL provider)
+        if ("LOCAL".equals(u.getProvider()) && !u.isEmailVerified()) {
+            throw new UnauthorizedException(
+                "Vui lòng xác thực email trước khi đăng nhập. Kiểm tra hộp thư của bạn."
+            );
+        }
 
-        return issueTokens(u);
+        long tokenStart = System.currentTimeMillis();
+        TokenResponse response = issueTokens(u);
+        log.debug("LOGIN: Token generation took {}ms", System.currentTimeMillis() - tokenStart);
+        
+        log.info("LOGIN: Total time {}ms for user {}", System.currentTimeMillis() - startTime, email);
+        return response;
     }
 
     // -------- REFRESH (ROTATE) --------

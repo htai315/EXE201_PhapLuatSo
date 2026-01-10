@@ -8,9 +8,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
@@ -23,10 +24,13 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
         
         logger.error("OAuth2 authentication failed: {}", exception.getMessage());
         
-        String targetUrl = UriComponentsBuilder.fromUriString("/html/login.html")
-                .queryParam("error", "oauth2_failed")
-                .queryParam("message", exception.getLocalizedMessage())
-                .build().toUriString();
+        String message = exception.getLocalizedMessage();
+        if (message == null || message.isEmpty()) {
+            message = "Đăng nhập Google thất bại";
+        }
+        
+        String encodedMessage = URLEncoder.encode(message, StandardCharsets.UTF_8);
+        String targetUrl = "/html/login.html?error=oauth2_failed&message=" + encodedMessage;
         
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }

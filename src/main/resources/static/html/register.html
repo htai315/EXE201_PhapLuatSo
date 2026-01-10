@@ -7,19 +7,14 @@
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-  <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="/css/common.css">
-  <link rel="stylesheet" href="/css/animations.css">
   <link rel="stylesheet" href="/css/toast-notification.css">
   
   <style>
@@ -59,7 +54,7 @@
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(20px);
       border-radius: 24px;
-      padding: 3rem;
+      padding: 2.5rem;
       box-shadow: 
         0 20px 60px rgba(0, 0, 0, 0.15),
         0 0 0 1px rgba(255, 255, 255, 0.1) inset;
@@ -68,14 +63,8 @@
     }
     
     @keyframes slideInRight {
-      from {
-        opacity: 0;
-        transform: translateX(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
+      from { opacity: 0; transform: translateX(30px); }
+      to { opacity: 1; transform: translateX(0); }
     }
     
     .auth-hero-text {
@@ -83,36 +72,28 @@
     }
     
     @keyframes slideInLeft {
-      from {
-        opacity: 0;
-        transform: translateX(-30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
+      from { opacity: 0; transform: translateX(-30px); }
+      to { opacity: 1; transform: translateX(0); }
     }
     
     .auth-title {
-      font-size: 2rem;
+      font-size: 1.75rem;
       font-weight: 700;
       color: #1e293b;
       margin-bottom: 0.5rem;
-      font-family: 'Inter', sans-serif;
     }
     
     .auth-subtitle {
       color: #64748b;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
     }
     
     .form-control {
       border: 2px solid #e2e8f0;
       border-radius: 12px;
-      padding: 0.75rem 1rem;
-      font-size: 0.95rem;
+      padding: 0.7rem 1rem;
+      font-size: 0.9rem;
       transition: all 0.3s ease;
-      font-family: 'Inter', sans-serif;
     }
     
     .form-control:focus {
@@ -120,16 +101,77 @@
       box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
     }
     
+    .form-control.is-invalid {
+      border-color: #ef4444;
+    }
+    
+    .input-group-text {
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-right: none;
+      border-radius: 12px 0 0 12px;
+      color: #64748b;
+    }
+    
+    .input-group .form-control {
+      border-left: none;
+      border-radius: 0 12px 12px 0;
+    }
+    
+    .input-group .form-control:not(:last-child) {
+      border-radius: 0;
+    }
+    
+    .password-toggle {
+      background: #f8fafc;
+      color: #64748b;
+      transition: all 0.3s ease;
+      padding: 0 12px;
+      border: 2px solid #e2e8f0 !important;
+      border-left: none !important;
+    }
+    
+    .password-toggle:hover {
+      background: #f0f4ff;
+      color: #667eea;
+    }
+    
+    .input-group:focus-within .password-toggle {
+      border-color: #667eea !important;
+    }
+    
+    .input-group:focus-within .input-group-text {
+      border-color: #667eea;
+      background: #f0f4ff;
+      color: #667eea;
+    }
+    
+    .form-label {
+      font-weight: 500;
+      color: #475569;
+      font-size: 0.875rem;
+      margin-bottom: 0.4rem;
+    }
+    
+    .invalid-feedback {
+      font-size: 0.8rem;
+    }
+    
+    .password-hint {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-top: 0.25rem;
+    }
+    
     .btn-primary {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       border: none;
       border-radius: 12px;
-      padding: 0.875rem 1.5rem;
+      padding: 0.8rem 1.5rem;
       font-weight: 600;
-      font-size: 1rem;
+      font-size: 0.95rem;
       transition: all 0.3s ease;
       box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-      font-family: 'Inter', sans-serif;
     }
     
     .btn-primary:hover {
@@ -141,11 +183,10 @@
     .btn-outline-dark {
       border: 2px solid #e2e8f0;
       border-radius: 12px;
-      padding: 0.875rem 1.5rem;
+      padding: 0.75rem 1.5rem;
       font-weight: 600;
       transition: all 0.3s ease;
       background: white;
-      font-family: 'Inter', sans-serif;
     }
     
     .btn-outline-dark:hover {
@@ -158,8 +199,7 @@
     .divider-text {
       position: relative;
       color: #94a3b8;
-      font-size: 0.875rem;
-      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
     }
     
     .divider-text::before,
@@ -172,48 +212,40 @@
       background: #e2e8f0;
     }
     
-    .divider-text::before {
-      left: 0;
-    }
-    
-    .divider-text::after {
-      right: 0;
-    }
+    .divider-text::before { left: 0; }
+    .divider-text::after { right: 0; }
     
     .auth-hero-title {
-      font-size: 3rem;
+      font-size: 2.75rem;
       font-weight: 800;
       color: white;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.25rem;
       text-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
-      font-family: 'Inter', sans-serif;
       line-height: 1.2;
     }
     
     .auth-hero-subtitle {
-      font-size: 1.125rem;
+      font-size: 1.05rem;
       color: rgba(255, 255, 255, 0.95);
       line-height: 1.7;
-      font-family: 'Inter', sans-serif;
     }
     
     .auth-hero-list {
       list-style: none;
       padding: 0;
-      margin: 2rem 0 0 0;
+      margin: 1.5rem 0 0 0;
     }
     
     .auth-hero-list li {
       color: rgba(255, 255, 255, 0.95);
-      font-size: 1rem;
-      margin-bottom: 1rem;
+      font-size: 0.95rem;
+      margin-bottom: 0.85rem;
       display: flex;
       align-items: center;
-      font-family: 'Inter', sans-serif;
     }
     
     .auth-hero-list li i {
-      font-size: 1.25rem;
+      font-size: 1.1rem;
       margin-right: 0.75rem;
       color: #fbbf24;
     }
@@ -221,12 +253,11 @@
     .auth-logo-link {
       text-decoration: none;
       color: white;
-      font-size: 1.5rem;
+      font-size: 1.35rem;
       font-weight: 700;
       display: inline-flex;
       align-items: center;
       transition: all 0.3s ease;
-      font-family: 'Inter', sans-serif;
     }
     
     .auth-logo-link:hover {
@@ -235,20 +266,10 @@
     }
     
     .auth-logo-img {
-      width: 48px;
-      height: 48px;
+      width: 44px;
+      height: 44px;
       object-fit: contain;
       filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
-    }
-    
-    .form-label {
-      font-family: 'Inter', sans-serif;
-      font-weight: 500;
-      color: #475569;
-    }
-    
-    a {
-      font-family: 'Inter', sans-serif;
     }
     
     .text-primary {
@@ -259,18 +280,19 @@
       color: #764ba2 !important;
     }
     
-    .text-muted {
-      font-family: 'Inter', sans-serif;
+    #passwordStrength {
+      margin-top: 0.35rem;
     }
     
-    .invalid-feedback {
-      font-family: 'Inter', sans-serif;
-      font-size: 0.875rem;
+    #passwordStrength .progress {
+      height: 4px;
+      border-radius: 2px;
+      background: #e2e8f0;
     }
     
     @media (max-width: 991px) {
       .auth-hero-title {
-        font-size: 2.5rem;
+        font-size: 2.25rem;
       }
       
       .auth-card {
@@ -280,77 +302,102 @@
   </style>
 </head>
 <body>
-<!-- Register Section -->
-<section class="auth-section min-vh-100 d-flex align-items-center py-5">
-  <div class="container auth-layout">
-    <div class="row align-items-center justify-content-between g-5">
-      <div class="col-lg-6 fade-in">
+<section class="auth-section min-vh-100 d-flex align-items-center py-4">
+  <div class="container">
+    <div class="row align-items-center justify-content-between g-4">
+      <!-- Left: Hero -->
+      <div class="col-lg-6">
         <div class="auth-hero-text">
           <a href="../index.html" class="auth-logo-link d-inline-flex align-items-center mb-4">
             <img src="../img/Law.png" alt="Logo" class="me-2 auth-logo-img">
             <span class="fw-semibold text-white">AI Pháp Luật Số</span>
           </a>
-          <h1 class="auth-hero-title mb-3">
-            Tạo tài khoản mới
-          </h1>
-          <p class="auth-hero-subtitle mb-4">
-            Đăng ký để bắt đầu sử dụng trợ lý pháp lý AI, luyện quiz và theo dõi tiến độ học tập của bạn.
+          <h1 class="auth-hero-title">Tạo tài khoản mới</h1>
+          <p class="auth-hero-subtitle mb-3">
+            Đăng ký để bắt đầu sử dụng trợ lý pháp lý AI, luyện tập quiz và theo dõi tiến độ học tập của bạn.
           </p>
           <ul class="auth-hero-list">
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>Gói FREE cho trải nghiệm ban đầu</li>
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>Lưu hồ sơ và lịch sử tra cứu</li>
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>Nâng cấp gói khi bạn sẵn sàng</li>
+            <li><i class="bi bi-check-circle-fill"></i>Gói FREE cho trải nghiệm ban đầu</li>
+            <li><i class="bi bi-check-circle-fill"></i>Lưu hồ sơ và lịch sử tra cứu</li>
+            <li><i class="bi bi-check-circle-fill"></i>Nâng cấp gói khi bạn sẵn sàng</li>
           </ul>
         </div>
       </div>
 
-      <div class="col-md-7 col-lg-6 col-xl-5 fade-in-delay">
-        <div class="auth-card auth-card-large">
-          <div class="mb-4">
-            <h2 class="auth-title">Tạo tài khoản</h2>
+      <!-- Right: Form -->
+      <div class="col-md-8 col-lg-6 col-xl-5">
+        <div class="auth-card">
+          <div class="mb-3">
+            <h2 class="auth-title">Đăng ký tài khoản</h2>
             <p class="auth-subtitle mb-0">Điền thông tin để bắt đầu sử dụng dịch vụ.</p>
           </div>
 
           <form class="auth-form">
             <div class="mb-3">
               <label class="form-label">Họ và tên</label>
-              <input type="text" class="form-control" id="fullNameInput" required>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                <input type="text" class="form-control" id="fullNameInput" placeholder="Nguyễn Văn A" required>
+              </div>
               <div class="invalid-feedback d-block" id="fullNameError"></div>
             </div>
 
             <div class="mb-3">
               <label class="form-label">Email</label>
-              <input type="email" class="form-control" id="emailInput" required>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                <input type="email" class="form-control" id="emailInput" placeholder="email@example.com" required>
+              </div>
               <div class="invalid-feedback d-block" id="emailError"></div>
             </div>
 
             <div class="mb-3">
               <label class="form-label">Mật khẩu</label>
-              <input type="password" class="form-control" id="passwordInput" required>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                <input type="password" class="form-control" id="passwordInput" placeholder="••••••••" required>
+                <button class="btn btn-outline-secondary password-toggle" type="button" tabindex="-1">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
               <div class="invalid-feedback d-block" id="passwordError"></div>
-              <small class="text-muted">Tối thiểu 6 ký tự</small>
+              <div class="password-hint">Tối thiểu 8 ký tự, bao gồm chữ hoa, chữ thường và số.</div>
+              <div id="passwordStrength" style="display: none;">
+                <small>Độ mạnh: <span id="strengthText" style="font-weight: 600;"></span></small>
+                <div class="progress">
+                  <div id="strengthBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                </div>
+              </div>
             </div>
 
-            <div class="mb-3">
+            <div class="mb-4">
               <label class="form-label">Xác nhận mật khẩu</label>
-              <input type="password" class="form-control" id="confirmPasswordInput" required>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                <input type="password" class="form-control" id="confirmPasswordInput" placeholder="••••••••" required>
+                <button class="btn btn-outline-secondary password-toggle" type="button" tabindex="-1">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
               <div class="invalid-feedback d-block" id="confirmPasswordError"></div>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100 mb-3">Tạo Tài Khoản</button>
+            <button type="submit" class="btn btn-primary w-100 mb-3">
+              <i class="bi bi-person-plus me-2"></i>Tạo Tài Khoản
+            </button>
 
             <div class="text-center mb-3">
-              <span class="divider-text">hoặc đăng nhập với</span>
+              <span class="divider-text">hoặc đăng ký với</span>
             </div>
 
-            <button type="button" id="googleRegisterBtn" class="btn btn-outline-dark w-100 mb-3">
+            <button type="button" id="googleRegisterBtn" class="btn btn-outline-dark w-100">
               <img src="../img/Google__G__logo.svg.webp" alt="Google" style="height: 18px;" class="me-2">
-              Đăng nhập bằng Google
+              Đăng ký bằng Google
             </button>
           </form>
 
           <div class="text-center mt-4">
-            <p class="mb-0">Đã có tài khoản? <a href="login.html" class="text-primary">Đăng nhập</a></p>
+            <p class="mb-0">Đã có tài khoản? <a href="login.html" class="text-primary">Đăng nhập ngay</a></p>
           </div>
         </div>
       </div>
@@ -360,18 +407,15 @@
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- Custom JS -->
 <script src="/scripts/toast-notification.js"></script>
 <script src="/scripts/api-client.js"></script>
-<script src="/scripts/script.js"></script>
+<script src="/scripts/password-validator.js"></script>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     const form = document.querySelector(".auth-form");
     const googleRegisterBtn = document.getElementById("googleRegisterBtn");
 
-    // Clear error message
     function clearError(inputId) {
       const input = document.getElementById(inputId);
       const errorDiv = document.getElementById(inputId.replace('Input', 'Error'));
@@ -379,7 +423,6 @@
       if (errorDiv) errorDiv.textContent = '';
     }
 
-    // Show error message
     function showError(inputId, message) {
       const input = document.getElementById(inputId);
       const errorDiv = document.getElementById(inputId.replace('Input', 'Error'));
@@ -387,15 +430,28 @@
       if (errorDiv) errorDiv.textContent = message;
     }
 
-    // Validate email format
     function isValidEmail(email) {
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
 
+    // Password toggle
+    document.querySelectorAll('.password-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = btn.previousElementSibling;
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+          input.type = 'text';
+          icon.classList.replace('bi-eye', 'bi-eye-slash');
+        } else {
+          input.type = 'password';
+          icon.classList.replace('bi-eye-slash', 'bi-eye');
+        }
+      });
+    });
+
     if (googleRegisterBtn) {
       googleRegisterBtn.addEventListener("click", (e) => {
         e.preventDefault();
-        // Redirect to Google OAuth2 authorization endpoint
         window.location.href = "/oauth2/authorization/google";
       });
     }
@@ -407,156 +463,161 @@
     const passwordInput = document.getElementById('passwordInput');
     const confirmPasswordInput = document.getElementById('confirmPasswordInput');
 
-    // Real-time validation
     fullNameInput.addEventListener('blur', () => {
       const value = fullNameInput.value.trim();
-      if (!value) {
-        showError('fullNameInput', 'Vui lòng nhập họ và tên');
-      } else if (value.length < 2) {
-        showError('fullNameInput', 'Họ và tên phải có ít nhất 2 ký tự');
-      } else {
-        clearError('fullNameInput');
-      }
+      if (!value) showError('fullNameInput', 'Vui lòng nhập họ và tên');
+      else if (value.length < 2) showError('fullNameInput', 'Họ và tên phải có ít nhất 2 ký tự');
+      else clearError('fullNameInput');
     });
 
     fullNameInput.addEventListener('input', () => {
-      if (fullNameInput.value.trim()) {
-        clearError('fullNameInput');
-      }
+      if (fullNameInput.value.trim()) clearError('fullNameInput');
     });
 
     emailInput.addEventListener('blur', () => {
       const value = emailInput.value.trim();
-      if (!value) {
-        showError('emailInput', 'Vui lòng nhập email');
-      } else if (!isValidEmail(value)) {
-        showError('emailInput', 'Email không hợp lệ');
-      } else {
-        clearError('emailInput');
-      }
+      if (!value) showError('emailInput', 'Vui lòng nhập email');
+      else if (!isValidEmail(value)) showError('emailInput', 'Email không hợp lệ');
+      else clearError('emailInput');
     });
 
     emailInput.addEventListener('input', () => {
-      if (emailInput.value.trim()) {
-        clearError('emailInput');
-      }
+      if (emailInput.value.trim()) clearError('emailInput');
     });
 
     passwordInput.addEventListener('blur', () => {
       const value = passwordInput.value;
-      if (!value) {
-        showError('passwordInput', 'Vui lòng nhập mật khẩu');
-      } else if (value.length < 6) {
-        showError('passwordInput', 'Mật khẩu phải có ít nhất 6 ký tự');
-      } else {
-        clearError('passwordInput');
+      if (!value) showError('passwordInput', 'Vui lòng nhập mật khẩu');
+      else {
+        const validation = PasswordValidator.validate(value);
+        if (!validation.valid) showError('passwordInput', validation.errors[0]);
+        else clearError('passwordInput');
       }
-      // Re-validate confirm password if it has value
-      if (confirmPasswordInput.value) {
-        validateConfirmPassword();
-      }
+      if (confirmPasswordInput.value) validateConfirmPassword();
     });
 
     passwordInput.addEventListener('input', () => {
-      if (passwordInput.value) {
+      const value = passwordInput.value;
+      if (value) {
         clearError('passwordInput');
+        const strengthDiv = document.getElementById('passwordStrength');
+        const strengthText = document.getElementById('strengthText');
+        const strengthBar = document.getElementById('strengthBar');
+        strengthDiv.style.display = 'block';
+        const strength = PasswordValidator.getStrength(value);
+        const color = PasswordValidator.getStrengthColor(strength);
+        const text = PasswordValidator.getStrengthText(strength);
+        strengthText.textContent = text;
+        strengthText.style.color = color;
+        strengthBar.style.backgroundColor = color;
+        const widthMap = { weak: '33%', medium: '66%', strong: '100%' };
+        strengthBar.style.width = widthMap[strength];
+      } else {
+        document.getElementById('passwordStrength').style.display = 'none';
       }
-      // Re-validate confirm password if it has value
-      if (confirmPasswordInput.value) {
-        validateConfirmPassword();
-      }
+      if (confirmPasswordInput.value) validateConfirmPassword();
     });
 
     function validateConfirmPassword() {
       const password = passwordInput.value;
       const confirm = confirmPasswordInput.value;
-      
-      if (!confirm) {
-        showError('confirmPasswordInput', 'Vui lòng xác nhận mật khẩu');
-        return false;
-      } else if (password !== confirm) {
-        showError('confirmPasswordInput', 'Mật khẩu xác nhận không khớp');
-        return false;
-      } else {
-        clearError('confirmPasswordInput');
-        return true;
-      }
+      if (!confirm) { showError('confirmPasswordInput', 'Vui lòng xác nhận mật khẩu'); return false; }
+      else if (password !== confirm) { showError('confirmPasswordInput', 'Mật khẩu xác nhận không khớp'); return false; }
+      else { clearError('confirmPasswordInput'); return true; }
     }
 
     confirmPasswordInput.addEventListener('blur', validateConfirmPassword);
     confirmPasswordInput.addEventListener('input', () => {
-      if (confirmPasswordInput.value) {
-        validateConfirmPassword();
-      }
+      if (confirmPasswordInput.value) validateConfirmPassword();
     });
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-
-      // Clear all errors
-      clearError('fullNameInput');
-      clearError('emailInput');
-      clearError('passwordInput');
-      clearError('confirmPasswordInput');
+      clearError('fullNameInput'); clearError('emailInput'); clearError('passwordInput'); clearError('confirmPasswordInput');
 
       const fullName = fullNameInput.value.trim();
       const email = emailInput.value.trim();
       const password = passwordInput.value;
       const confirm = confirmPasswordInput.value;
-
       let hasError = false;
 
-      // Validate all fields
-      if (!fullName) {
-        showError('fullNameInput', 'Vui lòng nhập họ và tên');
-        hasError = true;
-      } else if (fullName.length < 2) {
-        showError('fullNameInput', 'Họ và tên phải có ít nhất 2 ký tự');
-        hasError = true;
+      if (!fullName) { showError('fullNameInput', 'Vui lòng nhập họ và tên'); hasError = true; }
+      else if (fullName.length < 2) { showError('fullNameInput', 'Họ và tên phải có ít nhất 2 ký tự'); hasError = true; }
+
+      if (!email) { showError('emailInput', 'Vui lòng nhập email'); hasError = true; }
+      else if (!isValidEmail(email)) { showError('emailInput', 'Email không hợp lệ'); hasError = true; }
+
+      if (!password) { showError('passwordInput', 'Vui lòng nhập mật khẩu'); hasError = true; }
+      else {
+        const validation = PasswordValidator.validate(password);
+        if (!validation.valid) { showError('passwordInput', validation.errors[0]); hasError = true; }
       }
 
-      if (!email) {
-        showError('emailInput', 'Vui lòng nhập email');
-        hasError = true;
-      } else if (!isValidEmail(email)) {
-        showError('emailInput', 'Email không hợp lệ');
-        hasError = true;
-      }
+      if (!confirm) { showError('confirmPasswordInput', 'Vui lòng xác nhận mật khẩu'); hasError = true; }
+      else if (password !== confirm) { showError('confirmPasswordInput', 'Mật khẩu xác nhận không khớp'); hasError = true; }
 
-      if (!password) {
-        showError('passwordInput', 'Vui lòng nhập mật khẩu');
-        hasError = true;
-      } else if (password.length < 6) {
-        showError('passwordInput', 'Mật khẩu phải có ít nhất 6 ký tự');
-        hasError = true;
-      }
-
-      if (!confirm) {
-        showError('confirmPasswordInput', 'Vui lòng xác nhận mật khẩu');
-        hasError = true;
-      } else if (password !== confirm) {
-        showError('confirmPasswordInput', 'Mật khẩu xác nhận không khớp');
-        hasError = true;
-      }
-
-      if (hasError) {
-        return;
-      }
+      if (hasError) return;
 
       try {
-        const response = await API_CLIENT.post("/api/auth/register", { email, password, fullName });
-        
-        // Đăng ký thành công
-        Toast.success('Đăng ký thành công! Vui lòng đăng nhập');
-        setTimeout(() => {
-          window.location.href = "login.html";
-        }, 1000);
+        await API_CLIENT.post("/api/auth/register", { email, password, fullName });
+        Toast.success('Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.');
+        showEmailVerificationModal(email);
       } catch (error) {
         console.error("Register error", error);
-        const errorMessage = error.error || error.message || 'Đăng ký thất bại';
-        showError('emailInput', errorMessage);
+        showError('emailInput', error.error || error.message || 'Đăng ký thất bại');
       }
     });
+    
+    function showEmailVerificationModal(email) {
+      const modalHtml = `
+        <div class="modal fade" id="emailVerificationModal" tabindex="-1" data-bs-backdrop="static">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 20px; border: none;">
+              <div class="modal-body text-center p-5">
+                <div style="font-size: 70px; color: #667eea; margin-bottom: 16px;">
+                  <i class="bi bi-envelope-check"></i>
+                </div>
+                <h4 class="mb-3" style="font-weight: 700; color: #333;">Kiểm tra email của bạn!</h4>
+                <p class="text-muted mb-4">
+                  Chúng tôi đã gửi email xác thực đến<br>
+                  <strong style="color: #667eea;">${email}</strong>
+                </p>
+                <p class="text-muted mb-4" style="font-size: 14px;">
+                  Vui lòng click vào link trong email để hoàn tất đăng ký.<br>
+                  <small>Nhớ kiểm tra cả thư mục Spam nếu không thấy email.</small>
+                </p>
+                <a href="login.html" class="btn btn-primary px-4 py-2" style="border-radius: 12px;">
+                  <i class="bi bi-box-arrow-in-right me-2"></i>Đi đến trang đăng nhập
+                </a>
+                <div class="mt-3">
+                  <button type="button" class="btn btn-link text-muted" id="resendEmailBtn">
+                    Không nhận được email? Gửi lại
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+      const modal = new bootstrap.Modal(document.getElementById('emailVerificationModal'));
+      modal.show();
+      
+      document.getElementById('resendEmailBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('resendEmailBtn');
+        btn.disabled = true;
+        btn.textContent = 'Đang gửi...';
+        try {
+          await API_CLIENT.post('/api/auth/resend-verification', { email });
+          Toast.success('Email xác thực đã được gửi lại!');
+          btn.textContent = 'Đã gửi lại email';
+        } catch (error) {
+          Toast.error(error.message || 'Không thể gửi lại email');
+          btn.disabled = false;
+          btn.textContent = 'Không nhận được email? Gửi lại';
+        }
+      });
+    }
   });
 </script>
 </body>

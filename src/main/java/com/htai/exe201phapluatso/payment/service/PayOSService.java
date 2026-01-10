@@ -463,7 +463,7 @@ public class PayOSService {
         }
     }
 
-    @Scheduled(fixedDelay = 900000)
+    @Scheduled(fixedDelay = 300000) // Chạy mỗi 5 phút
     @Transactional
     public void cleanupStalePendingPayments() {
         log.info("Running stale payment cleanup task...");
@@ -473,10 +473,21 @@ public class PayOSService {
         
         List<Payment> stalePayments = paymentRepo.findByStatusAndCreatedAtBefore("PENDING", staleTime);
         
-        if (stalePayments.size() > maxCleanupBatchSize) {
-            log.info("Found {} stale payments, processing first {} only", stalePayments.size(), maxCleanupBatchSize);
-            stalePayments = stalePayments.subList(0, maxCleanupBatchSize);
+        if (stalePayments.isEmpty()) {
+            log.info("No stale payments found");
+            return;
         }
+        
+        // Tăng batch size lên 50
+        int batchSize = Math.min(stalePayments.size(), 50);
+        if (stalePayments.size() > batchSize) {
+            log.info("Found {} stale payments, processing first {} only", stalePayments.size(), batchSize);
+            stalePayments = stalePayments.subList(0, batchSize);
+        }
+        
+        int processed = 0;
+        int expired = 0;
+        int cancelled = 0;
         
         for (Payment payment : stalePayments) {
             try {
@@ -485,31 +496,57 @@ public class PayOSService {
                 String statusName = status != null ? status.name() : null;
                 
                 if ("CANCELLED".equals(statusName) || "EXPIRED".equals(statusName)) {
-                    payment.setStatus("CANCELLED");
+                    payment.setStatus("EXPIRED");
                     paymentRepo.save(payment);
-                    log.info("Marked payment {} as CANCELLED", payment.getOrderCode());
+                    expired++;
+                    log.info("Marked payment {} as EXPIRED (PayOS status: {})", payment.getOrderCode(), statusName);
                 } else if ("PAID".equals(statusName)) {
                     log.warn("Found PAID payment without webhook: {}", payment.getOrderCode());
                     payment.setStatus("NEEDS_REVIEW");
                     paymentRepo.save(payment);
+                } else if ("PENDING".equals(statusName) || "PROCESSING".equals(statusName)) {
+                    // Nếu payment quá cũ (hơn 24h) mà vẫn PENDING trên PayOS → đánh dấu EXPIRED
+                    if (payment.getCreatedAt().isBefore(oneDayAgo)) {
+                        payment.setStatus("EXPIRED");
+                        paymentRepo.save(payment);
+                        expired++;
+                        log.info("Marked old pending payment {} as EXPIRED (>24h)", payment.getOrderCode());
+                    }
                 }
+                processed++;
             } catch (Exception e) {
-                String errorMsg = e.getMessage() != null ? e.getMessage() : "";
+                String errorMsg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
                 
-                if (errorMsg.contains("không tồn tại") || errorMsg.contains("not found") || errorMsg.contains("tạm dừng")) {
+                // PayOS không tìm thấy payment → EXPIRED
+                if (errorMsg.contains("không tồn tại") || errorMsg.contains("not found") || 
+                    errorMsg.contains("tạm dừng") || errorMsg.contains("404")) {
                     payment.setStatus("EXPIRED");
                     paymentRepo.save(payment);
+                    expired++;
                     log.info("Marked payment {} as EXPIRED (not found on PayOS)", payment.getOrderCode());
-                } else if (payment.getCreatedAt().isBefore(oneDayAgo)) {
-                    payment.setStatus("TIMEOUT");
+                } 
+                // Payment quá cũ (>24h) → EXPIRED luôn
+                else if (payment.getCreatedAt().isBefore(oneDayAgo)) {
+                    payment.setStatus("EXPIRED");
                     paymentRepo.save(payment);
-                    log.info("Marked payment {} as TIMEOUT", payment.getOrderCode());
-                } else {
-                    log.debug("Skipping payment {} - will retry later", payment.getOrderCode());
+                    expired++;
+                    log.info("Marked payment {} as EXPIRED (>24h old)", payment.getOrderCode());
+                } 
+                // Lỗi khác nhưng payment đã quá 2 giờ → EXPIRED
+                else if (payment.getCreatedAt().isBefore(LocalDateTime.now().minusHours(2))) {
+                    payment.setStatus("EXPIRED");
+                    paymentRepo.save(payment);
+                    expired++;
+                    log.info("Marked payment {} as EXPIRED (>2h old, API error)", payment.getOrderCode());
                 }
+                else {
+                    log.debug("Skipping payment {} - will retry later: {}", payment.getOrderCode(), errorMsg);
+                }
+                processed++;
             }
         }
         
-        log.info("Stale payment cleanup completed. Processed {} payments", stalePayments.size());
+        log.info("Stale payment cleanup completed. Processed: {}, Expired: {}, Cancelled: {}", 
+                processed, expired, cancelled);
     }
 }

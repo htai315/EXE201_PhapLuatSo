@@ -43,9 +43,9 @@ public class PasswordResetService {
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("Email không tồn tại trong hệ thống"));
 
-        // Kiểm tra nếu user đăng nhập bằng Google
+        // Kiểm tra nếu user đăng nhập bằng Google/OAuth
         if (!"LOCAL".equals(user.getProvider())) {
-            throw new BadRequestException("Tài khoản đăng nhập bằng " + user.getProvider() + " không thể đặt lại mật khẩu");
+            throw new BadRequestException("Tài khoản này đăng nhập bằng Google. Vui lòng sử dụng nút 'Đăng nhập bằng Google' để truy cập.");
         }
 
         // Xóa các OTP cũ của email này

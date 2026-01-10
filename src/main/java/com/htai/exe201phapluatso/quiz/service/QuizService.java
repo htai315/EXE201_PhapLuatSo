@@ -188,6 +188,15 @@ public class QuizService {
                 .toList();
     }
 
+    /**
+     * Get questions with options for PDF export
+     */
+    @Transactional(readOnly = true)
+    public List<QuizQuestion> getQuestionsWithOptionsForExport(Long userId, Long quizSetId) {
+        getOwnedQuizSet(userId, quizSetId);
+        return questionRepo.findByQuizSetIdWithOptions(quizSetId);
+    }
+
     @Transactional
     public void deleteQuizSet(Long userId, Long quizSetId) {
         log.info("Đang xóa bộ đề {} bởi user {}", quizSetId, userId);

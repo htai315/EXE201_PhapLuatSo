@@ -3,6 +3,7 @@ package com.htai.exe201phapluatso.auth.controller;
 import com.htai.exe201phapluatso.auth.dto.*;
 import com.htai.exe201phapluatso.auth.security.AuthUserPrincipal;
 import com.htai.exe201phapluatso.auth.service.AuthService;
+import com.htai.exe201phapluatso.auth.service.EmailVerificationService;
 import com.htai.exe201phapluatso.auth.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -15,16 +16,23 @@ public class AuthController {
 
     private final AuthService auth;
     private final UserService userService;
+    private final EmailVerificationService emailVerificationService;
 
-    public AuthController(AuthService auth, UserService userService) {
+    public AuthController(
+            AuthService auth, 
+            UserService userService, 
+            EmailVerificationService emailVerificationService) {
         this.auth = auth;
         this.userService = userService;
+        this.emailVerificationService = emailVerificationService;
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
         auth.register(req);
-        return ResponseEntity.ok(new MessageResponse("Đăng ký thành công! Vui lòng đăng nhập."));
+        return ResponseEntity.ok(new MessageResponse(
+            "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản."
+        ));
     }
 
     @PostMapping("/login")
@@ -41,6 +49,22 @@ public class AuthController {
     public ResponseEntity<?> logout(@Valid @RequestBody RefreshRequest req) {
         auth.logout(req);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestParam String token) {
+        emailVerificationService.verifyEmail(token);
+        return ResponseEntity.ok(new MessageResponse(
+            "Xác thực email thành công! Bạn có thể đăng nhập ngay."
+        ));
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<?> resendVerification(@Valid @RequestBody ResendVerificationRequest req) {
+        emailVerificationService.resendVerificationEmail(req.email());
+        return ResponseEntity.ok(new MessageResponse(
+            "Email xác thực đã được gửi lại. Vui lòng kiểm tra hộp thư."
+        ));
     }
 
     @GetMapping("/test")

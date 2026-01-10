@@ -9,17 +9,23 @@ import com.htai.exe201phapluatso.quiz.dto.QuizSetResponse;
 import com.htai.exe201phapluatso.quiz.dto.PagedQuizSetsResponse;
 import com.htai.exe201phapluatso.quiz.dto.PagedExamHistoryResponse;
 import com.htai.exe201phapluatso.quiz.dto.ExamDtos.*;
+import com.htai.exe201phapluatso.quiz.entity.QuizQuestion;
 import com.htai.exe201phapluatso.quiz.entity.QuizSet;
 import com.htai.exe201phapluatso.quiz.service.QuizExamService;
+import com.htai.exe201phapluatso.quiz.service.QuizPdfExportService;
 import com.htai.exe201phapluatso.quiz.service.QuizService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -38,10 +44,12 @@ public class QuizController {
 
     private final QuizService quizService;
     private final QuizExamService quizExamService;
+    private final QuizPdfExportService pdfExportService;
 
-    public QuizController(QuizService quizService, QuizExamService quizExamService) {
+    public QuizController(QuizService quizService, QuizExamService quizExamService, QuizPdfExportService pdfExportService) {
         this.quizService = quizService;
         this.quizExamService = quizExamService;
+        this.pdfExportService = pdfExportService;
     }
 
     @PostMapping
@@ -213,6 +221,70 @@ public class QuizController {
         
         PagedExamHistoryResponse res = quizExamService.getAllHistory(userId, page, size);
         return ResponseEntity.ok(res);
+    }
+
+    // -------- PDF Export APIs --------
+
+    /**
+     * Export quiz to PDF (questions only - for exam)
+     */
+    @GetMapping("/{id}/export/pdf")
+    public ResponseEntity<byte[]> exportQuizToPdf(
+            Authentication auth,
+            @PathVariable Long id
+    ) {
+        Long userId = getUserId(auth);
+        QuizSet quizSet = quizService.getOwnedQuizSet(userId, id);
+        List<QuizQuestion> questions = quizService.getQuestionsWithOptionsForExport(userId, id);
+        
+        if (questions.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        byte[] pdfBytes = pdfExportService.exportQuizToPdf(quizSet, questions);
+        
+        String filename = sanitizeFilename(quizSet.getTitle()) + ".pdf";
+        String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8);
+        
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, 
+                        "attachment; filename=\"" + encodedFilename + "\"; filename*=UTF-8''" + encodedFilename)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
+    }
+
+    /**
+     * Export quiz to PDF with answers (for review/study)
+     */
+    @GetMapping("/{id}/export/pdf-with-answers")
+    public ResponseEntity<byte[]> exportQuizWithAnswersToPdf(
+            Authentication auth,
+            @PathVariable Long id
+    ) {
+        Long userId = getUserId(auth);
+        QuizSet quizSet = quizService.getOwnedQuizSet(userId, id);
+        List<QuizQuestion> questions = quizService.getQuestionsWithOptionsForExport(userId, id);
+        
+        if (questions.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        byte[] pdfBytes = pdfExportService.exportQuizWithAnswersToPdf(quizSet, questions);
+        
+        String filename = sanitizeFilename(quizSet.getTitle()) + "_dap-an.pdf";
+        String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8);
+        
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, 
+                        "attachment; filename=\"" + encodedFilename + "\"; filename*=UTF-8''" + encodedFilename)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
+    }
+
+    private String sanitizeFilename(String name) {
+        return name.replaceAll("[^a-zA-Z0-9àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđĐ\\s_-]", "")
+                   .replaceAll("\\s+", "_")
+                   .substring(0, Math.min(name.length(), 100));
     }
 
     @DeleteMapping("/{id}")

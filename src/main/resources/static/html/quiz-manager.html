@@ -84,6 +84,15 @@
                 <button class="btn btn-outline-secondary btn-sm btn-rounded" onclick="location.href='/html/my-quizzes.html'">
                     <i class="bi bi-arrow-left me-1"></i>Danh sách Bộ đề
                 </button>
+                <div class="dropdown">
+                    <button class="btn btn-outline-success btn-sm btn-rounded dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-file-earmark-pdf me-1"></i>Xuất PDF
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#" onclick="exportPdf(false)"><i class="bi bi-file-text me-2"></i>Đề thi (không đáp án)</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="exportPdf(true)"><i class="bi bi-file-check me-2"></i>Đề thi + Đáp án</a></li>
+                    </ul>
+                </div>
                 <button id="btnAddQuestionPage" type="button" class="btn btn-primary btn-sm btn-rounded">
                     <i class="bi bi-plus-circle me-1"></i>Thêm câu hỏi
                 </button>
@@ -421,6 +430,62 @@
         } catch (err) {
             console.error(err);
             showAlert(err.error || err.message || 'Không thể xóa câu hỏi');
+        } finally {
+            ERROR_HANDLER.showLoading(false);
+        }
+    }
+
+    async function exportPdf(withAnswers = false) {
+        if (!currentQuizSetId) return;
+        
+        if (allQuestions.length === 0) {
+            Toast.warning('Bộ đề chưa có câu hỏi nào để xuất');
+            return;
+        }
+        
+        ERROR_HANDLER.showLoading(true);
+        try {
+            const endpoint = withAnswers 
+                ? `${API_BASE}/${currentQuizSetId}/export/pdf-with-answers`
+                : `${API_BASE}/${currentQuizSetId}/export/pdf`;
+            
+            const token = localStorage.getItem('accessToken');
+            const response = await fetch(endpoint, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Không thể xuất PDF');
+            }
+            
+            const blob = await response.blob();
+            const contentDisposition = response.headers.get('Content-Disposition');
+            let filename = withAnswers ? 'quiz_dap-an.pdf' : 'quiz.pdf';
+            
+            if (contentDisposition) {
+                const filenameMatch = contentDisposition.match(/filename\*?=['"]?(?:UTF-8'')?([^;\n"']+)/i);
+                if (filenameMatch && filenameMatch[1]) {
+                    filename = decodeURIComponent(filenameMatch[1]);
+                }
+            }
+            
+            // Download file
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            Toast.success('Đã xuất PDF thành công!');
+        } catch (err) {
+            console.error(err);
+            Toast.error(err.message || 'Không thể xuất PDF');
         } finally {
             ERROR_HANDLER.showLoading(false);
         }

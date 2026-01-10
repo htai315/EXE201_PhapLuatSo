@@ -3,11 +3,8 @@ package com.htai.exe201phapluatso.auth.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
-/**
- * Request DTO để gửi OTP đặt lại mật khẩu
- */
-public record SendOtpRequest(
-    @NotBlank(message = "Email không được để trống")
+public record ResendVerificationRequest(
     @Email(message = "Email không hợp lệ")
+    @NotBlank(message = "Email không được để trống")
     String email
 ) {}

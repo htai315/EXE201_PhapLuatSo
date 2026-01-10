@@ -17,9 +17,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="/css/common.css">
-  <link rel="stylesheet" href="/css/animations.css">
   <link rel="stylesheet" href="/css/toast-notification.css">
   
   <style>
@@ -131,6 +128,28 @@
     .input-group .form-control {
       border-left: none;
       border-radius: 0 12px 12px 0;
+    }
+    
+    .input-group .form-control:not(:last-child) {
+      border-radius: 0;
+    }
+    
+    .password-toggle {
+      background: #f8fafc;
+      color: #64748b;
+      transition: all 0.3s ease;
+      padding: 0 10px;
+      border: 2px solid #e2e8f0 !important;
+      border-left: none !important;
+    }
+    
+    .password-toggle:hover {
+      background: #f0f4ff;
+      color: #667eea;
+    }
+    
+    .input-group:focus-within .password-toggle {
+      border-color: #667eea !important;
     }
     
     .input-group:focus-within .input-group-text {
@@ -349,6 +368,9 @@
               <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-lock"></i></span>
                 <input id="loginPassword" type="password" class="form-control" placeholder="Nhập mật khẩu" required>
+                <button class="btn btn-outline-secondary password-toggle" type="button" tabindex="-1">
+                  <i class="bi bi-eye"></i>
+                </button>
               </div>
               <div class="invalid-feedback d-block" id="passwordError"></div>
             </div>
@@ -393,6 +415,18 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
+    // Check for OAuth2 error from URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
+    const message = urlParams.get('message');
+    
+    if (error === 'oauth2_failed' && message) {
+      // Show error toast with decoded message
+      Toast.error(decodeURIComponent(message));
+      // Clean up URL params
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
     // Check if user is already logged in
     const accessToken = localStorage.getItem('accessToken');
     if (accessToken) {
@@ -444,6 +478,23 @@
         window.location.href = "/oauth2/authorization/google";
       });
     }
+    
+    // Password toggle functionality
+    document.querySelectorAll('.password-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = btn.previousElementSibling;
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+          input.type = 'text';
+          icon.classList.remove('bi-eye');
+          icon.classList.add('bi-eye-slash');
+        } else {
+          input.type = 'password';
+          icon.classList.remove('bi-eye-slash');
+          icon.classList.add('bi-eye');
+        }
+      });
+    });
 
     if (!form) return;
 
@@ -531,9 +582,51 @@
       } catch (error) {
         console.error("Login error", error);
         const errorMessage = error.error || error.message || 'Đăng nhập thất bại';
-        showError('emailError', errorMessage);
+        
+        // Kiểm tra nếu lỗi là email chưa xác thực
+        if (errorMessage.includes('xác thực email') || errorMessage.includes('Vui lòng xác thực')) {
+          showEmailNotVerifiedError(email);
+        } else {
+          showError('emailError', errorMessage);
+        }
       }
     });
+    
+    // Hiển thị lỗi email chưa xác thực với nút gửi lại
+    function showEmailNotVerifiedError(email) {
+      const errorDiv = document.getElementById('emailError');
+      errorDiv.innerHTML = `
+        <div class="alert alert-warning py-2 px-3 mb-0 mt-2" style="border-radius: 10px;">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          Email chưa được xác thực.
+          <button type="button" class="btn btn-link btn-sm p-0 ms-2" id="resendVerifyBtn" style="text-decoration: underline;">
+            Gửi lại email xác thực
+          </button>
+        </div>
+      `;
+      
+      document.getElementById('resendVerifyBtn').addEventListener('click', async (e) => {
+        e.preventDefault();
+        const btn = e.target;
+        btn.disabled = true;
+        btn.textContent = 'Đang gửi...';
+        
+        try {
+          await API_CLIENT.post('/api/auth/resend-verification', { email });
+          Toast.success('Email xác thực đã được gửi! Vui lòng kiểm tra hộp thư.');
+          errorDiv.innerHTML = `
+            <div class="alert alert-success py-2 px-3 mb-0 mt-2" style="border-radius: 10px;">
+              <i class="bi bi-check-circle me-2"></i>
+              Email xác thực đã được gửi. Kiểm tra hộp thư của bạn.
+            </div>
+          `;
+        } catch (err) {
+          Toast.error(err.message || 'Không thể gửi email');
+          btn.disabled = false;
+          btn.textContent = 'Gửi lại email xác thực';
+        }
+      });
+    }
   });
 </script>
 </body>
