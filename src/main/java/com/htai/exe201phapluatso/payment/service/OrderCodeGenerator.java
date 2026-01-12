@@ -25,7 +25,7 @@ public class OrderCodeGenerator {
         // Use native SQL to get next value from sequence
         // This is thread-safe and works in distributed systems
         Long orderCode = (Long) entityManager
-                .createNativeQuery("SELECT NEXT VALUE FOR order_code_sequence")
+                .createNativeQuery("SELECT nextval('order_code_sequence')")
                 .getSingleResult();
         
         return orderCode;

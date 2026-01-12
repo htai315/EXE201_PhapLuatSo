@@ -31,7 +31,7 @@
 - Hệ thống credit và thanh toán
 - Admin dashboard
 
-**Tech Stack:** Spring Boot 4.0, SQL Server, OpenAI GPT-4o-mini, PayOS, JWT Auth, OAuth2 (Google)
+**Tech Stack:** Spring Boot 4.0, PostgreSQL + pgvector, OpenAI GPT-4o-mini, PayOS, JWT Auth, OAuth2 (Google)
 
 ---
 

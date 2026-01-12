@@ -25,7 +25,7 @@
     <link rel="stylesheet" href="/css/toast-notification.css">
     <link rel="stylesheet" href="/css/confirm-modal.css">
 </head>
-<body>
+<body data-auth-required="true">
 <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
     <div class="container">
         <a class="navbar-brand" href="/index.html">
@@ -160,6 +160,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/scripts/auth-guard.js"></script>
 <script src="/scripts/toast-notification.js"></script>
 <script src="/scripts/confirm-modal.js"></script>
 <script src="/scripts/error-handler.js"></script>
@@ -171,11 +172,7 @@
     let currentQuizSetData = null;
 
     document.addEventListener('DOMContentLoaded', () => {
-        const token = localStorage.getItem('accessToken');
-        if (!token) {
-            window.location.href = '/html/login.html';
-            return;
-        }
+        if (!AUTH.isLoggedIn()) return;
 
         const params = new URLSearchParams(window.location.search);
         const setId = params.get('setId');
@@ -191,7 +188,7 @@
         document.getElementById('btnAddQuestionPage').addEventListener('click', goAddQuestion);
         document.getElementById('btnDeleteSetTop').addEventListener('click', () => deleteCurrentSet());
 
-        loadQuizSetAndQuestions(token, setId);
+        loadQuizSetAndQuestions(setId);
     });
 
     function showAlert(message, type = 'danger') {
@@ -200,7 +197,7 @@
         Toast.show(message, toastType, 2000);
     }
 
-    async function loadQuizSetAndQuestions(token, setId) {
+    async function loadQuizSetAndQuestions(setId) {
         ERROR_HANDLER.showLoading(true);
         try {
             // API_CLIENT.get() trả về data trực tiếp (đã parse JSON)
@@ -449,7 +446,7 @@
                 ? `${API_BASE}/${currentQuizSetId}/export/pdf-with-answers`
                 : `${API_BASE}/${currentQuizSetId}/export/pdf`;
             
-            const token = localStorage.getItem('accessToken');
+            const token = AUTH.getToken();
             const response = await fetch(endpoint, {
                 method: 'GET',
                 headers: {

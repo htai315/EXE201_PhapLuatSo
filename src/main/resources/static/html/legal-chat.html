@@ -13,10 +13,11 @@
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/credits-counter.css">
     <link rel="stylesheet" href="/css/legal-chat.css">
+    <link rel="stylesheet" href="/css/mobile-utils.css">
     <link rel="stylesheet" href="/css/toast-notification.css">
     
 </head>
-<body>
+<body data-auth-required="true">
 <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
     <div class="container">
         <a class="navbar-brand" href="/index.html">
@@ -65,8 +66,16 @@
 </nav>
 
 <div class="chat-layout">
+    <!-- Mobile Sidebar Overlay -->
+    <div class="chat-sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <!-- Mobile Sidebar Toggle Button -->
+    <button class="chat-sidebar-toggle" id="sidebarToggle" aria-label="Toggle chat history">
+        <i class="bi bi-clock-history"></i>
+    </button>
+    
     <!-- Sidebar -->
-    <div class="chat-sidebar">
+    <div class="chat-sidebar" id="chatSidebar">
         <div class="sidebar-header">
             <h2>💬 Chat AI Pháp Luật</h2>
             <p>Trợ lý pháp lý thông minh</p>
@@ -141,6 +150,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/scripts/auth-guard.js"></script>
 <script src="/scripts/toast-notification.js"></script>
 <script src="/scripts/api-client.js"></script>
 <script src="/scripts/script.js"></script>
@@ -156,11 +166,10 @@ let searchDebounceTimer = null;
 let creditsCounter = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-        window.location.href = '/html/login.html';
-        return;
-    }
+    // Auth check is handled by auth-guard.js via data-auth-required="true"
+    if (!AUTH.isLoggedIn()) return;
+    
+    const token = AUTH.getToken();
 
     // Initialize credits counter
     creditsCounter = new CreditsCounter();
@@ -172,6 +181,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendBtn = document.getElementById('sendBtn');
     const searchInput = document.getElementById('searchInput');
     const clearSearch = document.getElementById('clearSearch');
+    
+    // Mobile sidebar toggle functionality
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const chatSidebar = document.getElementById('chatSidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    
+    function toggleSidebar() {
+        chatSidebar.classList.toggle('show');
+        sidebarOverlay.classList.toggle('show');
+        
+        // Update toggle button icon
+        const icon = sidebarToggle.querySelector('i');
+        if (chatSidebar.classList.contains('show')) {
+            icon.className = 'bi bi-x-lg';
+        } else {
+            icon.className = 'bi bi-clock-history';
+        }
+    }
+    
+    function closeSidebar() {
+        chatSidebar.classList.remove('show');
+        sidebarOverlay.classList.remove('show');
+        const icon = sidebarToggle.querySelector('i');
+        icon.className = 'bi bi-clock-history';
+    }
+    
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', toggleSidebar);
+    }
+    
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', closeSidebar);
+    }
+    
+    // Close sidebar when selecting a chat on mobile
+    window.closeSidebarOnMobile = closeSidebar;
 
     // Load initial chat sessions
     loadChatSessions(true);
@@ -223,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sendBtn.disabled = true;
 
         try {
-            // Send to appropriate endpoint
+            // Send to appropriate endpoint (uses conversation memory on backend)
             const endpoint = currentSessionId 
                 ? `/api/chat/sessions/${currentSessionId}/messages`
                 : '/api/chat/sessions/messages';
@@ -238,13 +283,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!response.ok) {
-                // Parse error response properly
                 let errorMessage = 'Có lỗi xảy ra';
                 try {
                     const errorData = await response.json();
                     errorMessage = errorData.error || errorData.message || errorMessage;
                 } catch (parseError) {
-                    // If JSON parse fails, use status text
                     errorMessage = response.statusText || errorMessage;
                 }
                 throw new Error(errorMessage);
@@ -256,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!currentSessionId) {
                 currentSessionId = data.sessionId;
                 currentPage = 0;
-                loadChatSessions(true); // Reload sidebar
+                loadChatSessions(true);
             }
             
             // Remove typing indicator
@@ -279,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
             questionInput.focus();
         }
     });
-
+    
     async function loadChatSessions(reset = false) {
         if (isLoadingSessions) return;
         isLoadingSessions = true;
@@ -338,13 +381,18 @@ document.addEventListener('DOMContentLoaded', () => {
             sessionList.forEach(session => {
                 const isActive = session.id === currentSessionId ? 'active' : '';
                 html += `
-                    <div class="chat-item ${isActive}" onclick="loadSession(${session.id}, this)">
-                        <div class="chat-item-icon">
-                            <i class="bi bi-chat-text"></i>
+                    <div class="chat-item ${isActive}" data-session-id="${session.id}">
+                        <div class="chat-item-content" onclick="loadSession(${session.id}, this)">
+                            <div class="chat-item-icon">
+                                <i class="bi bi-chat-text"></i>
+                            </div>
+                            <div class="chat-item-text">
+                                <div class="chat-item-title">${escapeHtml(session.title)}</div>
+                            </div>
                         </div>
-                        <div class="chat-item-text">
-                            <div class="chat-item-title">${escapeHtml(session.title)}</div>
-                        </div>
+                        <button class="chat-item-delete" onclick="deleteSession(${session.id}, event)" title="Xóa cuộc trò chuyện">
+                            <i class="bi bi-trash3"></i>
+                        </button>
                     </div>
                 `;
             });
@@ -391,13 +439,18 @@ document.addEventListener('DOMContentLoaded', () => {
             sessionList.forEach(session => {
                 const isActive = session.id === currentSessionId ? 'active' : '';
                 html += `
-                    <div class="chat-item ${isActive}" onclick="loadSession(${session.id}, this)">
-                        <div class="chat-item-icon">
-                            <i class="bi bi-chat-text"></i>
+                    <div class="chat-item ${isActive}" data-session-id="${session.id}">
+                        <div class="chat-item-content" onclick="loadSession(${session.id}, this)">
+                            <div class="chat-item-icon">
+                                <i class="bi bi-chat-text"></i>
+                            </div>
+                            <div class="chat-item-text">
+                                <div class="chat-item-title">${escapeHtml(session.title)}</div>
+                            </div>
                         </div>
-                        <div class="chat-item-text">
-                            <div class="chat-item-title">${escapeHtml(session.title)}</div>
-                        </div>
+                        <button class="chat-item-delete" onclick="deleteSession(${session.id}, event)" title="Xóa cuộc trò chuyện">
+                            <i class="bi bi-trash3"></i>
+                        </button>
                     </div>
                 `;
             });
@@ -504,9 +557,57 @@ document.addEventListener('DOMContentLoaded', () => {
                     chatItem.classList.add('active');
                 }
             }
+            
+            // Close sidebar on mobile after selecting a chat
+            if (window.innerWidth <= 768 && typeof closeSidebarOnMobile === 'function') {
+                closeSidebarOnMobile();
+            }
         } catch (error) {
             console.error('Error loading session:', error);
             Toast.error('Không thể tải cuộc trò chuyện');
+        }
+    };
+
+    window.deleteSession = async (sessionId, event) => {
+        // Prevent triggering loadSession
+        event.stopPropagation();
+        
+        if (!confirm('Bạn có chắc muốn xóa cuộc trò chuyện này?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/chat/sessions/${sessionId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to delete session');
+            }
+            
+            // Remove from DOM
+            const chatItem = document.querySelector(`.chat-item[data-session-id="${sessionId}"]`);
+            if (chatItem) {
+                chatItem.remove();
+            }
+            
+            // If deleted current session, start new chat
+            if (currentSessionId === sessionId) {
+                startNewChat();
+            }
+            
+            Toast.success('Đã xóa cuộc trò chuyện');
+            
+            // Reload sessions to update groups
+            currentPage = 0;
+            loadChatSessions(true);
+            
+        } catch (error) {
+            console.error('Error deleting session:', error);
+            Toast.error('Không thể xóa cuộc trò chuyện');
         }
     };
 

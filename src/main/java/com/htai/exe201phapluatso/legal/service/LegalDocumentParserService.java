@@ -29,12 +29,14 @@ public class LegalDocumentParserService {
      * Pattern: "Điều 1.", "Điều 2.", etc.
      */
     public List<LegalArticle> parseDocument(MultipartFile file) {
-        // Extract full text from PDF
-        String fullText = documentParser.extractText(file);
+        // Extract full text from PDF (no truncation for legal documents)
+        String fullText = documentParser.extractFullText(file);
         
         if (fullText == null || fullText.trim().isEmpty()) {
             throw new BadRequestException("Không thể đọc nội dung file PDF");
         }
+
+        log.info("Full text extracted: {} characters", fullText.length());
 
         // Parse articles
         return extractArticles(fullText);
@@ -74,15 +76,15 @@ public class LegalDocumentParserService {
                 // Clean up content: remove chapter headers, etc.
                 content = cleanContent(content);
                 
-                // Only save if content is meaningful (not just whitespace or headers)
-                if (content.length() > 10) {
+                // Only save if content is not empty
+                if (!content.isEmpty()) {
                     LegalArticle article = new LegalArticle();
                     article.setArticleNumber(currentArticleNum);
                     article.setArticleTitle(currentTitle);
                     article.setContent(content);
                     articles.add(article);
                 } else {
-                    log.debug("Skipped Điều {} (content too short: {} chars)", currentArticleNum, content.length());
+                    log.debug("Skipped Điều {} (empty content)", currentArticleNum);
                 }
             }
             
@@ -97,14 +99,14 @@ public class LegalDocumentParserService {
             String content = fullText.substring(lastEnd).trim();
             content = cleanContent(content);
             
-            if (content.length() > 10) {
+            if (!content.isEmpty()) {
                 LegalArticle article = new LegalArticle();
                 article.setArticleNumber(currentArticleNum);
                 article.setArticleTitle(currentTitle);
                 article.setContent(content);
                 articles.add(article);
             } else {
-                log.debug("Skipped last article Điều {} (content too short: {} chars)", currentArticleNum, content.length());
+                log.debug("Skipped last article Điều {} (empty content)", currentArticleNum);
             }
         }
         

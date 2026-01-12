@@ -31,19 +31,33 @@ public class QuizPdfExportService {
     private static final DeviceRgb CORRECT_COLOR = new DeviceRgb(34, 197, 94);
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     
-    // Windows fonts that support Vietnamese
+    // Cross-platform fonts that support Vietnamese
     private static final String[] VIETNAMESE_FONTS = {
+        // Windows - common paths
+        "C:\\Windows\\Fonts\\arial.ttf",
+        "C:\\Windows\\Fonts\\times.ttf",
+        "C:\\Windows\\Fonts\\tahoma.ttf",
+        "C:\\Windows\\Fonts\\segoeui.ttf",
         "C:/Windows/Fonts/arial.ttf",
         "C:/Windows/Fonts/times.ttf",
         "C:/Windows/Fonts/tahoma.ttf",
-        "C:/Windows/Fonts/segoeui.ttf"
+        "C:/Windows/Fonts/segoeui.ttf",
+        // Linux (common paths)
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+        "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+        "/usr/share/fonts/TTF/DejaVuSans.ttf",
+        // macOS
+        "/System/Library/Fonts/Supplemental/Arial.ttf",
+        "/System/Library/Fonts/Helvetica.ttc",
+        "/Library/Fonts/Arial.ttf"
     };
 
     /**
-     * Create font with Vietnamese support
+     * Create font with Vietnamese support (cross-platform)
      */
     private PdfFont createVietnameseFont() {
-        // Try Windows fonts first
+        // Try system fonts first
         for (String fontPath : VIETNAMESE_FONTS) {
             try {
                 java.io.File fontFile = new java.io.File(fontPath);
@@ -58,9 +72,10 @@ public class QuizPdfExportService {
             }
         }
         
-        // Fallback to default font
+        // Fallback to default font with warning
         try {
-            log.warn("No Vietnamese font found, using default font (Vietnamese characters may not display correctly)");
+            log.warn("No Vietnamese font found on this system. Vietnamese characters may not display correctly. " +
+                    "Consider installing DejaVu or Liberation fonts.");
             return PdfFontFactory.createFont();
         } catch (Exception e) {
             throw new RuntimeException("Failed to create font", e);

@@ -357,7 +357,6 @@
                 <span class="input-group-text"><i class="bi bi-envelope"></i></span>
                 <input id="loginEmail" type="email" class="form-control" placeholder="name@example.com" required>
               </div>
-              <div class="invalid-feedback d-block" id="emailError"></div>
             </div>
 
             <div class="mb-3">
@@ -372,7 +371,8 @@
                   <i class="bi bi-eye"></i>
                 </button>
               </div>
-              <div class="invalid-feedback d-block" id="passwordError"></div>
+              <!-- Container cho email verification error -->
+              <div id="emailVerificationError"></div>
             </div>
 
             <div class="mb-4 d-flex justify-content-between align-items-center">
@@ -448,24 +448,6 @@
     const passwordInput = document.getElementById("loginPassword");
     const googleBtn = document.getElementById("googleLoginBtn");
 
-    // Clear error message
-    function clearError(errorId) {
-      const errorDiv = document.getElementById(errorId);
-      const inputGroup = errorDiv?.previousElementSibling;
-      const input = inputGroup?.querySelector('input');
-      if (input) input.classList.remove('is-invalid');
-      if (errorDiv) errorDiv.textContent = '';
-    }
-
-    // Show error message
-    function showError(errorId, message) {
-      const errorDiv = document.getElementById(errorId);
-      const inputGroup = errorDiv?.previousElementSibling;
-      const input = inputGroup?.querySelector('input');
-      if (input) input.classList.add('is-invalid');
-      if (errorDiv) errorDiv.textContent = message;
-    }
-
     // Validate email format
     function isValidEmail(email) {
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -498,36 +480,33 @@
 
     if (!form) return;
 
-    // Real-time validation
+    // Real-time validation - chỉ highlight input, không hiện text error
     emailInput.addEventListener('blur', () => {
       const value = emailInput.value.trim();
-      if (!value) {
-        showError('emailError', 'Vui lòng nhập email');
-      } else if (!isValidEmail(value)) {
-        showError('emailError', 'Email không hợp lệ');
+      if (!value || !isValidEmail(value)) {
+        emailInput.classList.add('is-invalid');
       } else {
-        clearError('emailError');
+        emailInput.classList.remove('is-invalid');
       }
     });
 
     emailInput.addEventListener('input', () => {
       if (emailInput.value.trim()) {
-        clearError('emailError');
+        emailInput.classList.remove('is-invalid');
       }
     });
 
     passwordInput.addEventListener('blur', () => {
-      const value = passwordInput.value;
-      if (!value) {
-        showError('passwordError', 'Vui lòng nhập mật khẩu');
+      if (!passwordInput.value) {
+        passwordInput.classList.add('is-invalid');
       } else {
-        clearError('passwordError');
+        passwordInput.classList.remove('is-invalid');
       }
     });
 
     passwordInput.addEventListener('input', () => {
       if (passwordInput.value) {
-        clearError('passwordError');
+        passwordInput.classList.remove('is-invalid');
       }
     });
 
@@ -535,29 +514,31 @@
       e.preventDefault();
 
       // Clear all errors
-      clearError('emailError');
-      clearError('passwordError');
+      emailInput.classList.remove('is-invalid');
+      passwordInput.classList.remove('is-invalid');
 
       const email = emailInput.value.trim();
       const password = passwordInput.value;
 
-      let hasError = false;
-
-      // Validate fields
+      // Validate fields - sử dụng Toast thay vì inline error
       if (!email) {
-        showError('emailError', 'Vui lòng nhập email');
-        hasError = true;
-      } else if (!isValidEmail(email)) {
-        showError('emailError', 'Email không hợp lệ');
-        hasError = true;
+        emailInput.classList.add('is-invalid');
+        Toast.error('Vui lòng nhập email');
+        emailInput.focus();
+        return;
+      }
+      
+      if (!isValidEmail(email)) {
+        emailInput.classList.add('is-invalid');
+        Toast.error('Email không hợp lệ');
+        emailInput.focus();
+        return;
       }
 
       if (!password) {
-        showError('passwordError', 'Vui lòng nhập mật khẩu');
-        hasError = true;
-      }
-
-      if (hasError) {
+        passwordInput.classList.add('is-invalid');
+        Toast.error('Vui lòng nhập mật khẩu');
+        passwordInput.focus();
         return;
       }
 
@@ -567,18 +548,33 @@
         // Lưu token để dùng cho các trang khác
         localStorage.setItem("accessToken", data.accessToken);
         localStorage.setItem("refreshToken", data.refreshToken);
+        
+        // Fetch user info to save role for auth-guard
+        try {
+          const user = await API_CLIENT.get('/api/auth/me');
+          if (user.fullName) {
+            localStorage.setItem('userName', user.fullName);
+          }
+          if (user.role) {
+            localStorage.setItem('userRole', user.role);
+          }
+        } catch (e) {
+          console.warn('Could not fetch user info:', e);
+        }
+        
+        Toast.success('Đăng nhập thành công!');
 
         // Check if there's a returnUrl to redirect to
         const urlParams = new URLSearchParams(window.location.search);
         const returnUrl = urlParams.get('returnUrl');
         
-        if (returnUrl && returnUrl.startsWith('/')) {
-          // Redirect to the return URL (only allow relative URLs for security)
-          window.location.href = returnUrl;
-        } else {
-          // Chuyển về trang chính
-          window.location.href = "/index.html";
-        }
+        setTimeout(() => {
+          if (returnUrl && returnUrl.startsWith('/')) {
+            window.location.href = returnUrl;
+          } else {
+            window.location.href = "/index.html";
+          }
+        }, 500);
       } catch (error) {
         console.error("Login error", error);
         const errorMessage = error.error || error.message || 'Đăng nhập thất bại';
@@ -587,14 +583,15 @@
         if (errorMessage.includes('xác thực email') || errorMessage.includes('Vui lòng xác thực')) {
           showEmailNotVerifiedError(email);
         } else {
-          showError('emailError', errorMessage);
+          // Hiển thị lỗi bằng Toast notification
+          Toast.error(errorMessage, 4000);
         }
       }
     });
     
     // Hiển thị lỗi email chưa xác thực với nút gửi lại
     function showEmailNotVerifiedError(email) {
-      const errorDiv = document.getElementById('emailError');
+      const errorDiv = document.getElementById('emailVerificationError');
       errorDiv.innerHTML = `
         <div class="alert alert-warning py-2 px-3 mb-0 mt-2" style="border-radius: 10px;">
           <i class="bi bi-exclamation-triangle me-2"></i>

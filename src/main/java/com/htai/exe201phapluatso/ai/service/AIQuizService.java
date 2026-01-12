@@ -85,49 +85,62 @@ public class AIQuizService {
         User user = userRepo.findByEmail(userEmail)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
 
-        // 3. Check and deduct credit BEFORE processing
-        creditService.checkAndDeductQuizGenCredit(user.getId());
+        // 3. Reserve credit BEFORE processing (will be refunded if AI fails)
+        com.htai.exe201phapluatso.credit.entity.CreditReservation reservation = 
+                creditService.reserveCredit(user.getId(), "QUIZ_GEN", "AI_QUIZ_GEN");
         
         log.info("Generating quiz for user {}: {} questions from document", 
                 user.getId(), request.questionCount());
 
-        // 4. Extract text from document
-        String documentText = documentParser.extractText(file);
+        try {
+            // 4. Extract text from document
+            String documentText = documentParser.extractText(file);
 
-        // 5. Generate questions using AI (with chunking if needed)
-        List<AIQuestionDTO> aiQuestions = generateQuestionsWithChunking(
-                documentText,
-                request.questionCount()
-        );
+            // 5. Generate questions using AI (with chunking if needed)
+            List<AIQuestionDTO> aiQuestions = generateQuestionsWithChunking(
+                    documentText,
+                    request.questionCount()
+            );
 
-        // 6. Create quiz set
-        QuizSet quizSet = new QuizSet();
-        quizSet.setTitle(sanitizeInput(request.quizSetName()));
-        quizSet.setDescription(sanitizeInput(request.description()));
-        quizSet.setCreatedBy(user);
-        quizSet.setCreatedAt(LocalDateTime.now());
-        quizSet.setUpdatedAt(LocalDateTime.now());
-        quizSet = quizSetRepo.save(quizSet);
+            // 6. Create quiz set
+            QuizSet quizSet = new QuizSet();
+            quizSet.setTitle(sanitizeInput(request.quizSetName()));
+            quizSet.setDescription(sanitizeInput(request.description()));
+            quizSet.setCreatedBy(user);
+            quizSet.setDurationMinutes(request.durationMinutes() != null ? request.durationMinutes() : 45);
+            quizSet.setCreatedAt(LocalDateTime.now());
+            quizSet.setUpdatedAt(LocalDateTime.now());
+            quizSet = quizSetRepo.save(quizSet);
 
-        // 7. Batch save questions
-        List<QuizQuestion> questionsToSave = new ArrayList<>();
-        for (int i = 0; i < aiQuestions.size(); i++) {
-            AIQuestionDTO aiQ = aiQuestions.get(i);
-            QuizQuestion question = createQuestionFromAI(aiQ, quizSet, i + 1);
-            questionsToSave.add(question);
+            // 7. Batch save questions
+            List<QuizQuestion> questionsToSave = new ArrayList<>();
+            for (int i = 0; i < aiQuestions.size(); i++) {
+                AIQuestionDTO aiQ = aiQuestions.get(i);
+                QuizQuestion question = createQuestionFromAI(aiQ, quizSet, i + 1);
+                questionsToSave.add(question);
+            }
+            List<QuizQuestion> savedQuestions = questionRepo.saveAll(questionsToSave);
+
+            // 8. Confirm credit deduction on success
+            creditService.confirmReservation(reservation.getId());
+
+            log.info("Quiz generation completed for user {}. Created quiz set {} with {} questions", 
+                    user.getId(), quizSet.getId(), savedQuestions.size());
+
+            // 9. Return response
+            return new GenerateQuestionsResponse(
+                    quizSet.getId(),
+                    quizSet.getTitle(),
+                    savedQuestions.size(),
+                    aiQuestions
+            );
+            
+        } catch (Exception e) {
+            // Refund credit if AI operation fails
+            log.error("AI quiz generation failed, refunding credit for user {}: {}", user.getId(), e.getMessage());
+            creditService.refundReservation(reservation.getId());
+            throw e;
         }
-        List<QuizQuestion> savedQuestions = questionRepo.saveAll(questionsToSave);
-
-        log.info("Quiz generation completed for user {}. Created quiz set {} with {} questions", 
-                user.getId(), quizSet.getId(), savedQuestions.size());
-
-        // 8. Return response
-        return new GenerateQuestionsResponse(
-                quizSet.getId(),
-                quizSet.getTitle(),
-                savedQuestions.size(),
-                aiQuestions
-        );
     }
     
     /**

@@ -7,6 +7,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -14,7 +15,7 @@ import java.util.stream.Collectors;
 
 /**
  * Service for searching relevant legal articles
- * Uses keyword extraction and scoring algorithm
+ * Supports both keyword-based and vector-based (semantic) search
  */
 @Service
 public class LegalSearchService {
@@ -23,14 +24,22 @@ public class LegalSearchService {
 
     private final EntityManager entityManager;
     private final LegalArticleRepo articleRepo;
+    private final VectorSearchService vectorSearchService;
 
-    public LegalSearchService(EntityManager entityManager, LegalArticleRepo articleRepo) {
+    @Autowired
+    public LegalSearchService(
+            EntityManager entityManager, 
+            LegalArticleRepo articleRepo,
+            VectorSearchService vectorSearchService
+    ) {
         this.entityManager = entityManager;
         this.articleRepo = articleRepo;
+        this.vectorSearchService = vectorSearchService;
     }
 
     /**
-     * Search for relevant legal articles
+     * Search for relevant legal articles using hybrid search (vector + keyword)
+     * Falls back to keyword-only if vector search is not available
      * 
      * @param question User's question
      * @param limit Maximum number of results
@@ -42,9 +51,28 @@ public class LegalSearchService {
             return Collections.emptyList();
         }
 
+        // Try hybrid search first (vector + keyword)
+        try {
+            List<LegalArticle> results = vectorSearchService.hybridSearch(question, limit);
+            if (!results.isEmpty()) {
+                log.info("Hybrid search found {} results", results.size());
+                return results;
+            }
+        } catch (Exception e) {
+            log.warn("Hybrid search failed, falling back to keyword search: {}", e.getMessage());
+        }
+
+        // Fallback to keyword-only search
+        return keywordSearch(question, limit);
+    }
+
+    /**
+     * Keyword-only search (legacy method, used as fallback)
+     */
+    public List<LegalArticle> keywordSearch(String question, int limit) {
         // Extract keywords
         List<String> keywords = extractKeywords(question);
-        log.info("Search keywords extracted: {}", keywords);
+        log.info("Keyword search with: {}", keywords);
         
         if (keywords.isEmpty()) {
             log.warn("No keywords extracted from question: {}", question);
@@ -89,7 +117,7 @@ public class LegalSearchService {
         StringBuilder sql = new StringBuilder(
             "SELECT DISTINCT a.* FROM legal_articles a " +
             "JOIN legal_documents d ON a.document_id = d.id " +
-            "WHERE d.status = N'Còn hiệu lực' AND ("
+            "WHERE d.status = 'Còn hiệu lực' AND ("
         );
 
         // Build OR conditions for each keyword

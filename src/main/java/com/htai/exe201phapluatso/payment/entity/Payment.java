@@ -61,6 +61,12 @@ public class Payment {
     @Column(name = "webhook_processed")
     private Boolean webhookProcessed = false;
 
+    @Column(name = "checkout_url", length = 500)
+    private String checkoutUrl;
+
+    @Column(name = "qr_code", columnDefinition = "TEXT")
+    private String qrCode;
+
     // Getters and Setters
     public Long getId() { return id; }
 
@@ -108,6 +114,12 @@ public class Payment {
 
     public Boolean getWebhookProcessed() { return webhookProcessed; }
     public void setWebhookProcessed(Boolean webhookProcessed) { this.webhookProcessed = webhookProcessed; }
+
+    public String getCheckoutUrl() { return checkoutUrl; }
+    public void setCheckoutUrl(String checkoutUrl) { this.checkoutUrl = checkoutUrl; }
+
+    public String getQrCode() { return qrCode; }
+    public void setQrCode(String qrCode) { this.qrCode = qrCode; }
     
     // Helper methods for admin
     public String getOrderId() { return orderCode != null ? String.valueOf(orderCode) : vnpTxnRef; }

@@ -2,6 +2,94 @@
 
 Lịch sử thay đổi của dự án Pháp Luật Số.
 
+## [1.2.0] - 2026-01-11
+
+### 🔧 Quiz Module Improvements
+
+#### ✨ Features
+
+**Distributed Exam Session với Redis**
+- Chuyển exam session từ in-memory (ConcurrentHashMap) sang Redis
+- Hỗ trợ horizontal scaling với multiple instances
+- Tự động fallback sang in-memory khi Redis không khả dụng
+- Session key format: `exam:session:{userId}_{quizSetId}`
+- JSON serialization cho session data
+
+**Quiz Duration Validation**
+- Validate thời gian làm bài: 5-180 phút
+- Default duration: 45 phút
+- Error message tiếng Việt: "Thời gian làm bài phải từ 5 đến 180 phút"
+
+**Session Timeout Configuration**
+- Cấu hình timeout qua `app.quiz.session-timeout-hours`
+- Default: 2 giờ
+- Valid range: 0.5 - 4 giờ (tự động clamp)
+- Scheduled cleanup mỗi 10 phút cho in-memory fallback
+
+#### 🏗️ Architecture Changes
+
+- Thêm `ExamSessionStore` interface với 2 implementations:
+  - `RedisExamSessionStore` (primary)
+  - `InMemoryExamSessionStore` (fallback)
+- Thêm `ExamSessionStoreManager` để quản lý fallback logic
+- Thêm `QuizDurationValidator` utility class
+- Thêm `ExamSessionData` record cho serialization
+
+#### 📦 Dependencies
+
+- `spring-boot-starter-data-redis`
+- `jackson-datatype-jsr310` (Java 8 Date/Time serialization)
+
+#### ⚙️ Configuration
+
+```properties
+# Redis (optional)
+spring.data.redis.host=localhost
+spring.data.redis.port=6379
+
+# Quiz Session
+app.quiz.session-timeout-hours=2
+app.quiz.min-duration-minutes=5
+app.quiz.max-duration-minutes=180
+app.quiz.default-duration-minutes=45
+```
+
+---
+
+## [1.1.0] - 2026-01-11
+
+### 🔐 Auth Security Improvements
+
+#### ✨ Features
+
+**Rate Limiting**
+- Login: 5 requests/60s per IP
+- Register: 3 requests/60s per IP
+- Password Reset: 3 requests/60s per IP
+- Vietnamese error messages
+
+**Refresh Token Rotation**
+- Token rotation on refresh
+- Reuse detection (invalidate all tokens on reuse)
+- Token family tracking
+
+**Account Lockout**
+- Lock after 5 failed login attempts
+- 15 minutes lockout duration
+- Auto-unlock after duration
+
+**Password Policy**
+- Minimum 8 characters
+- At least 1 uppercase, 1 lowercase, 1 digit, 1 special character
+- Vietnamese validation messages
+
+**Security Logging**
+- Audit log for security events
+- IP address tracking
+- User agent logging
+
+---
+
 ## [1.0.0] - 2024-12-31
 
 ### 🎉 Initial Release
@@ -61,7 +149,7 @@ Lịch sử thay đổi của dự án Pháp Luật Số.
 - Spring Security
 - JWT authentication
 - Flyway migrations
-- SQL Server database
+- PostgreSQL database
 - OpenAI GPT-4 integration
 - VNPay payment gateway
 

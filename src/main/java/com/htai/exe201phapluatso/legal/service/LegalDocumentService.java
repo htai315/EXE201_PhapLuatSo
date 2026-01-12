@@ -9,6 +9,7 @@ import com.htai.exe201phapluatso.legal.dto.UploadLegalDocumentRequest;
 import com.htai.exe201phapluatso.legal.dto.UploadLegalDocumentResponse;
 import com.htai.exe201phapluatso.legal.entity.LegalArticle;
 import com.htai.exe201phapluatso.legal.entity.LegalDocument;
+import com.htai.exe201phapluatso.legal.repo.ChatMessageRepo;
 import com.htai.exe201phapluatso.legal.repo.LegalArticleRepo;
 import com.htai.exe201phapluatso.legal.repo.LegalDocumentRepo;
 import org.slf4j.Logger;
@@ -44,9 +45,11 @@ public class LegalDocumentService {
     private final LegalArticleRepo articleRepo;
     private final LegalDocumentParserService parserService;
     private final UserRepo userRepo;
+    private final VectorSearchService vectorSearchService;
+    private final ChatMessageRepo chatMessageRepo;
 
     private static final String UPLOAD_DIR = "uploads/legal/";
-    private static final long MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+    private static final long MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB for legal documents
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
         "application/pdf"
     );
@@ -55,12 +58,16 @@ public class LegalDocumentService {
             LegalDocumentRepo documentRepo,
             LegalArticleRepo articleRepo,
             LegalDocumentParserService parserService,
-            UserRepo userRepo
+            UserRepo userRepo,
+            VectorSearchService vectorSearchService,
+            ChatMessageRepo chatMessageRepo
     ) {
         this.documentRepo = documentRepo;
         this.articleRepo = articleRepo;
         this.parserService = parserService;
         this.userRepo = userRepo;
+        this.vectorSearchService = vectorSearchService;
+        this.chatMessageRepo = chatMessageRepo;
     }
 
     @Transactional
@@ -110,13 +117,43 @@ public class LegalDocumentService {
         log.info("Document uploaded: {} with {} articles by user {}", 
                 document.getDocumentName(), document.getTotalArticles(), userEmail);
 
-        // 8. Return response
+        // 8. Generate embeddings for new articles (async-like, in background)
+        generateEmbeddingsForDocument(document);
+
+        // 9. Return response
         return new UploadLegalDocumentResponse(
                 document.getId(),
                 document.getDocumentName(),
                 document.getTotalArticles(),
                 "Đã import thành công " + document.getTotalArticles() + " điều luật"
         );
+    }
+
+    /**
+     * Generate embeddings for all articles in a document
+     * This runs after document is saved to generate vector embeddings for semantic search
+     */
+    private void generateEmbeddingsForDocument(LegalDocument document) {
+        try {
+            log.info("Generating embeddings for {} articles in document {}", 
+                document.getTotalArticles(), document.getId());
+            
+            for (LegalArticle article : document.getArticles()) {
+                try {
+                    vectorSearchService.generateAndSaveEmbedding(article.getId());
+                } catch (Exception e) {
+                    log.warn("Failed to generate embedding for article {}: {}", 
+                        article.getId(), e.getMessage());
+                    // Continue with other articles even if one fails
+                }
+            }
+            
+            log.info("Finished generating embeddings for document {}", document.getId());
+        } catch (Exception e) {
+            log.error("Error generating embeddings for document {}: {}", 
+                document.getId(), e.getMessage());
+            // Don't fail the upload if embedding generation fails
+        }
     }
     
     /**
@@ -247,7 +284,22 @@ public class LegalDocumentService {
             log.error("Could not delete file: {}", document.getFilePath(), e);
         }
         
-        // Delete from database (cascade will delete articles)
+        // Get article IDs to delete citations first
+        List<Long> articleIds = document.getArticles().stream()
+                .map(LegalArticle::getId)
+                .collect(Collectors.toList());
+        
+        // Delete citations from chat_message_citations table first (to avoid FK constraint)
+        if (!articleIds.isEmpty()) {
+            chatMessageRepo.deleteCitationsByArticleIds(articleIds);
+            log.info("Deleted citations for {} articles", articleIds.size());
+        }
+        
+        // Delete articles
+        articleRepo.deleteAll(document.getArticles());
+        document.getArticles().clear();
+        
+        // Delete from database
         documentRepo.delete(document);
         log.info("Document deleted: {}", id);
     }

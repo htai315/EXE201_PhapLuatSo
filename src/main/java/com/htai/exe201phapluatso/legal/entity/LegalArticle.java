@@ -22,7 +22,7 @@ public class LegalArticle {
     @Column(name = "article_title", length = 1000)
     private String articleTitle;
 
-    @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @Column(name = "created_at", nullable = false)

@@ -3,12 +3,14 @@
 
 let revenueChart = null;
 let userGrowthChart = null;
+let creditUsageChart = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     initSidebar();
     checkAuth();
     loadDashboardStats();
     loadCharts();
+    loadCreditAnalytics();
 });
 
 // ==================== SIDEBAR ====================
@@ -43,8 +45,7 @@ function initSidebar() {
 // ==================== AUTH ====================
 
 async function checkAuth() {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
+    if (!AUTH.isLoggedIn()) {
         window.location.href = '/html/login.html';
         return;
     }
@@ -81,8 +82,7 @@ async function checkAuth() {
 }
 
 function logout() {
-    localStorage.removeItem('accessToken'); // Changed from 'token' to 'accessToken'
-    localStorage.removeItem('refreshToken');
+    AUTH.clearAuth();
     window.location.href = '/html/login.html';
 }
 
@@ -360,4 +360,125 @@ function showAdminToast(message, type = 'info') {
         // Fallback to alert
         alert(message);
     }
+}
+
+
+// ==================== CREDIT ANALYTICS ====================
+
+async function loadCreditAnalytics() {
+    try {
+        // Calculate date range (last 30 days)
+        const to = new Date();
+        const from = new Date();
+        from.setDate(from.getDate() - 30);
+
+        const fromStr = from.toISOString().split('T')[0];
+        const toStr = to.toISOString().split('T')[0];
+
+        const analytics = await window.apiClient.get(`/api/admin/credits/analytics?from=${fromStr}&to=${toStr}`);
+
+        // Update stats
+        document.getElementById('totalChatUsed').textContent = formatNumber(analytics.totalChatUsed);
+        document.getElementById('totalQuizGenUsed').textContent = formatNumber(analytics.totalQuizGenUsed);
+        document.getElementById('totalChatPurchased').textContent = formatNumber(analytics.totalChatPurchased);
+        document.getElementById('totalRefunded').textContent = formatNumber(analytics.totalChatRefunded + analytics.totalQuizGenRefunded);
+
+        // Render chart
+        renderCreditUsageChart(analytics.usageByDay);
+
+    } catch (error) {
+        console.error('Failed to load credit analytics:', error);
+        // Don't show error toast - this is optional feature
+    }
+}
+
+function renderCreditUsageChart(data) {
+    const ctx = document.getElementById('creditUsageChart');
+    if (!ctx) return;
+
+    // Destroy existing chart
+    if (creditUsageChart) {
+        creditUsageChart.destroy();
+    }
+
+    const labels = data.map(item => formatDate(item.date));
+    const chatUsed = data.map(item => item.chatUsed);
+    const quizGenUsed = data.map(item => item.quizGenUsed);
+
+    creditUsageChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Chat Credits',
+                    data: chatUsed,
+                    backgroundColor: 'rgba(26, 75, 132, 0.8)',
+                    borderColor: '#1a4b84',
+                    borderWidth: 1,
+                    borderRadius: 4
+                },
+                {
+                    label: 'Quiz Gen Credits',
+                    data: quizGenUsed,
+                    backgroundColor: 'rgba(245, 158, 11, 0.8)',
+                    borderColor: '#f59e0b',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        font: {
+                            family: 'Inter',
+                            weight: 600
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: '#0f172a',
+                    titleFont: {
+                        family: 'Inter',
+                        weight: 600
+                    },
+                    bodyFont: {
+                        family: 'Inter'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    stacked: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    ticks: {
+                        stepSize: 1,
+                        font: {
+                            family: 'Inter'
+                        }
+                    }
+                },
+                x: {
+                    stacked: true,
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            family: 'Inter'
+                        }
+                    }
+                }
+            }
+        }
+    });
 }

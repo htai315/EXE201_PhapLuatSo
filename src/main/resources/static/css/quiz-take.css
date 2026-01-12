@@ -136,6 +136,7 @@ body {
 
 /* Question Content */
 .question-content {
+    position: relative;
 }
 
 .question-header {
@@ -455,6 +456,7 @@ body {
 
 /* ===== Result Section ===== */
 .result-section {
+    position: relative;
 }
 
 .result-header {
@@ -613,5 +615,210 @@ body {
 
     .result-stats {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 575px) {
+    .exam-header-section {
+        padding: 0.875rem 0;
+        margin-top: 55px;
+    }
+    
+    .exam-badge {
+        font-size: 0.75rem;
+        padding: 0.3rem 0.7rem;
+    }
+    
+    .exam-title {
+        font-size: 1.15rem;
+    }
+    
+    .exam-meta {
+        font-size: 0.8rem;
+    }
+    
+    .btn-back {
+        padding: 0.5rem 0.875rem;
+        font-size: 0.85rem;
+    }
+    
+    .exam-container {
+        padding: 1rem 0;
+    }
+    
+    .question-section {
+        padding: 1rem;
+        border-radius: 10px;
+    }
+    
+    .progress-section {
+        margin-bottom: 1rem;
+        padding-bottom: 0.875rem;
+    }
+    
+    .progress-label,
+    .progress-stats {
+        font-size: 0.8rem;
+    }
+    
+    .question-header {
+        margin-bottom: 1rem;
+    }
+    
+    .question-number {
+        font-size: 0.8rem;
+        padding: 0.35rem 0.75rem;
+    }
+    
+    .btn-flag {
+        padding: 0.35rem 0.75rem;
+        font-size: 0.8rem;
+    }
+    
+    .question-text {
+        font-size: 0.9rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .options-container {
+        gap: 0.625rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .option-item {
+        padding: 0.75rem;
+        gap: 0.625rem;
+        border-radius: 6px;
+    }
+    
+    .option-key {
+        width: 28px;
+        height: 28px;
+        font-size: 0.8rem;
+        border-radius: 5px;
+    }
+    
+    .option-text {
+        font-size: 0.875rem;
+    }
+    
+    .option-check {
+        font-size: 1rem;
+    }
+    
+    .question-navigation {
+        gap: 0.5rem;
+        margin-top: 1.25rem;
+    }
+    
+    .btn-nav {
+        padding: 0.625rem 0.875rem;
+        font-size: 0.8rem;
+        border-radius: 5px;
+    }
+    
+    .timer-card {
+        padding: 1rem;
+        border-radius: 6px;
+    }
+    
+    .timer-header {
+        font-size: 0.8rem;
+        margin-bottom: 0.625rem;
+    }
+    
+    .timer-unit {
+        min-width: 48px;
+        padding: 0.5rem 0.35rem;
+        border-radius: 5px;
+    }
+    
+    .timer-value {
+        font-size: 1.2rem;
+    }
+    
+    .timer-label {
+        font-size: 0.65rem;
+    }
+    
+    .timer-separator {
+        font-size: 1.1rem;
+    }
+    
+    .question-grid-card {
+        padding: 1rem;
+        border-radius: 6px;
+    }
+    
+    .grid-header {
+        font-size: 0.8rem;
+        margin-bottom: 0.625rem;
+    }
+    
+    .question-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 6px;
+        max-width: 100%;
+    }
+    
+    .grid-item {
+        max-width: 44px;
+        font-size: 0.75rem;
+        border-radius: 5px;
+    }
+    
+    .btn-submit-exam {
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+        border-radius: 6px;
+    }
+    
+    .result-header {
+        padding: 1.25rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+    }
+    
+    .result-score {
+        font-size: 2.25rem;
+    }
+    
+    .result-label {
+        font-size: 0.9rem;
+    }
+    
+    .result-stats {
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+        border-radius: 6px;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+    }
+    
+    .wrong-questions {
+        padding: 1rem;
+        border-radius: 6px;
+    }
+    
+    .wrong-question-item {
+        padding: 1rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+    }
+    
+    .explanation-box {
+        padding: 0.875rem;
+        font-size: 0.85rem;
+        border-radius: 6px;
     }
 }

@@ -441,3 +441,97 @@ body {
         font-size: 0.95rem;
     }
 }
+
+/* ===== Enhanced Mobile Responsive ===== */
+@media (max-width: 575px) {
+    body {
+        padding-top: 60px;
+    }
+    
+    .plans-hero {
+        padding: 2rem 0 4.5rem;
+        margin-bottom: -3rem;
+    }
+    
+    .hero-title {
+        font-size: 1.5rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 0.95rem;
+    }
+    
+    .pricing-section {
+        padding: 2.5rem 0 2rem;
+    }
+    
+    .pricing-card {
+        padding: 1.5rem;
+        border-radius: 16px;
+        margin-bottom: 1rem;
+    }
+    
+    .pricing-badge {
+        top: 1rem;
+        right: 1rem;
+        font-size: 0.7rem;
+        padding: 0.3rem 0.75rem;
+    }
+    
+    .pricing-name {
+        font-size: 1.35rem;
+    }
+    
+    .pricing-price {
+        font-size: 2rem;
+    }
+    
+    .price-currency {
+        font-size: 1.1rem;
+    }
+    
+    .pricing-features {
+        margin: 1.5rem 0;
+    }
+    
+    .pricing-features li {
+        padding: 0.75rem 0;
+        font-size: 0.9rem;
+    }
+    
+    .pricing-features i {
+        font-size: 1.1rem;
+    }
+    
+    .pricing-card .btn {
+        padding: 0.875rem;
+        font-size: 0.95rem;
+        border-radius: 10px;
+    }
+    
+    /* QR Modal Mobile */
+    #qrModal .modal-body {
+        padding: 1.25rem;
+    }
+    
+    #qrCodeContainer {
+        padding: 0.875rem;
+    }
+    
+    #qrCodeImage {
+        max-width: 200px;
+    }
+    
+    #paymentAmount {
+        font-size: 1.1rem;
+    }
+    
+    #checkoutLink {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    #orderCodeDisplay {
+        font-size: 0.9rem;
+    }
+}

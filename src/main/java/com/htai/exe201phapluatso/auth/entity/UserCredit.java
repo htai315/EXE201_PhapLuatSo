@@ -27,6 +27,10 @@ public class UserCredit {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private Integer version = 0;
+
     // Getters and Setters
     public Long getId() { return id; }
 
@@ -44,4 +48,7 @@ public class UserCredit {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public Integer getVersion() { return version; }
+    public void setVersion(Integer version) { this.version = version; }
 }

@@ -38,6 +38,7 @@ public class PayOSService {
     private final CreditService creditService;
     private final QRCodeService qrCodeService;
     private final OrderCodeGenerator orderCodeGenerator;
+    private final PaymentEmailService paymentEmailService;
 
     @Value("${payos.return-url}")
     private String returnUrl;
@@ -66,6 +67,15 @@ public class PayOSService {
     @Value("${payment.reuse-pending-payment:true}")
     private boolean reusePendingPayment;
 
+    @Value("${payos.checkout-url-prefix:https://pay.payos.vn/web/}")
+    private String checkoutUrlPrefix;
+
+    @Value("${payment.webhook-retry-max-attempts:5}")
+    private int webhookRetryMaxAttempts;
+
+    @Value("${payment.webhook-retry-delay-ms:500}")
+    private long webhookRetryDelayMs;
+
     public PayOSService(
             PayOS payOS,
             PaymentRepo paymentRepo,
@@ -73,7 +83,8 @@ public class PayOSService {
             PlanRepo planRepo,
             CreditService creditService,
             QRCodeService qrCodeService,
-            OrderCodeGenerator orderCodeGenerator
+            OrderCodeGenerator orderCodeGenerator,
+            PaymentEmailService paymentEmailService
     ) {
         this.payOS = payOS;
         this.paymentRepo = paymentRepo;
@@ -82,8 +93,13 @@ public class PayOSService {
         this.creditService = creditService;
         this.qrCodeService = qrCodeService;
         this.orderCodeGenerator = orderCodeGenerator;
+        this.paymentEmailService = paymentEmailService;
     }
 
+    /**
+     * Create payment with pessimistic lock to prevent race condition.
+     * Uses database lock on user's pending payments to ensure only one payment is created at a time.
+     */
     @Transactional
     public CreatePaymentResponse createPayment(Long userId, String planCode) {
         if (planCode == null || planCode.isBlank()) {
@@ -100,82 +116,78 @@ public class PayOSService {
             throw new BadRequestException("Gói không hợp lệ");
         }
 
-        // ========== REUSE LOGIC START ==========
-        // Kiểm tra xem có pending payment cùng gói không (plan đã được JOIN FETCH)
-        List<Payment> pendingPayments = paymentRepo.findByUserAndStatusOrderByCreatedAtDesc(user, "PENDING");
-        
-        if (!pendingPayments.isEmpty() && reusePendingPayment) {
-            // Tìm pending payment cùng gói (không chỉ lấy mới nhất)
-            Payment matchingPending = null;
-            for (Payment pending : pendingPayments) {
-                if (pending.getPlan().getCode().equals(planCode)) {
-                    matchingPending = pending;
-                    break;
-                }
-            }
+        // ========== REUSE LOGIC WITH PESSIMISTIC LOCK ==========
+        // Sử dụng pessimistic lock để tránh race condition khi 2 request đồng thời
+        if (reusePendingPayment) {
+            List<Payment> pendingPayments = paymentRepo.findPendingPaymentsByUserIdWithLock(userId);
+            log.debug("Found {} pending payments for user {}", pendingPayments.size(), userId);
             
-            // Nếu có pending payment cùng gói và còn mới (trong vòng spamBlockMinutes)
-            if (matchingPending != null) {
-                LocalDateTime createdAt = matchingPending.getCreatedAt();
-                boolean isRecent = createdAt.isAfter(LocalDateTime.now().minusMinutes(spamBlockMinutes));
+            if (!pendingPayments.isEmpty()) {
+                // Tìm pending payment cùng gói
+                Payment matchingPending = pendingPayments.stream()
+                        .filter(p -> p.getPlan() != null && p.getPlan().getCode().equals(planCode))
+                        .findFirst()
+                        .orElse(null);
                 
-                if (isRecent) {
-                    log.info("Found recent pending payment: orderCode={}, user={}, plan={}", 
-                            matchingPending.getOrderCode(), userId, planCode);
+                // Nếu có pending payment cùng gói và còn mới (trong vòng spamBlockMinutes)
+                if (matchingPending != null) {
+                    LocalDateTime createdAt = matchingPending.getCreatedAt();
+                    boolean isRecent = createdAt != null && 
+                            createdAt.isAfter(LocalDateTime.now().minusMinutes(spamBlockMinutes));
                     
-                    try {
-                        // Lấy payment info từ PayOS để check status
-                        var paymentInfo = payOS.paymentRequests().get(matchingPending.getOrderCode());
-                        String statusName = paymentInfo.getStatus() != null ? paymentInfo.getStatus().name() : null;
-                        
-                        if ("PENDING".equals(statusName) || "PROCESSING".equals(statusName)) {
-                            // Payment link vẫn còn active → REUSE
-                            // Note: PaymentLink from get() doesn't have checkoutUrl/qrCode
-                            // We need to construct them manually
-                            String checkoutUrl = "https://pay.payos.vn/web/" + matchingPending.getOrderCode();
+                    log.info("Found pending payment: orderCode={}, user={}, plan={}, createdAt={}, isRecent={}", 
+                            matchingPending.getOrderCode(), userId, planCode, createdAt, isRecent);
+                    
+                    if (isRecent) {
+                        try {
+                            // Lấy payment info từ PayOS để check status
+                            var paymentInfo = payOS.paymentRequests().get(matchingPending.getOrderCode());
+                            String statusName = paymentInfo.getStatus() != null ? paymentInfo.getStatus().name() : null;
                             
-                            log.info("REUSING payment link: orderCode={}, url={}", 
-                                    matchingPending.getOrderCode(), checkoutUrl);
+                            log.info("PayOS status for orderCode={}: {}", matchingPending.getOrderCode(), statusName);
                             
-                            // Generate QR code from checkout URL
-                            String qrCode = null;
-                            try {
-                                log.info("Generating QR code for reused payment: orderCode={}, url={}", 
-                                        matchingPending.getOrderCode(), checkoutUrl);
-                                qrCode = qrCodeService.generateQRCodeBase64(checkoutUrl);
-                                log.info("QR code generated successfully for reused payment: orderCode={}", 
-                                        matchingPending.getOrderCode());
-                            } catch (Exception e) {
-                                log.error("Failed to generate QR code for reused payment: orderCode={}", 
-                                         matchingPending.getOrderCode(), e);
+                            if ("PENDING".equals(statusName) || "PROCESSING".equals(statusName)) {
+                                // Payment link vẫn còn active → REUSE
+                                // Lấy checkoutUrl và qrCode đã lưu trong database
+                                String checkoutUrl = matchingPending.getCheckoutUrl();
+                                String qrCode = matchingPending.getQrCode();
+                                
+                                // Fallback nếu không có trong DB (payment cũ trước khi có feature này)
+                                if (checkoutUrl == null || checkoutUrl.isBlank()) {
+                                    checkoutUrl = buildCheckoutUrl(matchingPending.getOrderCode());
+                                }
+                                if (qrCode == null || qrCode.isBlank()) {
+                                    log.warn("No saved QR code found, generating from checkout URL (may not be scannable by bank app)");
+                                    qrCode = generateQRCodeSafe(checkoutUrl, matchingPending.getOrderCode());
+                                }
+                                
+                                log.info("REUSING payment link: orderCode={}, url={}, hasQR={}", 
+                                        matchingPending.getOrderCode(), checkoutUrl, qrCode != null);
+                                
+                                return new CreatePaymentResponse(
+                                        checkoutUrl,
+                                        String.valueOf(matchingPending.getOrderCode()),
+                                        qrCode,
+                                        (long) plan.getPrice(),
+                                        plan.getName()
+                                );
+                            } else {
+                                // Payment đã expired/cancelled → Tạo mới
+                                log.info("Payment link expired/cancelled (status={}), will create new one", statusName);
+                                matchingPending.setStatus("EXPIRED");
+                                paymentRepo.save(matchingPending);
                             }
                             
-                            return new CreatePaymentResponse(
-                                    checkoutUrl,
-                                    String.valueOf(matchingPending.getOrderCode()),
-                                    qrCode,
-                                    (long) plan.getPrice(),
-                                    plan.getName()
-                            );
-                        } else {
-                            // Payment đã expired/cancelled → Tạo mới
-                            log.info("Payment link expired/cancelled, will create new one");
+                        } catch (Exception e) {
+                            // Không lấy được payment từ PayOS - có thể đã hết hạn
+                            log.warn("Cannot get payment from PayOS (orderCode={}): {}", 
+                                    matchingPending.getOrderCode(), e.getMessage());
+                            
+                            // Đánh dấu payment cũ là EXPIRED và tạo mới
                             matchingPending.setStatus("EXPIRED");
                             paymentRepo.save(matchingPending);
+                            log.info("Marked old payment as EXPIRED, will create new one");
                         }
-                        
-                    } catch (Exception e) {
-                        // Không lấy được payment từ PayOS
-                        log.warn("Cannot get payment from PayOS: {}", e.getMessage());
-                        
-                        if (!testMode) {
-                            // Production: block spam
-                            throw new BadRequestException(
-                                "Bạn đã có giao dịch đang chờ xử lý. " +
-                                "Vui lòng hoàn tất thanh toán hoặc đợi " + spamBlockMinutes + " phút."
-                            );
-                        }
-                        // Test mode: cho phép tạo mới
                     }
                 }
             }
@@ -225,21 +237,35 @@ public class PayOSService {
                     paymentLink.getPaymentLinkId());
             log.info("========== PAYOS PAYMENT CREATED ==========");
 
+            String checkoutUrl = paymentLink.getCheckoutUrl();
             String qrCode = paymentLink.getQrCode();
+            String qrCodeToSave = qrCode; // Lưu QR gốc từ PayOS (VietQR string hoặc URL)
             
             // Fallback: Generate QR code if PayOS doesn't provide one
             if (qrCode == null || qrCode.isBlank()) {
                 log.info("PayOS did not provide QR code, generating our own");
                 try {
-                    qrCode = qrCodeService.generateQRCodeBase64(paymentLink.getCheckoutUrl());
+                    qrCode = qrCodeService.generateQRCodeBase64(checkoutUrl);
+                    // Không lưu base64 vào DB vì quá lớn (~50KB)
+                    // Khi reuse sẽ generate lại từ checkoutUrl
+                    qrCodeToSave = null;
                     log.debug("Generated fallback QR code for orderCode: {}", orderCode);
                 } catch (Exception e) {
                     log.warn("Failed to generate fallback QR code: {}", e.getMessage());
                 }
             }
 
+            // Lưu checkoutUrl và qrCode vào database để reuse sau này
+            // Chỉ lưu QR code nếu là VietQR string (ngắn), không lưu base64 (quá lớn)
+            payment.setCheckoutUrl(checkoutUrl);
+            if (qrCodeToSave != null && !qrCodeToSave.startsWith("data:image")) {
+                payment.setQrCode(qrCodeToSave);
+            }
+            paymentRepo.save(payment);
+            log.debug("Saved checkoutUrl and qrCode for orderCode: {}", orderCode);
+
             return new CreatePaymentResponse(
-                    paymentLink.getCheckoutUrl(),
+                    checkoutUrl,
                     String.valueOf(orderCode),
                     qrCode,
                     (long) plan.getPrice(),
@@ -284,6 +310,30 @@ public class PayOSService {
         throw lastException;
     }
 
+    /**
+     * Build checkout URL from order code (configurable prefix)
+     */
+    private String buildCheckoutUrl(long orderCode) {
+        return checkoutUrlPrefix + orderCode;
+    }
+
+    /**
+     * Generate QR code safely with error handling
+     */
+    private String generateQRCodeSafe(String checkoutUrl, long orderCode) {
+        try {
+            log.debug("Generating QR code for orderCode={}", orderCode);
+            return qrCodeService.generateQRCodeBase64(checkoutUrl);
+        } catch (Exception e) {
+            log.error("Failed to generate QR code for orderCode={}: {}", orderCode, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Handle webhook with retry mechanism for race condition when payment not yet committed.
+     * PayOS may send webhook before createPayment transaction commits.
+     */
     @Transactional
     public void handleWebhook(Map<String, Object> webhookData) {
         try {
@@ -297,8 +347,8 @@ public class PayOSService {
 
             log.info("Verified webhook: orderCode={}, code={}", orderCode, code);
 
-            Payment payment = paymentRepo.findByOrderCodeWithLock(orderCode)
-                    .orElseThrow(() -> new NotFoundException("Payment not found: " + orderCode));
+            // Retry mechanism: payment may not exist yet if webhook arrives before transaction commits
+            Payment payment = findPaymentWithRetry(orderCode);
 
             if (payment.getWebhookProcessed() != null && payment.getWebhookProcessed()) {
                 log.warn("Webhook already processed for orderCode: {}", orderCode);
@@ -341,6 +391,9 @@ public class PayOSService {
                 payment.setWebhookProcessed(true);
                 paymentRepo.save(payment);
 
+                // Gửi email xác nhận thanh toán (async - không block webhook)
+                paymentEmailService.sendPaymentSuccessEmail(payment);
+
                 log.info("Payment SUCCESS: orderCode={}, credits added", orderCode);
             } else {
                 payment.setStatus("FAILED");
@@ -352,12 +405,42 @@ public class PayOSService {
             log.info("========== PayOS WEBHOOK END ==========");
 
         } catch (NotFoundException e) {
-            log.error("Payment not found in webhook", e);
+            log.error("Payment not found in webhook after retries", e);
             throw e;
         } catch (Exception e) {
             log.error("Webhook processing failed", e);
             throw new BadRequestException("Invalid webhook: " + e.getMessage());
         }
+    }
+
+    /**
+     * Find payment with retry mechanism.
+     * Handles race condition when webhook arrives before createPayment transaction commits.
+     */
+    private Payment findPaymentWithRetry(long orderCode) {
+        for (int attempt = 1; attempt <= webhookRetryMaxAttempts; attempt++) {
+            var paymentOpt = paymentRepo.findByOrderCodeWithLock(orderCode);
+            
+            if (paymentOpt.isPresent()) {
+                log.info("Payment found on attempt {}: orderCode={}", attempt, orderCode);
+                return paymentOpt.get();
+            }
+            
+            if (attempt < webhookRetryMaxAttempts) {
+                long waitTime = webhookRetryDelayMs * attempt;
+                log.info("Payment not found, retrying in {}ms (attempt {}/{})", 
+                        waitTime, attempt, webhookRetryMaxAttempts);
+                try {
+                    Thread.sleep(waitTime);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new BadRequestException("Webhook processing interrupted");
+                }
+            }
+        }
+        
+        throw new NotFoundException("Payment not found after " + webhookRetryMaxAttempts + 
+                " attempts: orderCode=" + orderCode);
     }
 
     public boolean verifyWebhookSignature(Map<String, Object> webhookData) {
@@ -400,6 +483,69 @@ public class PayOSService {
 
         log.info("Payment status details: orderCode={}, status={}", orderCode, payment.getStatus());
         return response;
+    }
+
+    /**
+     * Get payment details for continuing payment (with QR code).
+     * Only works for PENDING payments owned by the user.
+     */
+    @Transactional(readOnly = true)
+    public CreatePaymentResponse getPaymentForContinue(long orderCode, Long userId) {
+        Payment payment = paymentRepo.findByOrderCodeWithPlan(orderCode)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy đơn hàng: " + orderCode));
+
+        // Check ownership
+        if (!payment.getUser().getId().equals(userId)) {
+            throw new ForbiddenException("Bạn không có quyền truy cập đơn hàng này");
+        }
+
+        // Check status
+        if (!"PENDING".equals(payment.getStatus())) {
+            throw new BadRequestException("Đơn hàng không ở trạng thái chờ thanh toán");
+        }
+
+        // Check if payment is still valid on PayOS
+        try {
+            var paymentInfo = payOS.paymentRequests().get(orderCode);
+            String statusName = paymentInfo.getStatus() != null ? paymentInfo.getStatus().name() : null;
+            
+            if (!"PENDING".equals(statusName) && !"PROCESSING".equals(statusName)) {
+                // Payment đã hết hạn trên PayOS
+                payment.setStatus("EXPIRED");
+                paymentRepo.save(payment);
+                throw new BadRequestException("Đơn hàng đã hết hạn. Vui lòng tạo đơn hàng mới.");
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.warn("Cannot verify payment on PayOS: {}", e.getMessage());
+            // Nếu không check được PayOS, vẫn cho phép tiếp tục (có thể do network issue)
+        }
+
+        // Get checkout URL and QR code
+        String checkoutUrl = payment.getCheckoutUrl();
+        String qrCode = payment.getQrCode();
+        
+        // Fallback if not saved in DB
+        if (checkoutUrl == null || checkoutUrl.isBlank()) {
+            checkoutUrl = buildCheckoutUrl(orderCode);
+        }
+        if (qrCode == null || qrCode.isBlank()) {
+            log.warn("No saved QR code for orderCode={}, generating from URL", orderCode);
+            qrCode = generateQRCodeSafe(checkoutUrl, orderCode);
+        }
+
+        Plan plan = payment.getPlan();
+        
+        log.info("Returning payment for continue: orderCode={}, hasQR={}", orderCode, qrCode != null);
+        
+        return new CreatePaymentResponse(
+                checkoutUrl,
+                String.valueOf(orderCode),
+                qrCode,
+                payment.getAmount().longValue(),
+                plan != null ? plan.getName() : null
+        );
     }
 
     public List<PaymentHistoryResponse> getPaymentHistory(Long userId) {
@@ -548,5 +694,46 @@ public class PayOSService {
         
         log.info("Stale payment cleanup completed. Processed: {}, Expired: {}, Cancelled: {}", 
                 processed, expired, cancelled);
+    }
+
+    /**
+     * Cleanup old failed/expired/cancelled payments to prevent database bloat.
+     * Runs daily at 3 AM. Deletes payments older than 30 days that are not SUCCESS.
+     */
+    @Scheduled(cron = "0 0 3 * * ?") // Chạy lúc 3:00 AM mỗi ngày
+    @Transactional
+    public void cleanupOldFailedPayments() {
+        log.info("Running old payment cleanup task...");
+        
+        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
+        
+        // Chỉ xóa các payment không thành công và đã quá 30 ngày
+        List<String> statusesToDelete = List.of("EXPIRED", "CANCELLED", "FAILED");
+        int totalDeleted = 0;
+        
+        for (String status : statusesToDelete) {
+            try {
+                List<Payment> oldPayments = paymentRepo.findByStatusAndCreatedAtBefore(status, thirtyDaysAgo);
+                
+                if (!oldPayments.isEmpty()) {
+                    // Xóa theo batch để tránh lock quá lâu
+                    int batchSize = Math.min(oldPayments.size(), 100);
+                    List<Payment> toDelete = oldPayments.subList(0, batchSize);
+                    
+                    paymentRepo.deleteAll(toDelete);
+                    totalDeleted += toDelete.size();
+                    
+                    log.info("Deleted {} old {} payments (>30 days)", toDelete.size(), status);
+                }
+            } catch (Exception e) {
+                log.error("Failed to delete old {} payments: {}", status, e.getMessage());
+            }
+        }
+        
+        if (totalDeleted > 0) {
+            log.info("Old payment cleanup completed. Total deleted: {}", totalDeleted);
+        } else {
+            log.info("No old payments to delete");
+        }
     }
 }

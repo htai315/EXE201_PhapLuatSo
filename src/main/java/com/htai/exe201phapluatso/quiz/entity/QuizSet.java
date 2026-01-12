@@ -29,6 +29,9 @@ public class QuizSet {
     @Column(nullable = false, length = 20)
     private String visibility = "PRIVATE"; // PRIVATE, PUBLIC
 
+    @Column(name = "duration_minutes", nullable = false)
+    private Integer durationMinutes = 45; // Thời gian làm bài (phút)
+
     @Column(name="created_at", nullable=false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -47,6 +50,8 @@ public class QuizSet {
     public void setStatus(String status) { this.status = status; }
     public String getVisibility() { return visibility; }
     public void setVisibility(String visibility) { this.visibility = visibility; }
+    public Integer getDurationMinutes() { return durationMinutes; }
+    public void setDurationMinutes(Integer durationMinutes) { this.durationMinutes = durationMinutes; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

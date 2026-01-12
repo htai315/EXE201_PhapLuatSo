@@ -5,6 +5,7 @@ import com.htai.exe201phapluatso.auth.security.AuthUserPrincipal;
 import com.htai.exe201phapluatso.auth.service.AuthService;
 import com.htai.exe201phapluatso.auth.service.EmailVerificationService;
 import com.htai.exe201phapluatso.auth.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -36,8 +37,10 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public TokenResponse login(@Valid @RequestBody LoginRequest req) {
-        return auth.login(req);
+    public TokenResponse login(@Valid @RequestBody LoginRequest req, HttpServletRequest request) {
+        String ipAddress = getClientIP(request);
+        String userAgent = request.getHeader("User-Agent");
+        return auth.login(req, ipAddress, userAgent);
     }
 
     @PostMapping("/refresh")
@@ -89,5 +92,20 @@ public class AuthController {
             e.printStackTrace();
             return ResponseEntity.status(500).body("Error: " + e.getMessage());
         }
+    }
+
+    /**
+     * Get client IP address, handling proxy headers
+     */
+    private String getClientIP(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+        String xRealIP = request.getHeader("X-Real-IP");
+        if (xRealIP != null && !xRealIP.isEmpty()) {
+            return xRealIP;
+        }
+        return request.getRemoteAddr();
     }
 }

@@ -37,7 +37,7 @@ Nền tảng AI hỗ trợ học tập và tra cứu pháp luật Việt Nam v�
 
 ### Backend
 - **Framework**: Spring Boot 3.x
-- **Database**: SQL Server
+- **Database**: PostgreSQL + pgvector
 - **Migration**: Flyway
 - **Security**: Spring Security + JWT
 - **AI**: OpenAI GPT-4
@@ -53,7 +53,7 @@ Nền tảng AI hỗ trợ học tập và tra cứu pháp luật Việt Nam v�
 
 ### 1. Yêu Cầu
 - Java 17+
-- SQL Server
+- PostgreSQL 15+ (với pgvector extension)
 - Maven
 - OpenAI API Key
 - VNPay Sandbox Account
@@ -65,16 +65,16 @@ cd EXE201_PhapLuatSo
 ```
 
 ### 3. Cấu Hình Database
-Tạo database trong SQL Server:
+Tạo database trong PostgreSQL:
 ```sql
-CREATE DATABASE phapluatso;
+CREATE DATABASE exe201_phapluatso;
 ```
 
 ### 4. Cấu Hình Environment
 Copy `.env.example` thành `.env` và điền thông tin:
 ```env
 # Database
-DB_URL=jdbc:sqlserver://localhost:1433;databaseName=phapluatso;encrypt=true;trustServerCertificate=true
+DB_URL=jdbc:postgresql://localhost:5432/exe201_phapluatso
 DB_USERNAME=your_username
 DB_PASSWORD=your_password
 

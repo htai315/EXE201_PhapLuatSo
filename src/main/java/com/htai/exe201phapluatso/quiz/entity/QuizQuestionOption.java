@@ -14,7 +14,7 @@ public class QuizQuestionOption {
     @JoinColumn(name = "question_id")
     private QuizQuestion question;
 
-    @Column(name="option_key", nullable=false, length=1, columnDefinition = "CHAR(1)")
+    @Column(name="option_key", nullable=false, length=1)
     private String optionKey;
 
     @Column(name="option_text", nullable=false, length=1000)

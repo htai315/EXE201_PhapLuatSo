@@ -419,15 +419,213 @@
     .question-list-scroll {
         max-height: 400px;
     }
+    
+    .question-grid-container {
+        max-width: 100%;
+    }
 }
 
-@media (max-width: 576px) {
-    /* Mobile: vẫn giữ 5 cột */
-    #questionListContainer {
+@media (max-width: 767px) {
+    .question-list-card,
+    .question-detail-card {
+        min-height: 350px;
+        padding: 1rem;
+    }
+    
+    .question-list-body {
+        padding: 12px !important;
+    }
+    
+    .question-grid-container {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+    }
+    
+    .question-grid-item {
+        max-width: 50px;
+        font-size: 0.85rem;
+        border-radius: 6px;
+    }
+    
+    .question-detail-text {
+        font-size: 1rem;
+        padding: 12px;
+    }
+    
+    .option-detail-item {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+    
+    .option-detail-key {
+        min-width: 32px;
+        height: 32px;
+        font-size: 0.85rem;
+    }
+    
+    .option-detail-text {
+        font-size: 0.9rem;
+    }
+    
+    .correct-answer-box {
+        padding: 12px 14px;
+        font-size: 0.9rem;
+    }
+    
+    .explanation-box {
+        padding: 12px 14px;
+        font-size: 0.875rem;
+    }
+    
+    .question-card .card-body {
+        padding: 12px;
+    }
+    
+    .question-title {
+        font-size: 0.88rem;
+    }
+    
+    .question-options-list {
+        gap: 5px;
+    }
+    
+    .option-item {
+        padding: 7px 9px;
+        font-size: 0.82rem;
+    }
+    
+    .option-key-pill {
+        min-width: 20px;
+        height: 20px;
+        font-size: 0.68rem;
+    }
+    
+    .question-explanation {
+        font-size: 0.8rem;
+        padding: 8px 10px;
+    }
+}
+
+@media (max-width: 575px) {
+    .question-grid-container {
+        grid-template-columns: repeat(5, 1fr);
         gap: 6px;
     }
     
     .question-grid-item {
+        max-width: 44px;
+        font-size: 0.8rem;
+        border-radius: 5px;
+        border-width: 1.5px;
+    }
+    
+    .question-list-card,
+    .question-detail-card {
+        min-height: 300px;
+        padding: 0.875rem;
+    }
+    
+    .question-list-body {
+        padding: 10px !important;
+    }
+    
+    .question-detail-text {
+        font-size: 0.95rem;
+        padding: 10px;
+        margin-bottom: 16px;
+    }
+    
+    .section-title {
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+    }
+    
+    .option-detail-item {
+        padding: 8px 10px;
+        gap: 8px;
+        border-radius: 8px;
+    }
+    
+    .option-detail-key {
+        min-width: 28px;
+        height: 28px;
+        font-size: 0.8rem;
+        border-radius: 6px;
+    }
+    
+    .option-detail-text {
         font-size: 0.85rem;
+    }
+    
+    .option-detail-item i {
+        font-size: 1.2rem;
+    }
+    
+    .correct-answer-box {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+        border-radius: 8px;
+    }
+    
+    .explanation-box {
+        padding: 10px 12px;
+        font-size: 0.82rem;
+        border-radius: 6px;
+    }
+    
+    .question-card {
+        margin-bottom: 10px !important;
+        border-radius: 8px;
+    }
+    
+    .question-card .card-body {
+        padding: 10px;
+    }
+    
+    .question-index-badge {
+        min-width: 24px;
+        height: 24px;
+        font-size: 0.75rem;
+        border-radius: 5px;
+        margin-right: 8px;
+    }
+    
+    .question-title {
+        font-size: 0.85rem;
+        line-height: 1.35;
+    }
+    
+    .question-options-list {
+        gap: 4px;
+        margin-top: 8px;
+    }
+    
+    .option-item {
+        padding: 6px 8px;
+        font-size: 0.78rem;
+        border-radius: 5px;
+        gap: 6px;
+    }
+    
+    .option-key-pill {
+        min-width: 18px;
+        height: 18px;
+        font-size: 0.65rem;
+        border-radius: 4px;
+    }
+    
+    .option-text {
+        line-height: 1.35;
+    }
+    
+    .question-explanation {
+        font-size: 0.78rem;
+        padding: 7px 9px;
+        margin-top: 8px;
+    }
+    
+    .question-card .btn-sm {
+        padding: 3px 8px;
+        font-size: 0.75rem;
     }
 }

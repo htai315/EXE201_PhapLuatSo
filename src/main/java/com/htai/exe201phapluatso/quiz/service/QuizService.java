@@ -8,6 +8,7 @@ import com.htai.exe201phapluatso.common.exception.NotFoundException;
 import com.htai.exe201phapluatso.credit.service.CreditService;
 import com.htai.exe201phapluatso.quiz.dto.CreateQuestionRequest;
 import com.htai.exe201phapluatso.quiz.dto.CreateQuizSetRequest;
+import com.htai.exe201phapluatso.quiz.dto.UpdateQuizSetRequest;
 import com.htai.exe201phapluatso.quiz.entity.QuizQuestion;
 import com.htai.exe201phapluatso.quiz.entity.QuizQuestionOption;
 import com.htai.exe201phapluatso.quiz.entity.QuizSet;
@@ -17,6 +18,7 @@ import com.htai.exe201phapluatso.quiz.repo.QuizAttemptRepo;
 import com.htai.exe201phapluatso.quiz.repo.QuizQuestionOptionRepo;
 import com.htai.exe201phapluatso.quiz.repo.QuizQuestionRepo;
 import com.htai.exe201phapluatso.quiz.repo.QuizSetRepo;
+import com.htai.exe201phapluatso.quiz.validation.QuizDurationValidator;
 import jakarta.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,6 +75,9 @@ public class QuizService {
     public QuizSet createQuizSet(Long userId, CreateQuizSetRequest req) {
         User user = requireActiveStudent(userId);
 
+        // Validate duration (5-180 phút)
+        int validatedDuration = QuizDurationValidator.validateAndGetDuration(req.durationMinutes());
+
         QuizSet set = new QuizSet();
         set.setCreatedBy(user);
         // Sanitize input
@@ -80,9 +85,39 @@ public class QuizService {
         set.setDescription(sanitize(req.description()));
         set.setStatus("DRAFT");
         set.setVisibility("PRIVATE");
+        // Set validated duration
+        set.setDurationMinutes(validatedDuration);
         set.setCreatedAt(LocalDateTime.now());
 
         return quizSetRepo.save(set);
+    }
+
+    /**
+     * Update quiz set
+     * Chỉ update những field được truyền (non-null)
+     */
+    @Transactional
+    public QuizSet updateQuizSet(Long userId, Long quizSetId, UpdateQuizSetRequest req) {
+        QuizSet quizSet = getOwnedQuizSet(userId, quizSetId);
+
+        // Update title if provided
+        if (req.title() != null && !req.title().isBlank()) {
+            quizSet.setTitle(sanitize(req.title()));
+        }
+
+        // Update description if provided
+        if (req.description() != null) {
+            quizSet.setDescription(sanitize(req.description()));
+        }
+
+        // Validate and update duration if provided
+        if (req.durationMinutes() != null) {
+            int validatedDuration = QuizDurationValidator.validateAndGetDuration(req.durationMinutes());
+            quizSet.setDurationMinutes(validatedDuration);
+        }
+
+        quizSet.setUpdatedAt(LocalDateTime.now());
+        return quizSetRepo.save(quizSet);
     }
 
     @Transactional
@@ -205,7 +240,7 @@ public class QuizService {
         log.info("Tìm thấy bộ đề: {}", quizSet.getTitle());
         
         try {
-            // SQL Server không cho phép multiple cascade paths
+            // PostgreSQL cascade delete handles this, but we keep explicit deletion for safety
             // Giải pháp: Xóa attempt_answers trước khi cascade xóa questions
             List<Long> questionIds = questionRepo.findByQuizSetIdOrderBySortOrderAsc(quizSetId)
                     .stream()

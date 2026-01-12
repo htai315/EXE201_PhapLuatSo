@@ -133,6 +133,7 @@ public class QuizController {
                 set.getDescription(),
                 set.getStatus(),
                 set.getVisibility(),
+                set.getDurationMinutes(),
                 set.getCreatedBy().getId(),
                 set.getCreatedAt(),
                 set.getUpdatedAt(),
@@ -234,23 +235,33 @@ public class QuizController {
             @PathVariable Long id
     ) {
         Long userId = getUserId(auth);
-        QuizSet quizSet = quizService.getOwnedQuizSet(userId, id);
-        List<QuizQuestion> questions = quizService.getQuestionsWithOptionsForExport(userId, id);
+        log.info("Exporting quiz {} to PDF for user {}", id, userId);
         
-        if (questions.isEmpty()) {
-            return ResponseEntity.badRequest().build();
+        try {
+            QuizSet quizSet = quizService.getOwnedQuizSet(userId, id);
+            List<QuizQuestion> questions = quizService.getQuestionsWithOptionsForExport(userId, id);
+            
+            if (questions.isEmpty()) {
+                log.warn("Quiz {} has no questions to export", id);
+                return ResponseEntity.badRequest().build();
+            }
+            
+            log.info("Generating PDF for quiz {} with {} questions", id, questions.size());
+            byte[] pdfBytes = pdfExportService.exportQuizToPdf(quizSet, questions);
+            
+            String filename = sanitizeFilename(quizSet.getTitle()) + ".pdf";
+            String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8);
+            
+            log.info("PDF generated successfully for quiz {}, size: {} bytes", id, pdfBytes.length);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, 
+                            "attachment; filename=\"" + encodedFilename + "\"; filename*=UTF-8''" + encodedFilename)
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(pdfBytes);
+        } catch (Exception e) {
+            log.error("Failed to export quiz {} to PDF: {}", id, e.getMessage(), e);
+            throw e;
         }
-        
-        byte[] pdfBytes = pdfExportService.exportQuizToPdf(quizSet, questions);
-        
-        String filename = sanitizeFilename(quizSet.getTitle()) + ".pdf";
-        String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8);
-        
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, 
-                        "attachment; filename=\"" + encodedFilename + "\"; filename*=UTF-8''" + encodedFilename)
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(pdfBytes);
     }
 
     /**
@@ -262,29 +273,48 @@ public class QuizController {
             @PathVariable Long id
     ) {
         Long userId = getUserId(auth);
-        QuizSet quizSet = quizService.getOwnedQuizSet(userId, id);
-        List<QuizQuestion> questions = quizService.getQuestionsWithOptionsForExport(userId, id);
+        log.info("Exporting quiz {} to PDF with answers for user {}", id, userId);
         
-        if (questions.isEmpty()) {
-            return ResponseEntity.badRequest().build();
+        try {
+            QuizSet quizSet = quizService.getOwnedQuizSet(userId, id);
+            List<QuizQuestion> questions = quizService.getQuestionsWithOptionsForExport(userId, id);
+            
+            if (questions.isEmpty()) {
+                log.warn("Quiz {} has no questions to export", id);
+                return ResponseEntity.badRequest().build();
+            }
+            
+            log.info("Generating PDF with answers for quiz {} with {} questions", id, questions.size());
+            byte[] pdfBytes = pdfExportService.exportQuizWithAnswersToPdf(quizSet, questions);
+            
+            String filename = sanitizeFilename(quizSet.getTitle()) + "_dap-an.pdf";
+            String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8);
+            
+            log.info("PDF with answers generated successfully for quiz {}, size: {} bytes", id, pdfBytes.length);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, 
+                            "attachment; filename=\"" + encodedFilename + "\"; filename*=UTF-8''" + encodedFilename)
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(pdfBytes);
+        } catch (Exception e) {
+            log.error("Failed to export quiz {} to PDF with answers: {}", id, e.getMessage(), e);
+            throw e;
         }
-        
-        byte[] pdfBytes = pdfExportService.exportQuizWithAnswersToPdf(quizSet, questions);
-        
-        String filename = sanitizeFilename(quizSet.getTitle()) + "_dap-an.pdf";
-        String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8);
-        
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, 
-                        "attachment; filename=\"" + encodedFilename + "\"; filename*=UTF-8''" + encodedFilename)
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(pdfBytes);
     }
 
     private String sanitizeFilename(String name) {
-        return name.replaceAll("[^a-zA-Z0-9àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđĐ\\s_-]", "")
-                   .replaceAll("\\s+", "_")
-                   .substring(0, Math.min(name.length(), 100));
+        if (name == null || name.isEmpty()) {
+            return "quiz";
+        }
+        String sanitized = name
+                .replaceAll("[^a-zA-Z0-9àáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđĐ\\s_-]", "")
+                .replaceAll("\\s+", "_")
+                .trim();
+        if (sanitized.isEmpty()) {
+            return "quiz";
+        }
+        // Safely truncate to max 100 characters
+        return sanitized.length() > 100 ? sanitized.substring(0, 100) : sanitized;
     }
 
     @DeleteMapping("/{id}")

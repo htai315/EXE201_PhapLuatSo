@@ -22,6 +22,7 @@ public class DocumentParserService {
     private static final Logger log = LoggerFactory.getLogger(DocumentParserService.class);
 
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    private static final long MAX_LEGAL_FILE_SIZE = 50 * 1024 * 1024; // 50MB for legal documents
     private static final int MAX_TEXT_LENGTH = 150000; // 150K characters (~40 pages) - balanced for cost/quality
     
     // Allowed content types
@@ -31,8 +32,22 @@ public class DocumentParserService {
         "text/plain"
     );
 
+    /**
+     * Extract text with truncation (for AI processing - saves tokens)
+     */
     public String extractText(MultipartFile file) {
-        validateFile(file);
+        return extractText(file, true);
+    }
+
+    /**
+     * Extract full text without truncation (for legal document parsing)
+     */
+    public String extractFullText(MultipartFile file) {
+        return extractText(file, false);
+    }
+
+    private String extractText(MultipartFile file, boolean truncate) {
+        validateFile(file, truncate ? MAX_FILE_SIZE : MAX_LEGAL_FILE_SIZE);
 
         String contentType = file.getContentType();
         if (contentType == null) {
@@ -44,7 +59,8 @@ public class DocumentParserService {
         }
 
         try {
-            log.info("Extracting text from file: type={}, size={} bytes", contentType, file.getSize());
+            log.info("Extracting text from file: type={}, size={} bytes, truncate={}", 
+                    contentType, file.getSize(), truncate);
             
             String text = switch (contentType) {
                 case "application/pdf" -> extractFromPDF(file);
@@ -57,8 +73,8 @@ public class DocumentParserService {
                 throw new BadRequestException("File không có nội dung văn bản");
             }
 
-            // Limit text length for better AI processing
-            if (text.length() > MAX_TEXT_LENGTH) {
+            // Limit text length for AI processing only
+            if (truncate && text.length() > MAX_TEXT_LENGTH) {
                 log.info("Text truncated from {} to {} characters", text.length(), MAX_TEXT_LENGTH);
                 text = text.substring(0, MAX_TEXT_LENGTH);
             }
@@ -73,13 +89,13 @@ public class DocumentParserService {
         }
     }
 
-    private void validateFile(MultipartFile file) {
+    private void validateFile(MultipartFile file, long maxSize) {
         if (file == null || file.isEmpty()) {
             throw new BadRequestException("File không được để trống");
         }
 
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw new BadRequestException("File không được vượt quá 10MB");
+        if (file.getSize() > maxSize) {
+            throw new BadRequestException("File không được vượt quá " + (maxSize / 1024 / 1024) + "MB");
         }
         
         // Validate filename

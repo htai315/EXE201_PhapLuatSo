@@ -1,5 +1,6 @@
 package com.htai.exe201phapluatso.quiz.dto;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -13,18 +14,21 @@ public class ExamDtos {
             String questionText,
             String explanation,
             List<ExamOptionDto> options,
-            String correctOptionKey  // Key đáp án đúng sau khi shuffle
+            String correctOptionKey  // Null khi gửi về frontend (ẩn đáp án), chỉ dùng internal
     ) {}
 
     public record ExamOptionDto(
             String optionKey,
             String optionText
-    ) {}
+    ) implements Serializable {
+        private static final long serialVersionUID = 1L;
+    }
 
     public record StartExamResponse(
             Long quizSetId,
             String quizSetTitle,
             int totalQuestions,
+            int durationMinutes, // Thời gian làm bài (phút)
             List<ExamQuestionDto> questions
     ) {}
 
@@ -33,8 +37,8 @@ public class ExamDtos {
     ) {
         public record AnswerDto(
                 Long questionId,
-                String selectedOptionKey,
-                String correctOptionKey  // Key đáp án đúng (đã shuffle) để validate
+                String selectedOptionKey
+                // NOTE: correctOptionKey đã bị xóa - server tự validate từ session
         ) {}
     }
 

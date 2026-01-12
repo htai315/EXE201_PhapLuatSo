@@ -30,7 +30,7 @@ public class LegalDocumentController {
      * POST /api/legal/documents/upload
      */
     @PostMapping("/upload")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<UploadLegalDocumentResponse> uploadDocument(
             Authentication authentication,
             @RequestParam("file") MultipartFile file,
@@ -65,7 +65,7 @@ public class LegalDocumentController {
      * GET /api/legal/documents
      */
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<List<LegalDocumentDTO>> getAllDocuments() {
         List<LegalDocumentDTO> documents = legalDocumentService.getAllDocuments();
         return ResponseEntity.ok(documents);
@@ -76,7 +76,7 @@ public class LegalDocumentController {
      * GET /api/legal/documents/paginated?page=0&size=10&search=luật
      */
     @GetMapping("/paginated")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Map<String, Object>> getDocumentsPaginated(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -101,7 +101,7 @@ public class LegalDocumentController {
      * GET /api/legal/documents/stats
      */
     @GetMapping("/stats")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Map<String, Object>> getDocumentsStats() {
         Map<String, Object> stats = legalDocumentService.getDocumentsStats();
         return ResponseEntity.ok(stats);
@@ -112,7 +112,7 @@ public class LegalDocumentController {
      * DELETE /api/legal/documents/{id}
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Void> deleteDocument(@PathVariable Long id) {
         legalDocumentService.deleteDocument(id);
         return ResponseEntity.noContent().build();

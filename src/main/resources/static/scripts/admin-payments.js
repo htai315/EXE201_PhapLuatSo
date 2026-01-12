@@ -36,8 +36,7 @@ function initSidebar() {
 }
 
 async function checkAuth() {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
+    if (!AUTH.isLoggedIn()) {
         window.location.href = '/html/login.html';
         return;
     }
@@ -61,8 +60,7 @@ async function checkAuth() {
 }
 
 function logout() {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    AUTH.clearAuth();
     window.location.href = '/html/login.html';
 }
 
@@ -238,5 +236,55 @@ function showAdminToast(message, type = 'info') {
         window.showToast(message, type);
     } else {
         alert(message);
+    }
+}
+
+// ==================== EXPORT CSV ====================
+
+async function exportPaymentsCsv() {
+    try {
+        showAdminToast('Đang tạo file CSV...', 'info');
+        
+        const url = '/api/admin/payments/export';
+        
+        const token = AUTH.getToken();
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Export failed');
+        }
+        
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        
+        // Get filename from Content-Disposition header or use default
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = 'payments_export.csv';
+        if (contentDisposition) {
+            const match = contentDisposition.match(/filename="(.+)"/);
+            if (match) {
+                filename = match[1];
+            }
+        }
+        
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(downloadUrl);
+        document.body.removeChild(a);
+        
+        showAdminToast('Export thành công!', 'success');
+        
+    } catch (error) {
+        console.error('Export failed:', error);
+        showAdminToast('Export thất bại: ' + error.message, 'error');
     }
 }

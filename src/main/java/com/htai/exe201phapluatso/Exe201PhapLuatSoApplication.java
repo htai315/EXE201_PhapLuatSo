@@ -3,6 +3,7 @@ package com.htai.exe201phapluatso;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.core.env.MapPropertySource;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.io.BufferedReader;
@@ -15,6 +16,7 @@ import java.util.Map;
 
 @SpringBootApplication
 @EnableScheduling
+@EnableAsync
 public class Exe201PhapLuatSoApplication {
 
     public static void main(String[] args) {

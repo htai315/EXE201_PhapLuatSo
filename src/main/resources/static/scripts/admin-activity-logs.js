@@ -39,8 +39,7 @@ function initSidebar() {
 // ==================== AUTH ====================
 
 async function checkAuth() {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
+    if (!AUTH.isLoggedIn()) {
         window.location.href = '/html/login.html';
         return;
     }
@@ -69,8 +68,7 @@ async function checkAuth() {
 }
 
 function logout() {
-    localStorage.removeItem('accessToken'); // Changed from 'token' to 'accessToken'
-    localStorage.removeItem('refreshToken');
+    AUTH.clearAuth();
     window.location.href = '/html/login.html';
 }
 

@@ -18,7 +18,7 @@ public class QuizAttemptAnswer {
     @JoinColumn(name = "question_id")
     private QuizQuestion question;
 
-    @Column(name = "selected_option_key", nullable = false, length = 1, columnDefinition = "CHAR(1)")
+    @Column(name = "selected_option_key", nullable = false, length = 1)
     private String selectedOptionKey;
 
     @Column(name = "is_correct", nullable = false)

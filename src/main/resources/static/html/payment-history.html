@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/animations.css">
     <link rel="stylesheet" href="/css/toast-notification.css">
+    <link rel="stylesheet" href="/css/confirm-modal.css">
 
     <style>
         .payment-header {
@@ -318,9 +319,51 @@
             height: 3rem;
             color: #1a4b84;
         }
+
+        /* QR Modal Styles */
+        #qrModal .modal-body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        #qrModal #qrCodeContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 280px;
+            width: 100%;
+        }
+
+        #qrModal #qrCodeImage {
+            display: block;
+            margin: 0 auto;
+            max-width: 280px;
+            height: auto;
+        }
+
+        #qrModal #qrLoading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        #qrModal .alert,
+        #qrModal .d-grid,
+        #qrModal .border-top {
+            width: 100%;
+        }
+
+        #qrModal #paymentAmount {
+            width: 100%;
+        }
+        }
     </style>
 </head>
-<body>
+<body data-auth-required="true">
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
         <div class="container">
@@ -430,12 +473,57 @@
         </div>
     </div>
 
+    <!-- QR Code Modal -->
+    <div class="modal fade" id="qrModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-qr-code me-2"></i>Quét mã QR để thanh toán</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <div id="qrCodeContainer" class="mb-3">
+                        <div id="qrLoading" class="py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Đang tải mã QR...</p>
+                        </div>
+                        <img id="qrCodeImage" src="" alt="QR Code" style="max-width: 280px; display: none;" 
+                             onload="document.getElementById('qrLoading').style.display='none'; this.style.display='block';">
+                    </div>
+                    <div class="alert alert-info py-2 mb-3">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Sử dụng app ngân hàng để quét mã QR
+                    </div>
+                    <p class="fw-bold fs-5 text-primary mb-3" id="paymentAmount"></p>
+                    <div class="d-grid gap-2">
+                        <a id="checkoutLink" href="#" target="_blank" class="btn btn-primary btn-lg">
+                            <i class="bi bi-box-arrow-up-right me-2"></i>Mở trang thanh toán PayOS
+                        </a>
+                    </div>
+                    <div class="mt-3 pt-3 border-top">
+                        <small class="text-muted">Mã đơn hàng: <strong id="orderCodeDisplay"></strong></small>
+                    </div>
+                    <div id="paymentStatusCheck" class="mt-3" style="display: none;">
+                        <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
+                        <small class="text-success">Đang chờ thanh toán...</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Auth Guard -->
+    <script src="/scripts/auth-guard.js"></script>
 
     <!-- Custom JS -->
     <script src="/scripts/toast-notification.js"></script>
     <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/confirm-modal.js"></script>
     <script src="/scripts/script.js"></script>
 
     <script>
@@ -524,6 +612,14 @@
                             <i class="bi ${getStatusIcon(payment.status)}"></i>
                             ${getStatusText(payment.status)}
                         </span>
+                        ${payment.status === 'PENDING' ? `
+                            <button class="btn btn-warning btn-sm ms-2" onclick="continuePayment('${payment.orderCode}', '${payment.planCode}')">
+                                <i class="bi bi-qr-code me-1"></i>Tiếp tục thanh toán
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm ms-1" onclick="cancelPayment('${payment.orderCode}')">
+                                <i class="bi bi-x-circle me-1"></i>Hủy
+                            </button>
+                        ` : ''}
                     </div>
 
                     ${payment.status === 'SUCCESS' ? `
@@ -622,6 +718,164 @@
                 minute: '2-digit'
             });
         }
+
+        // ========== CONTINUE PAYMENT ==========
+        let pollingInterval = null;
+        let currentOrderCode = null;
+
+        async function continuePayment(orderCode, planCode) {
+            console.log('Continue payment:', orderCode, planCode);
+            
+            try {
+                // Gọi API continue để lấy QR code của đơn hàng cụ thể
+                const response = await API_CLIENT.get(`/api/payment/continue/${orderCode}`);
+                
+                if (response.qrCode) {
+                    showQRModal(response);
+                } else if (response.paymentUrl) {
+                    window.open(response.paymentUrl, '_blank');
+                } else {
+                    showToast('Không thể lấy mã QR. Vui lòng thử lại.', 'error');
+                }
+            } catch (error) {
+                console.error('Continue payment error:', error);
+                // Nếu đơn hàng hết hạn, reload để cập nhật trạng thái
+                if (error.message && error.message.includes('hết hạn')) {
+                    showToast(error.message, 'warning');
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    showToast(error.message || 'Không thể tiếp tục thanh toán', 'error');
+                }
+            }
+        }
+
+        function showQRModal(data) {
+            const qrImage = document.getElementById('qrCodeImage');
+            const qrLoading = document.getElementById('qrLoading');
+            const checkoutLink = document.getElementById('checkoutLink');
+            const orderCodeDisplay = document.getElementById('orderCodeDisplay');
+            const paymentAmount = document.getElementById('paymentAmount');
+            const paymentStatusCheck = document.getElementById('paymentStatusCheck');
+            
+            // Reset state
+            qrImage.style.display = 'none';
+            qrLoading.style.display = 'block';
+            paymentStatusCheck.style.display = 'none';
+            
+            // Set QR code image
+            if (data.qrCode) {
+                if (data.qrCode.startsWith('data:image')) {
+                    qrImage.src = data.qrCode;
+                } else if (data.qrCode.startsWith('http')) {
+                    qrImage.src = data.qrCode;
+                } else {
+                    // VietQR string
+                    qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(data.qrCode)}`;
+                }
+            }
+            
+            checkoutLink.href = data.paymentUrl;
+            orderCodeDisplay.textContent = data.orderCode;
+            currentOrderCode = data.orderCode;
+            
+            if (data.amount) {
+                const formattedAmount = new Intl.NumberFormat('vi-VN').format(data.amount);
+                paymentAmount.textContent = `${formattedAmount} VNĐ` + (data.planName ? ` - ${data.planName}` : '');
+            }
+            
+            const modal = new bootstrap.Modal(document.getElementById('qrModal'));
+            modal.show();
+            
+            setTimeout(() => {
+                paymentStatusCheck.style.display = 'block';
+            }, 2000);
+            
+            startPaymentPolling(data.orderCode);
+        }
+
+        function startPaymentPolling(orderCode) {
+            cleanupPolling();
+            
+            pollingInterval = setInterval(async () => {
+                if (document.hidden) return;
+                
+                try {
+                    const response = await fetch(`/api/payment/status/${orderCode}`);
+                    const data = await response.json();
+                    
+                    if (data.status === 'SUCCESS') {
+                        cleanupPolling();
+                        showToast('Thanh toán thành công!', 'success');
+                        
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('qrModal'));
+                        if (modal) modal.hide();
+                        
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                        return;
+                    }
+                    
+                    if (data.status === 'FAILED' || data.status === 'CANCELLED' || data.status === 'EXPIRED') {
+                        cleanupPolling();
+                        showToast('Thanh toán thất bại hoặc đã bị hủy!', 'error');
+                        
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('qrModal'));
+                        if (modal) modal.hide();
+                        
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Polling error:', error);
+                }
+            }, 3000);
+        }
+
+        function cleanupPolling() {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+        }
+
+        document.getElementById('qrModal')?.addEventListener('hidden.bs.modal', () => {
+            cleanupPolling();
+        });
+
+        // ========== CANCEL PAYMENT ==========
+        async function cancelPayment(orderCode) {
+            const confirmed = await window.ConfirmModal.show({
+                title: 'Hủy đơn hàng?',
+                message: 'Bạn có chắc chắn muốn hủy đơn hàng này? Hành động này không thể hoàn tác.',
+                type: 'danger',
+                confirmText: 'Hủy đơn hàng',
+                cancelText: 'Giữ đơn hàng'
+            });
+            
+            if (!confirmed) return;
+            
+            try {
+                const response = await API_CLIENT.post(`/api/payment/cancel/${orderCode}`);
+                
+                if (response.status === 'success') {
+                    showToast('Đã hủy đơn hàng thành công', 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showToast(response.message || 'Không thể hủy đơn hàng', 'error');
+                }
+            } catch (error) {
+                console.error('Cancel payment error:', error);
+                showToast(error.message || 'Không thể hủy đơn hàng', 'error');
+            }
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', cleanupPolling);
     </script>
 </body>
 </html>

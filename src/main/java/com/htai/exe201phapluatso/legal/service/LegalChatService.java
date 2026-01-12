@@ -6,6 +6,7 @@ import com.htai.exe201phapluatso.credit.service.CreditService;
 import com.htai.exe201phapluatso.legal.config.LegalSearchConfig;
 import com.htai.exe201phapluatso.legal.dto.ChatResponse;
 import com.htai.exe201phapluatso.legal.dto.CitationDTO;
+import com.htai.exe201phapluatso.legal.dto.ConversationContext;
 import com.htai.exe201phapluatso.legal.entity.LegalArticle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 /**
  * Service for RAG-based legal chatbot
  * Implements Retrieval-Augmented Generation pattern with credits system
+ * Supports both regular and streaming responses
  */
 @Service
 public class LegalChatService {
@@ -48,39 +50,94 @@ public class LegalChatService {
      * @throws com.htai.exe201phapluatso.common.exception.ForbiddenException if insufficient credits
      */
     public ChatResponse chat(Long userId, String question) {
+        return chat(userId, question, null);
+    }
+    
+    /**
+     * Process user question with conversation context (memory)
+     * This allows AI to understand context from previous messages in the session
+     * 
+     * @param userId User ID (for credit checking)
+     * @param question User's legal question
+     * @param conversationContext Previous messages in the session (can be null)
+     * @return AI-generated answer with citations
+     */
+    public ChatResponse chat(Long userId, String question, ConversationContext conversationContext) {
         validateQuestion(question);
         
-        // STEP 0: Check and deduct credit BEFORE processing
-        // This ensures user is charged only if they have credits
-        creditService.checkAndDeductChatCredit(userId);
+        // STEP 0: Reserve credit BEFORE processing (will be refunded if AI fails)
+        com.htai.exe201phapluatso.credit.entity.CreditReservation reservation = 
+                creditService.reserveCredit(userId, "CHAT", "AI_CHAT");
         
         log.info("Processing chat question for user {}: {}", userId, question);
 
-        // Step 1: Retrieve candidate articles (more than needed)
-        List<LegalArticle> candidateArticles = retrieveRelevantArticles(question);
-        
-        if (candidateArticles.isEmpty()) {
-            log.warn("No relevant articles found for question");
-            return createNoResultsResponse();
+        try {
+            // Step 1: Retrieve candidate articles (more than needed)
+            // Use conversation context to improve search if available
+            String searchQuery = buildSearchQuery(question, conversationContext);
+            List<LegalArticle> candidateArticles = retrieveRelevantArticles(searchQuery);
+            
+            if (candidateArticles.isEmpty()) {
+                log.warn("No relevant articles found for question");
+                // Confirm credit even if no results (search was performed)
+                creditService.confirmReservation(reservation.getId());
+                return createNoResultsResponse();
+            }
+
+            // Step 2: AI re-ranking - Let AI analyze and select most relevant articles
+            List<LegalArticle> relevantArticles = aiReRankArticles(question, candidateArticles);
+            
+            if (relevantArticles.isEmpty()) {
+                log.warn("AI determined no articles are truly relevant");
+                creditService.confirmReservation(reservation.getId());
+                return createNoResultsResponse();
+            }
+
+            // Step 3: Generate AI response with filtered context AND conversation memory
+            String answer = generateAnswer(question, relevantArticles, conversationContext);
+
+            // Step 4: Build citations (only from relevant articles)
+            List<CitationDTO> citations = buildCitations(relevantArticles);
+
+            // Confirm credit deduction on success
+            creditService.confirmReservation(reservation.getId());
+
+            log.info("Chat response generated with {} relevant citations (filtered from {} candidates)", 
+                    citations.size(), candidateArticles.size());
+            return new ChatResponse(answer, citations);
+            
+        } catch (Exception e) {
+            // Refund credit if AI operation fails
+            log.error("AI chat failed, refunding credit for user {}: {}", userId, e.getMessage());
+            creditService.refundReservation(reservation.getId());
+            throw e;
         }
-
-        // Step 2: AI re-ranking - Let AI analyze and select most relevant articles
-        List<LegalArticle> relevantArticles = aiReRankArticles(question, candidateArticles);
-        
-        if (relevantArticles.isEmpty()) {
-            log.warn("AI determined no articles are truly relevant");
-            return createNoResultsResponse();
+    }
+    
+    /**
+     * Build search query combining current question with conversation context
+     * This helps find more relevant articles when user asks follow-up questions
+     */
+    private String buildSearchQuery(String question, ConversationContext context) {
+        if (context == null || context.isEmpty()) {
+            return question;
         }
-
-        // Step 3: Generate AI response with filtered context
-        String answer = generateAnswer(question, relevantArticles);
-
-        // Step 4: Build citations (only from relevant articles)
-        List<CitationDTO> citations = buildCitations(relevantArticles);
-
-        log.info("Chat response generated with {} relevant citations (filtered from {} candidates)", 
-                citations.size(), candidateArticles.size());
-        return new ChatResponse(answer, citations);
+        
+        // Extract key topics from recent conversation to enhance search
+        StringBuilder queryBuilder = new StringBuilder(question);
+        
+        // Add keywords from last assistant response if it contains legal terms
+        String lastAssistantMessage = context.getLastAssistantMessage();
+        if (lastAssistantMessage != null) {
+            // Extract "Điều X" references from previous response
+            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("Điều\\s+(\\d+)");
+            java.util.regex.Matcher matcher = pattern.matcher(lastAssistantMessage);
+            while (matcher.find()) {
+                queryBuilder.append(" Điều ").append(matcher.group(1));
+            }
+        }
+        
+        return queryBuilder.toString();
     }
 
     /**
@@ -219,11 +276,11 @@ public class LegalChatService {
     }
 
     /**
-     * Generate AI answer with context from articles
+     * Generate AI answer with context from articles and conversation memory
      */
-    private String generateAnswer(String question, List<LegalArticle> articles) {
+    private String generateAnswer(String question, List<LegalArticle> articles, ConversationContext conversationContext) {
         String context = buildContext(articles);
-        String prompt = buildPrompt(question, context);
+        String prompt = buildPromptWithMemory(question, context, conversationContext);
         
         try {
             return aiService.generateText(prompt);
@@ -259,10 +316,12 @@ public class LegalChatService {
     }
 
     /**
-     * Build AI prompt with instructions and context
+     * Build AI prompt with conversation memory for context-aware responses
      */
-    private String buildPrompt(String question, String context) {
-        return String.format("""
+    private String buildPromptWithMemory(String question, String context, ConversationContext conversationContext) {
+        StringBuilder promptBuilder = new StringBuilder();
+        
+        promptBuilder.append("""
             Bạn là chuyên gia tư vấn pháp luật Việt Nam.
             
             HƯỚNG DẪN TRẢ LỜI:
@@ -283,18 +342,30 @@ public class LegalChatService {
             - Câu 1: Trả lời trực tiếp câu hỏi + trích dẫn điều luật
             - Câu 2-3: Giải thích ngắn gọn (nếu cần thiết)
             - KHÔNG thêm phần kết luận, lời khuyên nếu không được hỏi
-            
-            CÂU HỎI:
-            %s
-            
-            ĐIỀU LUẬT LIÊN QUAN:
-            %s
-            
-            TRẢ LỜI (ngắn gọn, đúng trọng tâm):
-            """, 
-            question, 
-            context
-        );
+            """);
+        
+        // Add conversation history if available
+        if (conversationContext != null && !conversationContext.isEmpty()) {
+            promptBuilder.append("\n\nLỊCH SỬ HỘI THOẠI (để hiểu ngữ cảnh):\n");
+            for (ConversationContext.Message msg : conversationContext.getMessages()) {
+                String role = msg.role().equals("USER") ? "Người dùng" : "Trợ lý";
+                // Truncate long messages to save tokens
+                String content = msg.content().length() > 300 
+                    ? msg.content().substring(0, 300) + "..." 
+                    : msg.content();
+                promptBuilder.append(role).append(": ").append(content).append("\n");
+            }
+            promptBuilder.append("\nLƯU Ý: Hãy xem xét ngữ cảnh từ lịch sử hội thoại khi trả lời. ");
+            promptBuilder.append("Nếu người dùng hỏi \"nó\", \"điều đó\", \"vấn đề này\"... hãy hiểu họ đang đề cập đến chủ đề trước đó.\n");
+        }
+        
+        promptBuilder.append("\nCÂU HỎI HIỆN TẠI:\n");
+        promptBuilder.append(question);
+        promptBuilder.append("\n\nĐIỀU LUẬT LIÊN QUAN:\n");
+        promptBuilder.append(context);
+        promptBuilder.append("\n\nTRẢ LỜI (ngắn gọn, đúng trọng tâm):\n");
+        
+        return promptBuilder.toString();
     }
 
     /**

@@ -4,11 +4,15 @@ let currentPage = 0;
 let currentSearch = '';
 let currentStatus = '';
 let selectedUserId = null;
+let currentAdminId = null; // Store current admin's ID
+let creditAction = null; // 'add' or 'remove'
+let creditUserId = null;
+let creditUserEmail = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     initSidebar();
     checkAuth();
-    loadUsers();
+    // loadUsers will be called after checkAuth sets currentAdminId
     
     // Search on Enter key
     document.getElementById('searchInput').addEventListener('keypress', (e) => {
@@ -49,8 +53,7 @@ function initSidebar() {
 // ==================== AUTH ====================
 
 async function checkAuth() {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
+    if (!AUTH.isLoggedIn()) {
         window.location.href = '/html/login.html';
         return;
     }
@@ -71,7 +74,13 @@ async function checkAuth() {
             return;
         }
         
+        // Store current admin's ID to prevent self-actions
+        currentAdminId = user.id;
+        
         document.getElementById('adminUserName').textContent = user.fullName || user.email;
+        
+        // Now load users after we have the admin ID
+        loadUsers();
     } catch (err) {
         console.error('Failed to load user info:', err);
         window.location.href = '/html/login.html';
@@ -79,8 +88,7 @@ async function checkAuth() {
 }
 
 function logout() {
-    localStorage.removeItem('accessToken'); // Changed from 'token' to 'accessToken'
-    localStorage.removeItem('refreshToken');
+    AUTH.clearAuth();
     window.location.href = '/html/login.html';
 }
 
@@ -144,15 +152,21 @@ function renderUsersTable(users) {
         return;
     }
     
-    tbody.innerHTML = users.map(user => `
-        <tr>
+    tbody.innerHTML = users.map(user => {
+        const isCurrentAdmin = user.id === currentAdminId;
+        
+        return `
+        <tr ${isCurrentAdmin ? 'class="table-info"' : ''}>
             <td>
                 <div class="user-info-cell">
                     <div class="user-avatar-sm">
                         ${user.fullName ? user.fullName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
                     </div>
                     <div class="user-details">
-                        <div class="user-name" title="${escapeHtml(user.fullName || user.email)}">${escapeHtml(user.fullName || '-')}</div>
+                        <div class="user-name" title="${escapeHtml(user.fullName || user.email)}">
+                            ${escapeHtml(user.fullName || '-')}
+                            ${isCurrentAdmin ? '<span class="badge bg-primary ms-1">Bạn</span>' : ''}
+                        </div>
                         <div class="user-email" title="${escapeHtml(user.email)}">${escapeHtml(user.email)}</div>
                     </div>
                 </div>
@@ -176,7 +190,9 @@ function renderUsersTable(users) {
                     <button class="btn btn-info btn-action" onclick="viewUserDetail(${user.id})" title="Xem chi tiết">
                         <i class="bi bi-eye"></i>
                     </button>
-                    ${user.active ? `
+                    ${isCurrentAdmin ? `
+                        <span class="text-muted small" title="Không thể thao tác trên chính mình">-</span>
+                    ` : (user.active ? `
                         <button class="btn btn-warning btn-action" onclick="showBanModal(${user.id}, '${escapeHtml(user.email)}', '${escapeHtml(user.fullName || '')}')" title="Ban">
                             <i class="bi bi-ban"></i>
                         </button>
@@ -184,11 +200,11 @@ function renderUsersTable(users) {
                         <button class="btn btn-success btn-action" onclick="unbanUser(${user.id})" title="Unban">
                             <i class="bi bi-check-circle"></i>
                         </button>
-                    `}
+                    `)}
                 </div>
             </td>
         </tr>
-    `).join('');
+    `}).join('');
 }
 
 function renderStatusBadge(user) {
@@ -320,6 +336,14 @@ async function viewUserDetail(userId) {
                         <div class="user-detail-section-title">
                             <i class="bi bi-coin"></i>
                             Credits
+                            <div class="ms-auto">
+                                <button class="btn btn-sm btn-success me-1" onclick="showCreditModal(${user.id}, '${escapeHtml(user.email)}', 'add')">
+                                    <i class="bi bi-plus-lg"></i> Thêm
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="showCreditModal(${user.id}, '${escapeHtml(user.email)}', 'remove')">
+                                    <i class="bi bi-dash-lg"></i> Trừ
+                                </button>
+                            </div>
                         </div>
                         <div class="user-detail-grid">
                             <div class="user-detail-item">
@@ -548,5 +572,151 @@ function showAdminToast(message, type = 'info') {
     } else {
         // Fallback to alert
         alert(message);
+    }
+}
+
+// ==================== EXPORT CSV ====================
+
+async function exportUsersCsv() {
+    try {
+        showAdminToast('Đang tạo file CSV...', 'info');
+        
+        let url = '/api/admin/users/export';
+        const params = [];
+        
+        if (currentSearch) {
+            params.push(`search=${encodeURIComponent(currentSearch)}`);
+        }
+        if (currentStatus) {
+            params.push(`status=${encodeURIComponent(currentStatus)}`);
+        }
+        
+        if (params.length > 0) {
+            url += '?' + params.join('&');
+        }
+        
+        const token = AUTH.getToken();
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Export failed');
+        }
+        
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        
+        // Get filename from Content-Disposition header or use default
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = 'users_export.csv';
+        if (contentDisposition) {
+            const match = contentDisposition.match(/filename="(.+)"/);
+            if (match) {
+                filename = match[1];
+            }
+        }
+        
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(downloadUrl);
+        document.body.removeChild(a);
+        
+        showAdminToast('Export thành công!', 'success');
+        
+    } catch (error) {
+        console.error('Export failed:', error);
+        showAdminToast('Export thất bại: ' + error.message, 'error');
+    }
+}
+
+
+// ==================== CREDIT MANAGEMENT ====================
+
+function showCreditModal(userId, email, action) {
+    creditUserId = userId;
+    creditUserEmail = email;
+    creditAction = action;
+    
+    document.getElementById('creditUserEmail').value = email;
+    document.getElementById('creditChatAmount').value = 0;
+    document.getElementById('creditQuizGenAmount').value = 0;
+    document.getElementById('creditReason').value = '';
+    
+    const modalTitle = document.getElementById('creditModalTitle');
+    const submitBtn = document.getElementById('creditSubmitBtn');
+    const modalHeader = document.querySelector('#creditManageModal .modal-header');
+    
+    if (action === 'add') {
+        modalTitle.textContent = 'Thêm Credits';
+        submitBtn.innerHTML = '<i class="bi bi-plus-lg me-1"></i> Thêm Credits';
+        submitBtn.className = 'btn btn-success';
+        modalHeader.className = 'modal-header bg-success text-white';
+    } else {
+        modalTitle.textContent = 'Trừ Credits';
+        submitBtn.innerHTML = '<i class="bi bi-dash-lg me-1"></i> Trừ Credits';
+        submitBtn.className = 'btn btn-danger';
+        modalHeader.className = 'modal-header bg-danger text-white';
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('creditManageModal'));
+    modal.show();
+}
+
+async function submitCreditAdjust() {
+    const chatCredits = parseInt(document.getElementById('creditChatAmount').value) || 0;
+    const quizGenCredits = parseInt(document.getElementById('creditQuizGenAmount').value) || 0;
+    const reason = document.getElementById('creditReason').value.trim();
+    
+    if (chatCredits <= 0 && quizGenCredits <= 0) {
+        showAdminToast('Vui lòng nhập số credits cần ' + (creditAction === 'add' ? 'thêm' : 'trừ'), 'warning');
+        return;
+    }
+    
+    if (!reason) {
+        showAdminToast('Vui lòng nhập lý do', 'warning');
+        return;
+    }
+    
+    try {
+        const endpoint = creditAction === 'add' 
+            ? `/api/admin/users/${creditUserId}/credits/add`
+            : `/api/admin/users/${creditUserId}/credits/remove`;
+        
+        await window.apiClient.post(endpoint, {
+            chatCredits,
+            quizGenCredits,
+            reason
+        });
+        
+        showAdminToast(
+            creditAction === 'add' ? 'Đã thêm credits thành công' : 'Đã trừ credits thành công', 
+            'success'
+        );
+        
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('creditManageModal'));
+        modal.hide();
+        
+        // Close user detail modal and reload
+        const detailModal = bootstrap.Modal.getInstance(document.getElementById('userDetailModal'));
+        if (detailModal) {
+            detailModal.hide();
+        }
+        
+        // Reload users list
+        loadUsers(currentPage);
+        
+    } catch (error) {
+        console.error('Credit adjustment failed:', error);
+        const errorMsg = error.error || error.message || 'Unknown error';
+        showAdminToast('Thao tác thất bại: ' + errorMsg, 'error');
     }
 }

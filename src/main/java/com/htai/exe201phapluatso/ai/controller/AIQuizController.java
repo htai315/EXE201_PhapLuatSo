@@ -25,7 +25,8 @@ public class AIQuizController {
             @RequestParam("file") MultipartFile file,
             @RequestParam("quizSetName") String quizSetName,
             @RequestParam(value = "description", required = false, defaultValue = "") String description,
-            @RequestParam(value = "questionCount", defaultValue = "15") int questionCount
+            @RequestParam(value = "questionCount", defaultValue = "15") int questionCount,
+            @RequestParam(value = "durationMinutes", required = false) Integer durationMinutes
     ) {
         // Get email from AuthUserPrincipal
         AuthUserPrincipal principal = (AuthUserPrincipal) authentication.getPrincipal();
@@ -34,7 +35,8 @@ public class AIQuizController {
         GenerateQuestionsRequest request = new GenerateQuestionsRequest(
                 quizSetName,
                 description,
-                questionCount
+                questionCount,
+                durationMinutes
         );
 
         GenerateQuestionsResponse response = aiQuizService.generateQuestionsFromDocument(

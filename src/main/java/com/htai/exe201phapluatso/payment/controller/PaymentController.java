@@ -4,6 +4,7 @@ import com.htai.exe201phapluatso.auth.security.AuthUserPrincipal;
 import com.htai.exe201phapluatso.payment.dto.CreatePaymentRequest;
 import com.htai.exe201phapluatso.payment.dto.CreatePaymentResponse;
 import com.htai.exe201phapluatso.payment.entity.Payment;
+import com.htai.exe201phapluatso.payment.service.IdempotencyService;
 import com.htai.exe201phapluatso.payment.service.PayOSService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/payment")
@@ -22,18 +24,24 @@ public class PaymentController {
     private static final Logger log = LoggerFactory.getLogger(PaymentController.class);
 
     private final PayOSService payOSService;
+    private final IdempotencyService idempotencyService;
 
-    public PaymentController(PayOSService payOSService) {
+    public PaymentController(PayOSService payOSService, IdempotencyService idempotencyService) {
         this.payOSService = payOSService;
+        this.idempotencyService = idempotencyService;
     }
 
     /**
      * Create payment and get PayOS checkout URL + QR Code
      * POST /api/payment/create
+     * 
+     * Supports Idempotency-Key header to prevent duplicate payments on network retry.
+     * If the same key is used with PENDING/SUCCESS payment, returns existing payment.
      */
     @PostMapping("/create")
     public ResponseEntity<CreatePaymentResponse> createPayment(
             @RequestBody CreatePaymentRequest request,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
             Authentication authentication
     ) {
         AuthUserPrincipal principal = (AuthUserPrincipal) authentication.getPrincipal();
@@ -44,9 +52,48 @@ public class PaymentController {
             throw new IllegalArgumentException("Plan code is required");
         }
 
-        log.info("Creating PayOS payment: user={}, plan={}", userId, request.planCode());
+        String planCode = request.planCode();
 
-        CreatePaymentResponse response = payOSService.createPayment(userId, request.planCode());
+        // Check idempotency key nếu có
+        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+            log.info("Creating PayOS payment with idempotency key: user={}, plan={}, key={}", 
+                    userId, planCode, idempotencyKey);
+            
+            Optional<Payment> existingPayment = idempotencyService.checkIdempotencyKey(
+                    userId, idempotencyKey, planCode);
+            
+            if (existingPayment.isPresent()) {
+                Payment payment = existingPayment.get();
+                log.info("Returning existing payment from idempotency cache: orderCode={}", 
+                        payment.getOrderCode());
+                
+                // Build response từ existing payment
+                return ResponseEntity.ok(new CreatePaymentResponse(
+                        payment.getCheckoutUrl(),
+                        String.valueOf(payment.getOrderCode()),
+                        payment.getQrCode(),
+                        payment.getAmount().longValue(),
+                        payment.getPlan() != null ? payment.getPlan().getName() : null
+                ));
+            }
+        } else {
+            log.info("Creating PayOS payment: user={}, plan={}", userId, planCode);
+        }
+
+        // Tạo payment mới
+        CreatePaymentResponse response = payOSService.createPayment(userId, planCode);
+
+        // Update idempotency record với payment mới (nếu có key)
+        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+            try {
+                Payment newPayment = payOSService.getPaymentByOrderCode(
+                        Long.parseLong(response.orderCode()));
+                idempotencyService.updateIdempotencyRecord(userId, idempotencyKey, newPayment);
+            } catch (Exception e) {
+                log.warn("Failed to update idempotency record: {}", e.getMessage());
+                // Không throw exception - payment đã được tạo thành công
+            }
+        }
 
         return ResponseEntity.ok(response);
     }
@@ -63,7 +110,7 @@ public class PaymentController {
     ) {
         log.info("========== PayOS WEBHOOK RECEIVED ==========");
         log.info("Remote IP: {}", request.getRemoteAddr());
-        log.info("Webhook data: {}", webhookData);
+        log.debug("Webhook data: {}", webhookData);
 
         Map<String, String> response = new HashMap<>();
 
@@ -84,14 +131,7 @@ public class PaymentController {
                 }
             }
 
-            // For real webhooks, verify signature
-            if (!payOSService.verifyWebhookSignature(webhookData)) {
-                log.warn("Invalid webhook signature from IP: {}", request.getRemoteAddr());
-                response.put("code", "99");
-                response.put("message", "Invalid signature");
-                return ResponseEntity.status(400).body(response);
-            }
-
+            // Process real webhook (includes signature verification)
             payOSService.handleWebhook(webhookData);
             response.put("code", "00");
             response.put("message", "Success");
@@ -109,14 +149,35 @@ public class PaymentController {
     /**
      * Check payment status by orderCode
      * GET /api/payment/status/{orderCode}
+     * Note: This endpoint is public for polling from frontend
+     * Only returns minimal info (status, amount) - no sensitive data
      */
     @GetMapping("/status/{orderCode}")
-    public ResponseEntity<Map<String, Object>> checkPaymentStatus(@PathVariable long orderCode) {
-        log.info("Checking payment status: orderCode={}", orderCode);
+    public ResponseEntity<Map<String, Object>> checkPaymentStatus(
+            @PathVariable long orderCode,
+            Authentication authentication
+    ) {
+        log.debug("Checking payment status: orderCode={}", orderCode);
 
         try {
             Map<String, Object> response = payOSService.getPaymentStatusDetails(orderCode);
-            log.info("Payment status response: orderCode={}, status={}", orderCode, response.get("status"));
+            
+            // Optional: verify user owns this payment if authenticated
+            if (authentication != null && authentication.getPrincipal() instanceof AuthUserPrincipal) {
+                AuthUserPrincipal principal = (AuthUserPrincipal) authentication.getPrincipal();
+                Long userId = principal.userId();
+                
+                // Get payment to check ownership
+                Payment payment = payOSService.getPaymentByOrderCode(orderCode);
+                if (!payment.getUser().getId().equals(userId)) {
+                    // Return minimal info for non-owner (just status for polling)
+                    Map<String, Object> minimalResponse = new HashMap<>();
+                    minimalResponse.put("orderCode", orderCode);
+                    minimalResponse.put("status", response.get("status"));
+                    return ResponseEntity.ok(minimalResponse);
+                }
+            }
+            
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error checking payment status: orderCode={}", orderCode, e);
@@ -141,6 +202,32 @@ public class PaymentController {
 
         var history = payOSService.getPaymentHistory(userId);
         return ResponseEntity.ok(history);
+    }
+
+    /**
+     * Get payment details with QR code for continuing payment
+     * GET /api/payment/continue/{orderCode}
+     */
+    @GetMapping("/continue/{orderCode}")
+    public ResponseEntity<?> getPaymentForContinue(
+            @PathVariable long orderCode,
+            Authentication authentication
+    ) {
+        AuthUserPrincipal principal = (AuthUserPrincipal) authentication.getPrincipal();
+        Long userId = principal.userId();
+
+        log.info("Getting payment for continue: orderCode={}, user={}", orderCode, userId);
+
+        try {
+            CreatePaymentResponse response = payOSService.getPaymentForContinue(orderCode, userId);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Failed to get payment for continue", e);
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("status", "error");
+            errorResponse.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
     }
 
     /**

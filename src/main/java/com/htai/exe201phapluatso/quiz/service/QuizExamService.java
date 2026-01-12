@@ -7,16 +7,21 @@ import com.htai.exe201phapluatso.common.exception.ForbiddenException;
 import com.htai.exe201phapluatso.common.exception.NotFoundException;
 import com.htai.exe201phapluatso.quiz.dto.PagedExamHistoryResponse;
 import com.htai.exe201phapluatso.quiz.dto.ExamDtos.*;
+import com.htai.exe201phapluatso.quiz.dto.ExamSessionData;
 import com.htai.exe201phapluatso.quiz.entity.*;
 import com.htai.exe201phapluatso.quiz.repo.*;
+import com.htai.exe201phapluatso.quiz.session.ExamSessionStoreManager;
+import com.htai.exe201phapluatso.quiz.validation.QuizDurationValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -24,56 +29,48 @@ import java.util.stream.Collectors;
  * OPTIMIZED: Sử dụng JOIN FETCH để tránh N+1 query problem
  * ENHANCED: Random câu hỏi và shuffle đáp án
  * SECURED: Lưu mapping đáp án đúng server-side để tránh gian lận
+ * DISTRIBUTED: Sử dụng Redis session storage với in-memory fallback
  */
 @Service
 public class QuizExamService {
 
+    private static final Logger log = LoggerFactory.getLogger(QuizExamService.class);
+
     private static final int MAX_HISTORY_ITEMS = 10;
     private static final List<String> OPTION_KEYS = List.of("A", "B", "C", "D");
-    
-    // Cache lưu mapping đáp án đúng đã shuffle cho mỗi session làm bài
-    // Key: "userId_quizSetId", Value: Map<questionId, correctKeyAfterShuffle>
-    private final ConcurrentHashMap<String, ExamSession> examSessions = new ConcurrentHashMap<>();
-    
-    // Session timeout: 2 giờ
-    private static final long SESSION_TIMEOUT_MS = 2 * 60 * 60 * 1000;
 
     private final QuizSetRepo quizSetRepo;
     private final QuizQuestionRepo questionRepo;
     private final QuizAttemptRepo attemptRepo;
     private final QuizAttemptAnswerRepo answerRepo;
     private final UserRepo userRepo;
+    private final ExamSessionStoreManager sessionStoreManager;
 
     public QuizExamService(
             QuizSetRepo quizSetRepo,
             QuizQuestionRepo questionRepo,
             QuizAttemptRepo attemptRepo,
             QuizAttemptAnswerRepo answerRepo,
-            UserRepo userRepo
+            UserRepo userRepo,
+            ExamSessionStoreManager sessionStoreManager
     ) {
         this.quizSetRepo = quizSetRepo;
         this.questionRepo = questionRepo;
         this.attemptRepo = attemptRepo;
         this.answerRepo = answerRepo;
         this.userRepo = userRepo;
+        this.sessionStoreManager = sessionStoreManager;
     }
     
     /**
-     * Inner class để lưu thông tin session làm bài
+     * Scheduled task để cleanup expired sessions - chạy mỗi 10 phút
+     * Chỉ cleanup in-memory fallback store (Redis tự động cleanup qua TTL)
      */
-    private static class ExamSession {
-        final Map<Long, String> correctKeyMapping; // questionId -> correctKey sau shuffle
-        final Map<Long, List<ExamOptionDto>> shuffledOptionsMapping; // questionId -> options đã shuffle
-        final long createdAt;
-        
-        ExamSession(Map<Long, String> correctKeyMapping, Map<Long, List<ExamOptionDto>> shuffledOptionsMapping) {
-            this.correctKeyMapping = correctKeyMapping;
-            this.shuffledOptionsMapping = shuffledOptionsMapping;
-            this.createdAt = System.currentTimeMillis();
-        }
-        
-        boolean isExpired() {
-            return System.currentTimeMillis() - createdAt > SESSION_TIMEOUT_MS;
+    @Scheduled(fixedRate = 600000) // 10 phút
+    public void cleanupExpiredExamSessions() {
+        int removed = sessionStoreManager.cleanupExpiredInMemorySessions();
+        if (removed > 0) {
+            log.info("Cleaned up {} expired exam sessions from in-memory store", removed);
         }
     }
 
@@ -81,7 +78,8 @@ public class QuizExamService {
      * Bắt đầu làm bài quiz - OPTIMIZED & ENHANCED & SECURED
      * - Random thứ tự câu hỏi
      * - Shuffle đáp án A, B, C, D
-     * - Lưu mapping đáp án đúng server-side
+     * - Lưu mapping đáp án đúng server-side (Redis hoặc in-memory)
+     * - Track startedAt để tính thời gian làm bài chính xác
      */
     @Transactional(readOnly = true)
     public StartExamResponse startExam(Long userId, Long quizSetId) {
@@ -106,17 +104,24 @@ public class QuizExamService {
                 .map(q -> createShuffledQuestionDto(q, correctKeyMapping, shuffledOptionsMapping))
                 .toList();
         
-        // Lưu session với mapping đáp án đúng và options đã shuffle
-        String sessionKey = buildSessionKey(userId, quizSetId);
-        examSessions.put(sessionKey, new ExamSession(correctKeyMapping, shuffledOptionsMapping));
+        // Lưu session với mapping đáp án đúng, options đã shuffle và startedAt
+        String sessionKey = ExamSessionStoreManager.buildSessionKey(userId, quizSetId);
+        ExamSessionData sessionData = new ExamSessionData(correctKeyMapping, shuffledOptionsMapping);
+        sessionStoreManager.save(sessionKey, sessionData);
         
-        // Cleanup expired sessions
-        cleanupExpiredSessions();
+        log.debug("Started exam session for user {} on quiz {}. Redis available: {}", 
+                userId, quizSetId, sessionStoreManager.isRedisAvailable());
+
+        // Lấy duration từ quiz set (default 45 phút)
+        int durationMinutes = quizSet.getDurationMinutes() != null 
+                ? quizSet.getDurationMinutes() 
+                : QuizDurationValidator.DEFAULT_DURATION_MINUTES;
 
         return new StartExamResponse(
                 quizSet.getId(),
                 quizSet.getTitle(),
                 questionDtos.size(),
+                durationMinutes,
                 questionDtos
         );
     }
@@ -171,6 +176,7 @@ public class QuizExamService {
     /**
      * Nộp bài quiz - OPTIMIZED & SECURED
      * Validate đáp án từ server-side mapping thay vì tin tưởng frontend
+     * Track startedAt từ session để tính thời gian làm bài chính xác
      */
     @Transactional
     public SubmitExamResponse submitExam(Long userId, Long quizSetId, SubmitExamRequest req) {
@@ -186,21 +192,19 @@ public class QuizExamService {
             throw new BadRequestException("Bộ đề hiện chưa có câu hỏi nào");
         }
 
-        // SECURED: Lấy mapping đáp án đúng từ session
-        String sessionKey = buildSessionKey(userId, quizSetId);
-        ExamSession session = examSessions.get(sessionKey);
+        // SECURED: Lấy mapping đáp án đúng từ session store
+        String sessionKey = ExamSessionStoreManager.buildSessionKey(userId, quizSetId);
+        Optional<ExamSessionData> sessionOpt = sessionStoreManager.get(sessionKey);
         
-        // Nếu không có session (hết hạn hoặc chưa start), tạo mapping mới từ DB
-        Map<Long, String> correctKeyMapping;
-        Map<Long, List<ExamOptionDto>> shuffledOptionsMapping;
-        if (session == null || session.isExpired()) {
-            // Fallback: sử dụng đáp án gốc từ DB (key A, B, C, D theo thứ tự gốc)
-            correctKeyMapping = buildOriginalCorrectKeyMapping(questions);
-            shuffledOptionsMapping = buildOriginalOptionsMapping(questions);
-        } else {
-            correctKeyMapping = session.correctKeyMapping;
-            shuffledOptionsMapping = session.shuffledOptionsMapping;
+        // FIX: Reject submit khi session không tồn tại hoặc expired
+        if (sessionOpt.isEmpty()) {
+            throw new BadRequestException("Phiên thi đã hết hạn. Vui lòng bắt đầu lại bài thi.");
         }
+        
+        ExamSessionData session = sessionOpt.get();
+        Map<Long, String> correctKeyMapping = session.correctKeyMapping();
+        Map<Long, List<ExamOptionDto>> shuffledOptionsMapping = session.shuffledOptionsMapping();
+        LocalDateTime startedAt = session.startedAt();
 
         // Build map question by id
         Map<Long, QuizQuestion> questionMap = questions.stream()
@@ -253,14 +257,14 @@ public class QuizExamService {
         int scorePercent = (int) Math.round((correctCount * 100.0) / totalQuestions);
         double scoreOutOf10 = Math.round((correctCount * 100.0) / totalQuestions) / 10.0;
 
-        // Save attempt + answers
+        // Save attempt + answers với startedAt chính xác từ session
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         QuizAttempt attempt = new QuizAttempt();
         attempt.setUser(user);
         attempt.setQuizSet(quizSet);
-        attempt.setStartedAt(LocalDateTime.now());
+        attempt.setStartedAt(startedAt); // FIX: Sử dụng startedAt từ session
         attempt.setFinishedAt(LocalDateTime.now());
         attempt.setTotalQuestions(totalQuestions);
         attempt.setCorrectCount(correctCount);
@@ -290,8 +294,10 @@ public class QuizExamService {
             answerRepo.saveAll(answers);
         }
         
-        // Xóa session sau khi submit
-        examSessions.remove(sessionKey);
+        // Xóa session sau khi submit thành công
+        sessionStoreManager.delete(sessionKey);
+        log.debug("Submitted exam for user {} on quiz {}. Score: {}/{}",
+                userId, quizSetId, correctCount, totalQuestions);
 
         return new SubmitExamResponse(
                 attempt.getId(),
@@ -304,53 +310,12 @@ public class QuizExamService {
     }
     
     /**
-     * Build mapping đáp án đúng từ DB (fallback khi không có session)
-     */
-    private Map<Long, String> buildOriginalCorrectKeyMapping(List<QuizQuestion> questions) {
-        Map<Long, String> mapping = new HashMap<>();
-        for (QuizQuestion q : questions) {
-            for (QuizQuestionOption opt : q.getOptions()) {
-                if (opt.isCorrect()) {
-                    mapping.put(q.getId(), opt.getOptionKey());
-                    break;
-                }
-            }
-        }
-        return mapping;
-    }
-    
-    /**
-     * Build mapping options gốc từ DB (fallback khi không có session)
-     */
-    private Map<Long, List<ExamOptionDto>> buildOriginalOptionsMapping(List<QuizQuestion> questions) {
-        Map<Long, List<ExamOptionDto>> mapping = new HashMap<>();
-        for (QuizQuestion q : questions) {
-            mapping.put(q.getId(), buildOriginalOptions(q.getOptions()));
-        }
-        return mapping;
-    }
-    
-    /**
      * Build options gốc từ DB
      */
     private List<ExamOptionDto> buildOriginalOptions(List<QuizQuestionOption> opts) {
         return opts.stream()
                 .map(o -> new ExamOptionDto(o.getOptionKey(), o.getOptionText()))
                 .toList();
-    }
-    
-    /**
-     * Build session key
-     */
-    private String buildSessionKey(Long userId, Long quizSetId) {
-        return userId + "_" + quizSetId;
-    }
-    
-    /**
-     * Cleanup expired sessions
-     */
-    private void cleanupExpiredSessions() {
-        examSessions.entrySet().removeIf(entry -> entry.getValue().isExpired());
     }
 
     @Transactional(readOnly = true)
@@ -442,5 +407,3 @@ public class QuizExamService {
         return key.trim().toUpperCase(Locale.ROOT);
     }
 }
-
-

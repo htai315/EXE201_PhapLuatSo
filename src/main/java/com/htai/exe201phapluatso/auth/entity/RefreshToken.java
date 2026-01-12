@@ -25,6 +25,12 @@ public class RefreshToken {
     @Column(name = "revoked_at")
     private LocalDateTime revokedAt;
 
+    @Column(name = "used_at")
+    private LocalDateTime usedAt;
+
+    @Column(name = "replaced_by_token_id")
+    private Long replacedByTokenId;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -41,6 +47,26 @@ public class RefreshToken {
 
     public LocalDateTime getRevokedAt() { return revokedAt; }
     public void setRevokedAt(LocalDateTime revokedAt) { this.revokedAt = revokedAt; }
+
+    public LocalDateTime getUsedAt() { return usedAt; }
+    public void setUsedAt(LocalDateTime usedAt) { this.usedAt = usedAt; }
+
+    public Long getReplacedByTokenId() { return replacedByTokenId; }
+    public void setReplacedByTokenId(Long replacedByTokenId) { this.replacedByTokenId = replacedByTokenId; }
+
+    /**
+     * Check if token has been used (for rotation detection)
+     */
+    public boolean isUsed() {
+        return usedAt != null;
+    }
+
+    /**
+     * Check if token is valid (not revoked, not expired, not used)
+     */
+    public boolean isValid() {
+        return revokedAt == null && usedAt == null && LocalDateTime.now().isBefore(expiresAt);
+    }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
 }

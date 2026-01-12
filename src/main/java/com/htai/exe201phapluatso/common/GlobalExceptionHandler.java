@@ -1,9 +1,13 @@
 package com.htai.exe201phapluatso.common;
 
+import com.htai.exe201phapluatso.auth.dto.LockoutInfo;
+import com.htai.exe201phapluatso.common.exception.AccountLockedException;
 import com.htai.exe201phapluatso.common.exception.BadRequestException;
 import com.htai.exe201phapluatso.common.exception.ForbiddenException;
 import com.htai.exe201phapluatso.common.exception.InsufficientCreditsException;
 import com.htai.exe201phapluatso.common.exception.NotFoundException;
+import com.htai.exe201phapluatso.common.exception.RateLimitExceededException;
+import com.htai.exe201phapluatso.common.exception.TokenReusedException;
 import com.htai.exe201phapluatso.common.exception.UnauthorizedException;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -14,6 +18,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -54,6 +59,60 @@ public class GlobalExceptionHandler {
                     "error", ex.getMessage(),
                     "code", "INSUFFICIENT_CREDITS"
                 ));
+    }
+
+    /**
+     * Handle account locked exception (HTTP 423 Locked)
+     */
+    @ExceptionHandler(AccountLockedException.class)
+    public ResponseEntity<?> handleAccountLocked(AccountLockedException ex) {
+        log.warn("Account locked: {}", ex.getMessage());
+        LockoutInfo info = ex.getLockoutInfo();
+        
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("error", ex.getMessage()); // Tiếng Việt message
+        body.put("code", "ACCOUNT_LOCKED");
+        if (info != null) {
+            body.put("lockedUntil", info.lockedUntil());
+            body.put("remainingSeconds", info.remainingSeconds());
+            body.put("failedAttempts", info.failedAttempts());
+        }
+        
+        return ResponseEntity.status(HttpStatus.LOCKED).body(body);
+    }
+
+    /**
+     * Handle rate limit exceeded exception (HTTP 429 Too Many Requests)
+     */
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<?> handleRateLimitExceeded(RateLimitExceededException ex) {
+        log.warn("Rate limit exceeded: {}", ex.getMessage());
+        
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("error", ex.getMessage()); // Tiếng Việt message
+        body.put("code", "RATE_LIMIT_EXCEEDED");
+        body.put("retryAfter", ex.getRetryAfterSeconds());
+        body.put("limit", ex.getLimit());
+        body.put("remaining", ex.getRemaining());
+        
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(ex.getRetryAfterSeconds()))
+                .body(body);
+    }
+
+    /**
+     * Handle token reuse exception (HTTP 401 Unauthorized)
+     * This is a security breach - all tokens have been revoked
+     */
+    @ExceptionHandler(TokenReusedException.class)
+    public ResponseEntity<?> handleTokenReuse(TokenReusedException ex) {
+        log.error("TOKEN REUSE DETECTED for user {}", ex.getUserId());
+        
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("error", ex.getMessage()); // Tiếng Việt message
+        body.put("code", "TOKEN_REUSE_DETECTED");
+        
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

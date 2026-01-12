@@ -2,6 +2,8 @@ package com.htai.exe201phapluatso.admin.controller;
 
 import com.htai.exe201phapluatso.admin.dto.*;
 import com.htai.exe201phapluatso.admin.service.AdminActivityLogService;
+import com.htai.exe201phapluatso.admin.service.AdminCreditService;
+import com.htai.exe201phapluatso.admin.service.AdminCsvExportService;
 import com.htai.exe201phapluatso.admin.service.AdminService;
 import com.htai.exe201phapluatso.auth.entity.User;
 import com.htai.exe201phapluatso.auth.security.CurrentUser;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +30,7 @@ import java.util.Set;
  */
 @RestController
 @RequestMapping("/api/admin")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAuthority('ROLE_ADMIN')")
 public class AdminController {
 
     // Whitelist allowed sort fields to prevent injection
@@ -40,10 +43,15 @@ public class AdminController {
 
     private final AdminService adminService;
     private final AdminActivityLogService adminActivityLogService;
+    private final AdminCsvExportService adminCsvExportService;
+    private final AdminCreditService adminCreditService;
 
-    public AdminController(AdminService adminService, AdminActivityLogService adminActivityLogService) {
+    public AdminController(AdminService adminService, AdminActivityLogService adminActivityLogService, 
+                          AdminCsvExportService adminCsvExportService, AdminCreditService adminCreditService) {
         this.adminService = adminService;
         this.adminActivityLogService = adminActivityLogService;
+        this.adminCsvExportService = adminCsvExportService;
+        this.adminCreditService = adminCreditService;
     }
 
     /**
@@ -216,6 +224,27 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * GET /api/admin/users/export
+     * Export users to CSV file
+     * @param search Search by email or name (optional)
+     * @param status Filter by status: active, banned (optional)
+     */
+    @GetMapping("/users/export")
+    public ResponseEntity<byte[]> exportUsersToCsv(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String status
+    ) {
+        byte[] csvContent = adminCsvExportService.exportUsersToCsv(search, status);
+        
+        String filename = "users_export_" + LocalDate.now().format(DateTimeFormatter.ISO_DATE) + ".csv";
+        
+        return ResponseEntity.ok()
+                .header("Content-Type", "text/csv; charset=UTF-8")
+                .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                .body(csvContent);
+    }
+
     // ==================== PAYMENT MANAGEMENT ====================
 
     /**
@@ -259,6 +288,27 @@ public class AdminController {
     public ResponseEntity<AdminPaymentStatsResponse> getPaymentStats() {
         AdminPaymentStatsResponse stats = adminService.getPaymentStats();
         return ResponseEntity.ok(stats);
+    }
+
+    /**
+     * GET /api/admin/payments/export
+     * Export payments to CSV file
+     * @param from Start date (optional, ISO format: yyyy-MM-dd)
+     * @param to End date (optional, ISO format: yyyy-MM-dd)
+     */
+    @GetMapping("/payments/export")
+    public ResponseEntity<byte[]> exportPaymentsToCsv(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+    ) {
+        byte[] csvContent = adminCsvExportService.exportPaymentsToCsv(from, to);
+        
+        String filename = "payments_export_" + LocalDate.now().format(DateTimeFormatter.ISO_DATE) + ".csv";
+        
+        return ResponseEntity.ok()
+                .header("Content-Type", "text/csv; charset=UTF-8")
+                .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                .body(csvContent);
     }
 
     // ==================== ACTIVITY LOGS ====================
@@ -305,5 +355,71 @@ public class AdminController {
         response.put("totalPages", logs.getTotalPages());
         
         return ResponseEntity.ok(response);
+    }
+
+    // ==================== CREDIT MANAGEMENT ====================
+
+    /**
+     * POST /api/admin/users/{id}/credits/add
+     * Add credits to a user
+     */
+    @PostMapping("/users/{id}/credits/add")
+    public ResponseEntity<Map<String, String>> addCreditsToUser(
+            @PathVariable Long id,
+            @Valid @RequestBody AdminCreditAdjustRequest request,
+            @CurrentUser User adminUser
+    ) {
+        if (adminUser == null) {
+            throw new com.htai.exe201phapluatso.common.exception.BadRequestException("Admin user not found in session");
+        }
+        adminCreditService.addCredits(id, request.getChatCredits(), request.getQuizGenCredits(), 
+                request.getReason(), adminUser);
+        
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Đã thêm credits thành công");
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * POST /api/admin/users/{id}/credits/remove
+     * Remove credits from a user
+     */
+    @PostMapping("/users/{id}/credits/remove")
+    public ResponseEntity<Map<String, String>> removeCreditsFromUser(
+            @PathVariable Long id,
+            @Valid @RequestBody AdminCreditAdjustRequest request,
+            @CurrentUser User adminUser
+    ) {
+        if (adminUser == null) {
+            throw new com.htai.exe201phapluatso.common.exception.BadRequestException("Admin user not found in session");
+        }
+        adminCreditService.removeCredits(id, request.getChatCredits(), request.getQuizGenCredits(), 
+                request.getReason(), adminUser);
+        
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Đã trừ credits thành công");
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * GET /api/admin/credits/analytics
+     * Get credit usage analytics
+     * @param from Start date (default: 30 days ago)
+     * @param to End date (default: today)
+     */
+    @GetMapping("/credits/analytics")
+    public ResponseEntity<CreditAnalyticsResponse> getCreditAnalytics(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+    ) {
+        if (from == null) {
+            from = LocalDate.now().minusDays(30);
+        }
+        if (to == null) {
+            to = LocalDate.now();
+        }
+        
+        CreditAnalyticsResponse analytics = adminCreditService.getCreditAnalytics(from, to);
+        return ResponseEntity.ok(analytics);
     }
 }

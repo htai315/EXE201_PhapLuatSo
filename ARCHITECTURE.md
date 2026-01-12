@@ -34,7 +34,7 @@ Kiến trúc hệ thống Pháp Luật Số platform.
         │                   │                   │
         ▼                   ▼                   ▼
 ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
-│  SQL Server  │   │   OpenAI     │   │    VNPay     │
+│  PostgreSQL  │   │   OpenAI     │   │    VNPay     │
 │   Database   │   │     API      │   │   Payment    │
 └──────────────┘   └──────────────┘   └──────────────┘
 ```
@@ -455,7 +455,7 @@ legal_articles
 ```
 localhost:8080
   ├── Spring Boot (embedded Tomcat)
-  ├── SQL Server (local)
+  ├── PostgreSQL (local)
   └── .env file
 ```
 
@@ -469,7 +469,7 @@ Application Servers (multiple instances)
   └── Logging
   ↓
 Database Cluster
-  ├── Primary SQL Server
+  ├── Primary PostgreSQL
   └── Replica (read-only)
   ↓
 External Services
@@ -554,7 +554,7 @@ Development:
 |-------|-----------|
 | Frontend | HTML5, CSS3, JavaScript, Bootstrap 5 |
 | Backend | Spring Boot 3.x, Java 17 |
-| Database | SQL Server 2019+ |
+| Database | PostgreSQL 15+ with pgvector |
 | Migration | Flyway |
 | Security | Spring Security, JWT |
 | AI | OpenAI GPT-4 |

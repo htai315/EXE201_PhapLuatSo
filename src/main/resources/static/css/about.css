@@ -71,3 +71,95 @@
 .team-card {
     text-align: center;
 }
+
+/* ===== Mobile Responsive ===== */
+@media (max-width: 991px) {
+    .team-avatar {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 1.25rem;
+    }
+    
+    .team-name {
+        font-size: 1.1rem;
+    }
+    
+    .team-role {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 767px) {
+    .mission-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .mission-icon {
+        margin: 0 auto;
+    }
+    
+    .mission-item p {
+        font-size: 0.95rem;
+    }
+    
+    .team-card {
+        padding: 1.5rem;
+    }
+    
+    .team-avatar {
+        width: 90px;
+        height: 90px;
+        margin-bottom: 1rem;
+    }
+    
+    .team-name {
+        font-size: 1.05rem;
+    }
+    
+    .team-role {
+        font-size: 0.85rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .team-description {
+        font-size: 0.85rem;
+    }
+    
+    /* Stack team cards */
+    .team-card {
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 575px) {
+    .team-avatar {
+        width: 80px;
+        height: 80px;
+        border-width: 3px;
+    }
+    
+    .team-card {
+        padding: 1.25rem;
+    }
+    
+    .team-name {
+        font-size: 1rem;
+    }
+    
+    .team-role {
+        font-size: 0.8rem;
+    }
+    
+    .team-description {
+        font-size: 0.8rem;
+        line-height: 1.6;
+    }
+    
+    .mission-icon {
+        width: 24px;
+        height: 24px;
+        font-size: 1.25rem;
+    }
+}

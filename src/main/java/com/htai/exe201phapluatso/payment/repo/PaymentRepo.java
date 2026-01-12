@@ -4,6 +4,7 @@ import com.htai.exe201phapluatso.payment.entity.Payment;
 import com.htai.exe201phapluatso.auth.entity.User;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-public interface PaymentRepo extends JpaRepository<Payment, Long> {
+public interface PaymentRepo extends JpaRepository<Payment, Long>, JpaSpecificationExecutor<Payment> {
     Optional<Payment> findByVnpTxnRef(String vnpTxnRef);
     
     Optional<Payment> findByOrderCode(Long orderCode);
@@ -32,6 +33,11 @@ public interface PaymentRepo extends JpaRepository<Payment, Long> {
     // Find pending payments for duplicate check (with plan eagerly loaded)
     @Query("SELECT p FROM Payment p LEFT JOIN FETCH p.plan WHERE p.user = :user AND p.status = :status ORDER BY p.createdAt DESC")
     List<Payment> findByUserAndStatusOrderByCreatedAtDesc(@Param("user") User user, @Param("status") String status);
+    
+    // Pessimistic lock on user for creating payment (prevent race condition)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Payment p LEFT JOIN FETCH p.plan WHERE p.user.id = :userId AND p.status = 'PENDING' ORDER BY p.createdAt DESC")
+    List<Payment> findPendingPaymentsByUserIdWithLock(@Param("userId") Long userId);
     
     // Find stale pending payments for cleanup
     @Query("SELECT p FROM Payment p WHERE p.status = :status AND p.createdAt < :date")
@@ -101,12 +107,12 @@ public interface PaymentRepo extends JpaRepository<Payment, Long> {
      * Returns list of [date, totalAmount, count]
      */
     @Query(value = """
-        SELECT CAST(created_at AS DATE) as date, 
+        SELECT created_at::DATE as date, 
                COALESCE(SUM(amount), 0) as totalAmount, 
                COUNT(*) as count
         FROM payments
         WHERE status = 'SUCCESS' AND created_at BETWEEN :startDate AND :endDate
-        GROUP BY CAST(created_at AS DATE)
+        GROUP BY created_at::DATE
         ORDER BY date
         """, nativeQuery = true)
     List<Object[]> getRevenueByDateRange(

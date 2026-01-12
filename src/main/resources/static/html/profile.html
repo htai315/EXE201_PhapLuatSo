@@ -28,7 +28,7 @@
     <link rel="stylesheet" href="/css/toast-notification.css">
 
 </head>
-<body>
+<body data-auth-required="true">
 <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
     <div class="container">
         <a class="navbar-brand" href="/index.html">
@@ -275,17 +275,15 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <!-- Custom JS -->
+<script src="/scripts/auth-guard.js"></script>
 <script src="/scripts/toast-notification.js"></script>
 <script src="/scripts/api-client.js"></script>
 <script src="/scripts/script.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-        window.location.href = '/html/login.html';
-        return;
-    }
+    // Auth check is handled by auth-guard.js via data-auth-required="true"
+    if (!AUTH.isLoggedIn()) return;
 
     // Load user profile
     loadUserProfile();
@@ -304,7 +302,7 @@ async function loadUserProfile() {
     try {
         const res = await fetch('/api/auth/me', {
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                'Authorization': `Bearer ${AUTH.getToken()}`
             }
         });
 
@@ -338,7 +336,7 @@ async function loadCreditsInfo() {
     try {
         const res = await fetch('/api/credits/balance', {
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                'Authorization': `Bearer ${AUTH.getToken()}`
             }
         });
 
@@ -421,7 +419,7 @@ async function handleAvatarUpload(e) {
         const res = await fetch('/api/user/avatar', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                'Authorization': `Bearer ${AUTH.getToken()}`
             },
             body: formData
         });
@@ -539,7 +537,7 @@ async function handleChangePassword(e) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                'Authorization': `Bearer ${AUTH.getToken()}`
             },
             body: JSON.stringify({
                 currentPassword,

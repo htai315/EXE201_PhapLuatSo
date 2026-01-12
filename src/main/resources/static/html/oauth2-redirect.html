@@ -69,7 +69,7 @@
             localStorage.setItem('accessToken', accessToken);
             localStorage.setItem('refreshToken', refreshToken);
             
-            // Fetch user info
+            // Fetch user info and save role
             fetch('/api/auth/me', {
                 headers: {
                     'Authorization': 'Bearer ' + accessToken
@@ -78,6 +78,15 @@
             .then(response => response.json())
             .then(user => {
                 console.log('User logged in:', user);
+                
+                // Save user info to localStorage for auth-guard
+                if (user.fullName) {
+                    localStorage.setItem('userName', user.fullName);
+                }
+                if (user.role) {
+                    localStorage.setItem('userRole', user.role);
+                }
+                
                 Toast.success('Đăng nhập thành công!');
                 setTimeout(() => {
                     window.location.href = '/index.html';

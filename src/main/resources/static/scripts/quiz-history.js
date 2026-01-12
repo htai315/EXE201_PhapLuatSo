@@ -1,17 +1,15 @@
 // Quiz History Page Script - Paginated Version
 const API_BASE = '/api/quiz-sets';
 const PAGE_SIZE = 10;
+const CHART_PAGE_SIZE = 100; // Load nhiều hơn cho chart
 
 let currentPage = 0;
 let paginationData = null;
+let allAttemptsForChart = []; // Lưu tất cả attempts cho chart
 let scoreChart = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-        window.location.href = '/html/login.html';
-        return;
-    }
+    if (!AUTH.isLoggedIn()) return;
 
     document.getElementById('btnNewTest')?.addEventListener('click', () => {
         window.location.href = '/html/my-quizzes.html';
@@ -31,17 +29,31 @@ document.addEventListener('DOMContentLoaded', () => {
         loadHistory();
     });
 
-    loadHistory();
+    // Load data cho chart trước (nhiều hơn)
+    loadChartData().then(() => {
+        loadHistory();
+    });
 });
+
+// Load tất cả data cho chart (riêng biệt với pagination)
+async function loadChartData() {
+    try {
+        const chartData = await API_CLIENT.get(
+            API_BASE + '/exam/history?page=0&size=' + CHART_PAGE_SIZE
+        );
+        allAttemptsForChart = chartData?.content || [];
+    } catch (err) {
+        console.error('Error loading chart data:', err);
+        allAttemptsForChart = [];
+    }
+}
 
 async function loadHistory() {
     ERROR_HANDLER.showLoading(true);
     try {
-        console.log('Loading history page:', currentPage);
         paginationData = await API_CLIENT.get(
             API_BASE + '/exam/history?page=' + currentPage + '&size=' + PAGE_SIZE
         );
-        console.log('History data received:', paginationData);
         renderStats();
         renderChart();
         renderHistory();
@@ -57,31 +69,42 @@ async function loadHistory() {
 
 function renderStats() {
     const totalTests = paginationData?.totalElements || 0;
-    const currentAttempts = paginationData?.content || [];
-    const avgAccuracy = currentAttempts.length > 0
-        ? Math.round(currentAttempts.reduce((sum, a) => sum + a.scorePercent, 0) / currentAttempts.length)
+    // Sử dụng allAttemptsForChart cho thống kê chính xác hơn
+    const allAttempts = allAttemptsForChart.length > 0 ? allAttemptsForChart : (paginationData?.content || []);
+    const avgAccuracy = allAttempts.length > 0
+        ? Math.round(allAttempts.reduce((sum, a) => sum + a.scorePercent, 0) / allAttempts.length)
         : 0;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const testsToday = currentAttempts.filter(a => {
+    const testsToday = allAttempts.filter(a => {
         const attemptDate = new Date(a.finishedAt);
         attemptDate.setHours(0, 0, 0, 0);
         return attemptDate.getTime() === today.getTime();
     }).length;
 
+    // Tính số bài tuần này
+    const weekAgo = new Date(today);
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const testsThisWeek = allAttempts.filter(a => {
+        const attemptDate = new Date(a.finishedAt);
+        return attemptDate >= weekAgo;
+    }).length;
+
     document.getElementById('statTotalTests').textContent = totalTests;
     document.getElementById('statTestsTrend').textContent = '+' + testsToday + ' hôm nay';
     document.getElementById('statAvgAccuracy').textContent = avgAccuracy + '%';
+    document.getElementById('statAccuracyTrend').textContent = '+' + testsThisWeek + ' tuần này';
     document.getElementById('statAIQueries').textContent = totalTests * 3;
-    document.getElementById('statQueriesTrend').textContent = '+' + (testsToday * 3) + ' tuần này';
+    document.getElementById('statQueriesTrend').textContent = '+' + (testsThisWeek * 3) + ' tuần này';
 }
 
 function renderChart() {
     const ctx = document.getElementById('scoreChart');
     if (!ctx) return;
 
-    const currentAttempts = paginationData?.content || [];
+    // Sử dụng allAttemptsForChart thay vì chỉ page hiện tại
+    const allAttempts = allAttemptsForChart.length > 0 ? allAttemptsForChart : (paginationData?.content || []);
     const last7Days = [];
     const today = new Date();
     
@@ -93,7 +116,7 @@ function renderChart() {
     }
 
     const chartData = last7Days.map(date => {
-        const dayAttempts = currentAttempts.filter(a => {
+        const dayAttempts = allAttempts.filter(a => {
             const attemptDate = new Date(a.finishedAt);
             attemptDate.setHours(0, 0, 0, 0);
             return attemptDate.getTime() === date.getTime();
@@ -126,7 +149,8 @@ function renderChart() {
                 pointHoverRadius: 7,
                 pointBackgroundColor: '#1a4b84',
                 pointBorderColor: '#fff',
-                pointBorderWidth: 2
+                pointBorderWidth: 2,
+                spanGaps: true // Nối các điểm qua null values
             }]
         },
         options: {
@@ -141,7 +165,13 @@ function renderChart() {
                     borderColor: '#e2e8f0',
                     borderWidth: 1,
                     padding: 12,
-                    displayColors: false
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            if (context.raw === null) return 'Không có dữ liệu';
+                            return 'Điểm TB: ' + context.raw + '/10';
+                        }
+                    }
                 }
             },
             scales: {

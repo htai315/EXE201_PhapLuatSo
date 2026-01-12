@@ -3,6 +3,7 @@ package com.htai.exe201phapluatso.auth.service;
 import com.htai.exe201phapluatso.auth.dto.*;
 import com.htai.exe201phapluatso.auth.entity.*;
 import com.htai.exe201phapluatso.auth.repo.*;
+import com.htai.exe201phapluatso.common.exception.AccountLockedException;
 import com.htai.exe201phapluatso.common.exception.BadRequestException;
 import com.htai.exe201phapluatso.common.exception.ForbiddenException;
 import com.htai.exe201phapluatso.common.exception.NotFoundException;
@@ -28,6 +29,8 @@ public class AuthService {
     private final JwtService jwtService;
     private final TokenService tokenService;
     private final EmailVerificationService emailVerificationService;
+    private final AccountLockoutService accountLockoutService;
+    private final SecurityAuditService securityAuditService;
 
     @Value("${app.jwt.access-minutes}")
     private long accessMinutes;
@@ -40,7 +43,9 @@ public class AuthService {
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             TokenService tokenService,
-            @Lazy EmailVerificationService emailVerificationService
+            @Lazy EmailVerificationService emailVerificationService,
+            AccountLockoutService accountLockoutService,
+            SecurityAuditService securityAuditService
     ) {
         this.userRepo = userRepo;
         this.roleRepo = roleRepo;
@@ -50,6 +55,8 @@ public class AuthService {
         this.jwtService = jwtService;
         this.tokenService = tokenService;
         this.emailVerificationService = emailVerificationService;
+        this.accountLockoutService = accountLockoutService;
+        this.securityAuditService = securityAuditService;
     }
 
     // -------- LOCAL REGISTER --------
@@ -81,16 +88,31 @@ public class AuthService {
     }
 
     // -------- LOCAL LOGIN --------
-    public TokenResponse login(LoginRequest req) {
+    public TokenResponse login(LoginRequest req, String ipAddress, String userAgent) {
         long startTime = System.currentTimeMillis();
         String email = req.email().toLowerCase().trim();
 
         long dbStart = System.currentTimeMillis();
         User u = userRepo.findByEmail(email)
-                .orElseThrow(() -> new UnauthorizedException("Email hoặc mật khẩu không đúng"));
+                .orElseThrow(() -> {
+                    securityAuditService.logLoginAttempt(email, ipAddress, userAgent, false);
+                    return new UnauthorizedException("Email hoặc mật khẩu không đúng");
+                });
         log.debug("LOGIN: DB query took {}ms", System.currentTimeMillis() - dbStart);
 
+        // Check if account is locked
+        if (accountLockoutService.isAccountLocked(u)) {
+            LockoutInfo lockoutInfo = accountLockoutService.getLockoutInfo(u);
+            securityAuditService.logLoginAttempt(u.getId(), email, ipAddress, userAgent, false);
+            throw new AccountLockedException(
+                    "Tài khoản đã bị khóa tạm thời do đăng nhập sai nhiều lần. Vui lòng thử lại sau " 
+                    + lockoutInfo.getRemainingTimeFormatted() + ".",
+                    lockoutInfo
+            );
+        }
+
         if (!u.isEnabled()) {
+            securityAuditService.logLoginAttempt(u.getId(), email, ipAddress, userAgent, false);
             throw new ForbiddenException("Tài khoản đã bị khóa");
         }
         if (u.getPasswordHash() == null) {
@@ -102,6 +124,18 @@ public class AuthService {
         log.debug("LOGIN: BCrypt verify took {}ms", System.currentTimeMillis() - bcryptStart);
         
         if (!passwordMatch) {
+            // Record failed attempt and check if account should be locked
+            boolean nowLocked = accountLockoutService.recordFailedAttempt(u, ipAddress);
+            securityAuditService.logLoginAttempt(u.getId(), email, ipAddress, userAgent, false);
+            
+            if (nowLocked) {
+                LockoutInfo lockoutInfo = accountLockoutService.getLockoutInfo(u);
+                throw new AccountLockedException(
+                        "Tài khoản đã bị khóa tạm thời do đăng nhập sai nhiều lần. Vui lòng thử lại sau " 
+                        + lockoutInfo.getRemainingTimeFormatted() + ".",
+                        lockoutInfo
+                );
+            }
             throw new UnauthorizedException("Email hoặc mật khẩu không đúng");
         }
         
@@ -112,16 +146,29 @@ public class AuthService {
             );
         }
 
+        // Reset failed attempts on successful login
+        accountLockoutService.resetFailedAttempts(u);
+
         long tokenStart = System.currentTimeMillis();
         TokenResponse response = issueTokens(u);
         log.debug("LOGIN: Token generation took {}ms", System.currentTimeMillis() - tokenStart);
+        
+        // Log successful login
+        securityAuditService.logLoginAttempt(u.getId(), email, ipAddress, userAgent, true);
         
         log.info("LOGIN: Total time {}ms for user {}", System.currentTimeMillis() - startTime, email);
         return response;
     }
 
+    // -------- LOCAL LOGIN (backward compatible) --------
+    public TokenResponse login(LoginRequest req) {
+        return login(req, "unknown", "unknown");
+    }
+
     // -------- REFRESH (ROTATE) --------
     public TokenResponse refresh(RefreshRequest req) {
+        // TokenService.validateAndRotate will throw TokenReusedException if reuse detected
+        // GlobalExceptionHandler will catch it and return 401 with proper message
         User u = tokenService.validateAndRotate(req.refreshToken());
         return issueTokens(u);
     }

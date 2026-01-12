@@ -6,7 +6,7 @@ Hướng dẫn cài đặt chi tiết từ A-Z.
 
 ### Phần Mềm Cần Thiết
 - **Java**: JDK 17 trở lên
-- **Database**: SQL Server 2019+
+- **Database**: PostgreSQL 15+ (với pgvector extension)
 - **Build Tool**: Maven 3.6+
 - **IDE**: IntelliJ IDEA (khuyến nghị) hoặc Eclipse
 - **Git**: Để clone project
@@ -20,31 +20,29 @@ Hướng dẫn cài đặt chi tiết từ A-Z.
 
 ## 1️⃣ Cài Đặt Database
 
-### Bước 1: Cài SQL Server
-Download và cài đặt SQL Server từ Microsoft.
+### Bước 1: Cài PostgreSQL
+Download và cài đặt PostgreSQL từ https://www.postgresql.org/download/
+
+Hoặc dùng Docker:
+```bash
+docker run -d --name postgres -p 5432:5432 -e POSTGRES_PASSWORD=postgres pgvector/pgvector:pg16
+```
 
 ### Bước 2: Tạo Database
 ```sql
-CREATE DATABASE phapluatso;
-GO
-
-USE phapluatso;
-GO
+CREATE DATABASE exe201_phapluatso;
 ```
 
-### Bước 3: Tạo User (Optional)
+### Bước 3: Enable pgvector Extension
 ```sql
-CREATE LOGIN phapluatso_user WITH PASSWORD = 'YourStrongPassword123!';
-GO
+\c exe201_phapluatso
+CREATE EXTENSION IF NOT EXISTS vector;
+```
 
-USE phapluatso;
-GO
-
-CREATE USER phapluatso_user FOR LOGIN phapluatso_user;
-GO
-
-ALTER ROLE db_owner ADD MEMBER phapluatso_user;
-GO
+### Bước 4: Tạo User (Optional)
+```sql
+CREATE USER phapluatso_user WITH PASSWORD 'YourStrongPassword123!';
+GRANT ALL PRIVILEGES ON DATABASE exe201_phapluatso TO phapluatso_user;
 ```
 
 ---
@@ -68,8 +66,8 @@ Mở file `.env` và điền thông tin:
 
 ```env
 # ===== DATABASE =====
-DB_URL=jdbc:sqlserver://localhost:1433;databaseName=phapluatso;encrypt=true;trustServerCertificate=true
-DB_USERNAME=phapluatso_user
+DB_URL=jdbc:postgresql://localhost:5432/exe201_phapluatso
+DB_USERNAME=postgres
 DB_PASSWORD=YourStrongPassword123!
 
 # ===== JWT =====
@@ -212,9 +210,10 @@ mvn flyway:migrate
 
 ### Lỗi: "Cannot connect to database"
 **Giải pháp:**
-1. Check SQL Server đang chạy
+1. Check PostgreSQL đang chạy
 2. Check connection string trong `.env`
-3. Check firewall cho phép port 1433
+3. Check firewall cho phép port 5432
+4. Check database đã được tạo: `psql -l`
 
 ### Lỗi: "OpenAI API key invalid"
 **Giải pháp:**
@@ -277,13 +276,13 @@ Không dùng `.env` file trong production. Set environment variables:
 
 ```bash
 # Linux/Mac
-export DB_URL="jdbc:sqlserver://..."
+export DB_URL="jdbc:postgresql://your-db-host:5432/exe201_phapluatso"
 export DB_USERNAME="..."
 export DB_PASSWORD="..."
 # ... other vars
 
 # Windows
-set DB_URL=jdbc:sqlserver://...
+set DB_URL=jdbc:postgresql://your-db-host:5432/exe201_phapluatso
 set DB_USERNAME=...
 set DB_PASSWORD=...
 ```

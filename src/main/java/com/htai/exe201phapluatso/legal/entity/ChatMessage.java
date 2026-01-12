@@ -20,7 +20,7 @@ public class ChatMessage {
     @Column(nullable = false, length = 20)
     private String role; // USER or ASSISTANT
 
-    @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @Column(name = "created_at", nullable = false)

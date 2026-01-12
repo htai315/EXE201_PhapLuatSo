@@ -178,3 +178,151 @@ body {
     letter-spacing: 0.5px;
     display: block;
 }
+
+/* ===== Mobile Responsive ===== */
+@media (max-width: 991px) {
+    .profile-header {
+        padding: 2rem 0 5rem;
+    }
+    
+    .profile-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .profile-container {
+        padding: 0 1rem 2rem;
+    }
+    
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+    }
+}
+
+@media (max-width: 767px) {
+    body {
+        padding-top: 60px;
+    }
+    
+    .profile-header {
+        padding: 1.5rem 0 4.5rem;
+        margin-bottom: -3.5rem;
+    }
+    
+    .profile-header h1 {
+        font-size: 1.35rem;
+    }
+    
+    .profile-container {
+        padding: 0 0.75rem 2rem;
+    }
+    
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .profile-avatar-card {
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+    }
+    
+    .profile-card {
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+    }
+    
+    .profile-card-title {
+        font-size: 1rem;
+        margin-bottom: 0.875rem;
+        padding-bottom: 0.625rem;
+    }
+    
+    .profile-stats {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .profile-stat {
+        padding: 0.625rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        text-align: left;
+    }
+    
+    .profile-stat-number {
+        font-size: 1.25rem;
+        order: 2;
+    }
+    
+    .profile-stat-label {
+        order: 1;
+        margin-top: 0;
+    }
+    
+    .profile-info-item {
+        padding: 0.75rem;
+    }
+    
+    .profile-info-label {
+        font-size: 0.7rem;
+    }
+    
+    .profile-info-value {
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 575px) {
+    .profile-header {
+        padding: 1.25rem 0 4rem;
+        margin-bottom: -3rem;
+    }
+    
+    .profile-header h1 {
+        font-size: 1.25rem;
+    }
+    
+    .profile-container {
+        padding: 0 0.5rem 1.5rem;
+    }
+    
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        border-width: 3px;
+    }
+    
+    .profile-avatar-card,
+    .profile-card {
+        padding: 1rem;
+        border-radius: 12px;
+    }
+    
+    .profile-card-title {
+        font-size: 0.95rem;
+    }
+    
+    .profile-info-item {
+        padding: 0.625rem;
+        border-radius: 6px;
+    }
+    
+    /* Full width form inputs */
+    .profile-card .form-control,
+    .profile-card .form-select {
+        width: 100%;
+        font-size: 16px; /* Prevent zoom on iOS */
+    }
+    
+    /* Stack buttons on mobile */
+    .profile-card .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .profile-card .btn:last-child {
+        margin-bottom: 0;
+    }
+}

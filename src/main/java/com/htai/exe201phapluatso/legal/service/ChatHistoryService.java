@@ -148,12 +148,17 @@ public class ChatHistoryService {
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
 
         ChatSession session;
+        ConversationContext conversationContext = null;
+        
         if (sessionId == null) {
             // Create new session
             session = createNewSession(user, question);
         } else {
             // Use existing session
             session = getSessionAndCheckOwnership(userEmail, sessionId);
+            
+            // Build conversation context from previous messages
+            conversationContext = buildConversationContext(sessionId);
         }
 
         // Save user message
@@ -163,8 +168,8 @@ public class ChatHistoryService {
         userMessage.setContent(question);
         userMessage = messageRepo.save(userMessage);
 
-        // Generate AI response
-        ChatResponse chatResponse = chatService.chat(user.getId(), question);
+        // Generate AI response with conversation context
+        ChatResponse chatResponse = chatService.chat(user.getId(), question, conversationContext);
 
         // Save assistant message with citations
         ChatMessage assistantMessage = new ChatMessage();
@@ -186,13 +191,32 @@ public class ChatHistoryService {
         session.setUpdatedAt(LocalDateTime.now());
         sessionRepo.save(session);
 
-        log.info("Message sent in session {} by user {}", session.getId(), userEmail);
+        log.info("Message sent in session {} by user {} (with context: {})", 
+                session.getId(), userEmail, conversationContext != null && !conversationContext.isEmpty());
 
         return new SendMessageResponse(
                 session.getId(),
                 toMessageDTO(userMessage),
                 toMessageDTOFromResponse(assistantMessage, chatResponse.citations())
         );
+    }
+    
+    /**
+     * Build conversation context from previous messages in session
+     */
+    private ConversationContext buildConversationContext(Long sessionId) {
+        List<ChatMessage> messages = messageRepo.findBySessionIdWithCitations(sessionId);
+        
+        if (messages.isEmpty()) {
+            return null;
+        }
+        
+        // Convert to ConversationContext.Message format
+        List<ConversationContext.Message> contextMessages = messages.stream()
+                .map(msg -> new ConversationContext.Message(msg.getRole(), msg.getContent()))
+                .collect(Collectors.toList());
+        
+        return new ConversationContext(contextMessages);
     }
 
     /**
