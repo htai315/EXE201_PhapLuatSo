@@ -1,0 +1,368 @@
+/* ============================================
+   Mobile Utilities CSS
+   Touch-friendly, responsive utility classes
+   ============================================ */
+
+/* ===========================================
+   Touch-Friendly Utilities
+   =========================================== */
+@media (max-width: 991px) {
+    /* Minimum touch target size - 44px for accessibility */
+    .btn,
+    .nav-link,
+    .form-control,
+    .form-select,
+    input[type="checkbox"],
+    input[type="radio"] {
+        min-height: 44px;
+    }
+    
+    /* Adequate spacing between buttons */
+    .btn + .btn {
+        margin-left: 0.5rem;
+    }
+    
+    /* Disable hover effects on touch devices */
+    @media (hover: none) {
+        .btn:hover,
+        .card:hover,
+        .nav-link:hover {
+            transform: none;
+            box-shadow: inherit;
+        }
+    }
+    
+    /* Full-width buttons on mobile */
+    .btn-mobile-full {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Stack buttons vertically on mobile */
+    .btn-group-mobile-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .btn-group-mobile-stack .btn {
+        width: 100%;
+        margin-left: 0 !important;
+    }
+}
+
+/* ===========================================
+   Typography Mobile
+   =========================================== */
+@media (max-width: 767px) {
+    body {
+        font-size: 16px;
+        line-height: 1.6;
+    }
+    
+    h1 { font-size: 1.75rem; }
+    h2 { font-size: 1.5rem; }
+    h3 { font-size: 1.25rem; }
+    h4 { font-size: 1.1rem; }
+    
+    p, li {
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+    
+    /* Prevent text from being too small */
+    small, .small {
+        font-size: 0.875rem;
+    }
+}
+
+/* ===========================================
+   Responsive Images
+   =========================================== */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+.img-responsive {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
+.img-contain {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
+/* Aspect ratio containers */
+.aspect-ratio-16-9 {
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+}
+
+.aspect-ratio-4-3 {
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+}
+
+.aspect-ratio-1-1 {
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+}
+
+/* ===========================================
+   Responsive Video
+   =========================================== */
+.video-responsive {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 */
+    height: 0;
+    overflow: hidden;
+}
+
+.video-responsive iframe,
+.video-responsive video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* ===========================================
+   Table Responsive
+   =========================================== */
+.table-mobile-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 767px) {
+    .table-mobile-scroll table {
+        min-width: 600px;
+    }
+    
+    .table-mobile-scroll th,
+    .table-mobile-scroll td {
+        white-space: nowrap;
+        padding: 0.75rem 0.5rem;
+    }
+}
+
+/* ===========================================
+   Hide/Show Mobile Utilities
+   =========================================== */
+/* Hide on mobile (< 768px) */
+@media (max-width: 767px) {
+    .hide-mobile { display: none !important; }
+}
+
+/* Show only on mobile */
+@media (min-width: 768px) {
+    .show-mobile-only { display: none !important; }
+}
+
+/* Hide on tablet and below (< 992px) */
+@media (max-width: 991px) {
+    .hide-tablet { display: none !important; }
+}
+
+/* Show only on tablet and below */
+@media (min-width: 992px) {
+    .show-tablet-only { display: none !important; }
+}
+
+/* ===========================================
+   Element Spacing Utilities
+   =========================================== */
+@media (max-width: 767px) {
+    /* Reduced padding on mobile */
+    .p-mobile-sm { padding: 0.75rem !important; }
+    .p-mobile-md { padding: 1rem !important; }
+    .p-mobile-lg { padding: 1.5rem !important; }
+    
+    /* Reduced margin on mobile */
+    .m-mobile-sm { margin: 0.75rem !important; }
+    .m-mobile-md { margin: 1rem !important; }
+    .m-mobile-lg { margin: 1.5rem !important; }
+    
+    /* Gap utilities for mobile */
+    .gap-mobile-sm { gap: 0.5rem !important; }
+    .gap-mobile-md { gap: 1rem !important; }
+    .gap-mobile-lg { gap: 1.5rem !important; }
+}
+
+/* ===========================================
+   Mobile Container Utilities
+   =========================================== */
+@media (max-width: 767px) {
+    /* Full width container on mobile */
+    .container-mobile-full {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+    
+    /* Stack flex items vertically on mobile */
+    .flex-mobile-column {
+        flex-direction: column !important;
+    }
+    
+    /* Center items on mobile */
+    .text-mobile-center {
+        text-align: center !important;
+    }
+}
+
+/* ===========================================
+   Safe Area Support (Notched Phones)
+   =========================================== */
+@supports (padding: env(safe-area-inset-bottom)) {
+    .safe-area-bottom {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    .safe-area-top {
+        padding-top: env(safe-area-inset-top);
+    }
+    
+    .safe-area-left {
+        padding-left: env(safe-area-inset-left);
+    }
+    
+    .safe-area-right {
+        padding-right: env(safe-area-inset-right);
+    }
+}
+
+/* ===========================================
+   Touch Device Specific
+   =========================================== */
+@media (hover: none) and (pointer: coarse) {
+    /* Larger tap targets for touch */
+    .touch-target {
+        min-width: 44px;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Remove hover states that don't work on touch */
+    .no-touch-hover:hover {
+        transform: none !important;
+        box-shadow: inherit !important;
+    }
+}
+
+/* ===========================================
+   Scroll Behavior
+   =========================================== */
+.scroll-smooth {
+    scroll-behavior: smooth;
+}
+
+.overflow-touch {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+/* ===========================================
+   Form Mobile Enhancements
+   =========================================== */
+@media (max-width: 767px) {
+    /* Full width inputs on mobile */
+    .form-control-mobile-full,
+    .form-select-mobile-full {
+        width: 100% !important;
+    }
+    
+    /* Larger form labels on mobile */
+    .form-label {
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Better spacing for form groups */
+    .mb-3 {
+        margin-bottom: 1rem !important;
+    }
+}
+
+/* Prevent zoom on input focus (iOS) */
+@media (max-width: 767px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="tel"],
+    input[type="url"],
+    input[type="search"],
+    textarea,
+    select {
+        font-size: 16px !important;
+    }
+}
+
+/* ===========================================
+   Card Mobile Utilities
+   =========================================== */
+@media (max-width: 767px) {
+    .card-mobile-compact {
+        padding: 1rem !important;
+    }
+    
+    .card-mobile-compact .card-body {
+        padding: 0.75rem !important;
+    }
+    
+    /* Stack cards vertically */
+    .cards-mobile-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .cards-mobile-stack > * {
+        width: 100%;
+    }
+}
+
+/* ===========================================
+   Modal Mobile Enhancements
+   =========================================== */
+@media (max-width: 767px) {
+    .modal-mobile-fullscreen .modal-dialog {
+        margin: 0;
+        max-width: 100%;
+        height: 100%;
+    }
+    
+    .modal-mobile-fullscreen .modal-content {
+        height: 100%;
+        border-radius: 0;
+    }
+    
+    .modal-mobile-bottom .modal-dialog {
+        margin: 0;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        max-width: 100%;
+    }
+    
+    .modal-mobile-bottom .modal-content {
+        border-radius: 1rem 1rem 0 0;
+    }
+}
