@@ -663,7 +663,7 @@
                         <h3 class="pricing-name">Gói người dân</h3>
                         <div class="pricing-price">
                             <span class="price-currency">₫</span>
-                            <span class="price-amount">159,000</span>
+                            <span class="price-amount">59,000</span>
                         </div>
                     </div>
                     <ul class="pricing-features">
@@ -685,7 +685,7 @@
                         <h3 class="pricing-name">Gói tra cứu và học tập</h3>
                         <div class="pricing-price">
                             <span class="price-currency">₫</span>
-                            <span class="price-amount">249,000</span>
+                            <span class="price-amount">99,000</span>
                         </div>
                     </div>
                     <ul class="pricing-features">
@@ -911,8 +911,8 @@
 <script src="/scripts/script.js"></script>
 
 <script>
-// Payment function for pricing cards
-async function selectPlan(planName) {
+// Payment function for pricing cards - redirect to plans page
+function selectPlan(planName) {
     if (planName === 'FREE') {
         Toast.info('Bạn đã có gói FREE miễn phí khi đăng ký!');
         return;
@@ -931,60 +931,8 @@ async function selectPlan(planName) {
         return;
     }
     
-    // Show loading
-    const button = event.target;
-    const originalText = button.innerHTML;
-    button.disabled = true;
-    button.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Đang xử lý...';
-    
-    try {
-        // Call payment API
-        const response = await fetch('/api/payment/create', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                planCode: planName
-            })
-        });
-        
-        if (!response.ok) {
-            // If 401, token expired - redirect to login
-            if (response.status === 401) {
-                Toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('refreshToken');
-                setTimeout(() => {
-                    window.location.href = '/html/login.html';
-                }, 1000);
-                return;
-            }
-            
-            // Parse error response properly
-            let errorMessage = 'Không thể tạo thanh toán';
-            try {
-                const errorData = await response.json();
-                errorMessage = errorData.error || errorData.message || errorMessage;
-            } catch (parseError) {
-                // If JSON parse fails, use status text
-                errorMessage = response.statusText || errorMessage;
-            }
-            throw new Error(errorMessage);
-        }
-        
-        const data = await response.json();
-        
-        // Redirect to VNPay
-        window.location.href = data.paymentUrl;
-        
-    } catch (error) {
-        console.error('Payment error:', error);
-        Toast.error(error.message || 'Không thể tạo thanh toán');
-        button.disabled = false;
-        button.innerHTML = originalText;
-    }
+    // Redirect to plans page with selected plan
+    window.location.href = '/html/plans.html?plan=' + planName;
 }
 </script>
 </body>

@@ -1,1711 +1,791 @@
-# 📋 CODE REVIEW CHI TIẾT - PHÁP LUẬT SỐ PLATFORM
+# 📊 Code Review Chi Tiết - Dự Án Pháp Luật Số
 
-**Ngày review:** 12/01/2026  
-**Phiên bản:** 2.0 (Updated)  
-**Reviewer:** AI Code Reviewer  
-**Công nghệ:** Spring Boot 4.0, Java 17, PostgreSQL + pgvector, OpenAI GPT-4o-mini, Redis (optional)
-
----
-
-## 📊 TỔNG QUAN DỰ ÁN
-
-### Mô tả
-Pháp Luật Số là một nền tảng Legal Tech (công nghệ pháp lý) với các tính năng chính:
-- **AI Chatbot pháp luật** sử dụng RAG (Retrieval-Augmented Generation)
-- **Hệ thống Quiz** với AI tự động tạo câu hỏi từ tài liệu
-- **Thanh toán trực tuyến** qua PayOS
-- **Admin Dashboard** quản lý người dùng và doanh thu
-- **Hệ thống Credits** để monetize các tính năng AI
-
-### Kiến trúc tổng quan
-```
-Frontend (HTML/CSS/JS/Bootstrap)
-        │
-        │ HTTP/REST + JWT
-        ▼
-Spring Boot Backend (Layered Architecture)
-├── Controller Layer (REST APIs)
-├── Service Layer (Business Logic)
-├── Repository Layer (JPA/Hibernate)
-        │
-        ▼
-PostgreSQL + pgvector ←→ OpenAI API ←→ PayOS Gateway
-```
-
-### Đánh giá tổng thể
-
-| Tiêu chí | Điểm | Ghi chú |
-|----------|------|---------|
-| Architecture | 8/10 | Layered architecture rõ ràng, separation of concerns tốt |
-| Security | 8.5/10 | JWT + OAuth2 + Rate Limiting + Account Lockout + Security Audit ✅ |
-| Performance | 7/10 | Batch queries tốt, Redis optional cho sessions |
-| Code Quality | 7.5/10 | Clean code, cần thêm tests |
-| Feature Completeness | 8.5/10 | Đầy đủ tính năng core + Credit Reservation |
-| Maintainability | 7.5/10 | Tổ chức code tốt, documentation đầy đủ |
-| **TỔNG ĐIỂM** | **7.8/10** | Production-ready với security improvements đã implement |
-
-### 🆕 Các cải thiện đã implement (v2.0)
-- ✅ **Rate Limiting** - Bucket-based rate limiting cho login/register/password-reset
-- ✅ **Account Lockout** - Khóa tài khoản sau N lần login fail
-- ✅ **Security Audit Logging** - Log các sự kiện bảo mật quan trọng
-- ✅ **Credit Reservation System** - Reserve/Confirm/Refund pattern cho credits
-- ✅ **Redis Session Store** - Optional Redis cho quiz exam sessions
-- ✅ **Payment Idempotency** - Tránh duplicate payments
-- ✅ **Admin Credit Management** - Admin có thể add/remove credits
+> **Ngày review:** 13/01/2026  
+> **Phiên bản:** 0.0.1-SNAPSHOT  
+> **Reviewer:** AI Code Review
 
 ---
 
+## 📋 Mục Lục
 
-## 1. 🔐 MODULE AUTHENTICATION
+1. [Tổng Quan Dự Án](#tổng-quan-dự-án)
+2. [Cấu Trúc Source Code](#cấu-trúc-source-code)
+3. [Đánh Giá Từng Module](#đánh-giá-từng-module)
+4. [Đánh Giá Bảo Mật](#đánh-giá-bảo-mật)
+5. [Đánh Giá Database](#đánh-giá-database)
+6. [Điểm Mạnh](#điểm-mạnh)
+7. [Điểm Cần Cải Thiện](#điểm-cần-cải-thiện)
+8. [Khuyến Nghị](#khuyến-nghị)
+9. [Kết Luận](#kết-luận)
 
-### 1.1 Tổng quan
-Module xử lý đăng ký, đăng nhập, OAuth2 Google, email verification, password reset.
+---
 
-### 1.2 Files chính
-- `AuthController.java` - REST endpoints
-- `AuthService.java` - Business logic
-- `SecurityConfig.java` - Spring Security configuration
-- `JwtAuthFilter.java` - JWT validation filter
-- `OAuth2AuthenticationSuccessHandler.java` - Google OAuth2 handler
+## 🎯 Tổng Quan Dự Án
 
-### 1.3 Điểm mạnh ✅
+### Thông Tin Cơ Bản
 
-#### 1.3.1 JWT Implementation xuất sắc
+| Thuộc tính | Giá trị |
+|------------|---------|
+| **Tên dự án** | Pháp Luật Số - Legal AI Platform |
+| **Framework** | Spring Boot 4.0.0 |
+| **Java Version** | 17 |
+| **Database** | PostgreSQL + pgvector |
+| **AI Provider** | OpenAI GPT-4o-mini |
+| **Payment** | PayOS |
+| **Build Tool** | Maven |
+
+### Chức Năng Chính
+
+| # | Chức năng | Mô tả |
+|---|-----------|-------|
+| 1 | **AI Chat Pháp Luật** | Chatbot RAG tư vấn pháp luật với trích dẫn nguồn |
+| 2 | **AI Tạo Đề Thi** | Upload PDF/DOCX → AI tạo câu hỏi trắc nghiệm |
+| 3 | **Quản Lý Đề Thi** | CRUD câu hỏi, làm bài thi, xem lịch sử |
+| 4 | **Hệ Thống Credit** | Reserve/Confirm/Refund pattern |
+| 5 | **Thanh Toán** | PayOS với webhook, idempotency |
+| 6 | **Xác Thực** | JWT + OAuth2 Google |
+
+---
+
+## 📁 Cấu Trúc Source Code
+
+```
+src/main/java/com/htai/exe201phapluatso/
+├── Exe201PhapLuatSoApplication.java    # Main class + .env loader
+├── admin/                               # Module quản trị
+│   ├── controller/                      # AdminController (1 file)
+│   ├── dto/                             # 11 DTOs
+│   ├── entity/                          # AdminActivityLog
+│   ├── repo/                            # 1 repository
+│   └── service/                         # 4 services
+├── ai/                                  # Module AI
+│   ├── controller/                      # AIQuizController
+│   ├── dto/                             # 3 DTOs
+│   └── service/                         # AIQuizService, OpenAIService, DocumentParser, Embedding
+├── auth/                                # Module xác thực (LỚN NHẤT - 60 files)
+│   ├── controller/                      # AuthController, UserController, PasswordResetController
+│   ├── dto/                             # 13 DTOs
+│   ├── entity/                          # User, Role, RefreshToken, UserCredit, etc.
+│   ├── oauth2/                          # Google OAuth2 handlers
+│   ├── repo/                            # 9 repositories
+│   ├── security/                        # JwtAuthFilter, SecurityConfig, etc.
+│   ├── service/                         # 10 services
+│   └── validation/                      # Custom validators
+├── common/                              # Xử lý lỗi global
+│   ├── GlobalExceptionHandler.java
+│   ├── HashUtil.java
+│   ├── dto/                             # Error response DTOs
+│   └── exception/                       # 8 custom exceptions
+├── config/                              # Cấu hình
+│   ├── BeansConfig.java
+│   ├── DotEnvEnvironmentPostProcessor.java
+│   ├── EnvLoader.java
+│   ├── RedisConfig.java
+│   ├── WebClientConfig.java
+│   ├── WebConfig.java
+│   └── WebMvcConfig.java
+├── credit/                              # Hệ thống credit
+│   ├── controller/                      # CreditController
+│   ├── dto/                             # CreditBalanceResponse
+│   ├── entity/                          # CreditReservation
+│   ├── repo/                            # CreditReservationRepo
+│   ├── scheduler/                       # Cleanup expired reservations
+│   └── service/                         # CreditService
+├── legal/                               # Legal Chat (33 files)
+│   ├── config/                          # LegalSearchConfig
+│   ├── controller/                      # 6 controllers
+│   ├── dto/                             # 11 DTOs
+│   ├── entity/                          # ChatSession, ChatMessage, LegalDocument, LegalArticle
+│   ├── repo/                            # 4 repositories
+│   └── service/                         # 7 services
+├── payment/                             # Thanh toán (15 files)
+│   ├── config/                          # PayOSConfig
+│   ├── controller/                      # PaymentController
+│   ├── dto/                             # 3 DTOs
+│   ├── entity/                          # Payment, PaymentIdempotencyRecord
+│   ├── repo/                            # 2 repositories
+│   └── service/                         # 6 services
+└── quiz/                                # Quiz management (28 files)
+    ├── controller/                      # QuizController
+    ├── dto/                             # 9 DTOs
+    ├── entity/                          # QuizSet, QuizQuestion, QuizQuestionOption, etc.
+    ├── repo/                            # 5 repositories
+    ├── service/                         # QuizService, QuizExamService, QuizPdfExportService
+    ├── session/                         # Exam session management
+    └── validation/                      # QuizDurationValidator
+```
+
+**Tổng số files Java:** ~180 files  
+**Tổng số dòng code (ước tính):** ~15,000 dòng
+
+---
+
+## 🔍 Đánh Giá Từng Module
+
+### 1. Module AUTH (⭐⭐⭐⭐⭐ 5/5)
+
+#### 1.1 AuthService.java
 ```java
-// JwtAuthFilter.java - Kiểm tra ban status real-time
+// ✅ ĐIỂM TỐT: Account Lockout
+if (accountLockoutService.isAccountLocked(u)) {
+    LockoutInfo lockoutInfo = accountLockoutService.getLockoutInfo(u);
+    throw new AccountLockedException(...);
+}
+
+// ✅ ĐIỂM TỐT: Email verification bắt buộc
+if ("LOCAL".equals(u.getProvider()) && !u.isEmailVerified()) {
+    throw new UnauthorizedException("Vui lòng xác thực email trước khi đăng nhập.");
+}
+
+// ✅ ĐIỂM TỐT: Security Audit Logging
+securityAuditService.logLoginAttempt(u.getId(), email, ipAddress, userAgent, true);
+```
+
+#### 1.2 TokenService.java (Refresh Token Rotation)
+```java
+// ✅ ĐIỂM TỐT: Token Rotation với Reuse Detection
+// Khi refresh token được sử dụng:
+// 1. Đánh dấu token cũ là used
+// 2. Tạo token mới và link với token cũ
+// 3. Nếu phát hiện reuse → revoke ALL tokens của user
+```
+
+#### 1.3 JwtAuthFilter.java
+```java
+// ✅ ĐIỂM TỐT: Check user status từ DB mỗi request
 User user = userRepo.findById(uid).orElse(null);
 if (!user.isActive()) {
+    // User bị ban → return 403 ngay lập tức
     response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-    response.getWriter().write("{\"error\":\"ACCOUNT_BANNED\",\"message\":\"" + message + "\"}");
     return;
 }
 ```
-- **Ưu điểm:** Kiểm tra trạng thái user trực tiếp từ DB mỗi request → ban user có hiệu lực ngay lập tức
-- **Trade-off:** Tăng 1 query/request nhưng đảm bảo security
 
-#### 1.3.2 OAuth2 Google Integration hoàn chỉnh
-```java
-// AuthService.java - Xử lý cả user mới và link account
-User u = userRepo.findByProviderAndProviderId("GOOGLE", googleSub)
-        .orElseGet(() -> userRepo.findByEmail(normalized).orElse(null));
-```
-- Hỗ trợ cả đăng ký mới và link Google vào account có sẵn
-- Email verification tự động với Google account
-
-#### 1.3.3 Security Config chuẩn
-```java
-// SecurityConfig.java
-.csrf(csrf -> csrf.disable()) // OK cho stateless REST API
-.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-```
-- CSRF disabled hợp lý cho JWT-based API
-- Stateless session management đúng chuẩn
-
-#### 1.3.4 Password hashing an toàn
-- Sử dụng BCrypt (Spring Security default)
-- Logging thời gian BCrypt để monitor performance
-
-### 1.4 Điểm yếu ⚠️
-
-#### 1.4.1 ✅ FIXED - Rate Limiting đã được implement
-```java
-// RateLimitService.java - Bucket-based rate limiting
-public boolean isAllowed(String key, int limit, int windowSeconds) {
-    String bucketKey = "rate_limit:" + key;
-    RateLimitBucket bucket = rateLimitBuckets.computeIfAbsent(bucketKey, 
-        k -> new RateLimitBucket(limit, windowSeconds));
-    return bucket.tryConsume();
-}
-
-// RateLimitFilter.java - Applied to sensitive endpoints
-if (path.equals("/api/auth/login") && !rateLimitService.isAllowed(clientIp, loginLimit, loginWindow)) {
-    response.setStatus(429);
-    response.getWriter().write("{\"error\":\"Quá nhiều yêu cầu. Vui lòng thử lại sau.\"}");
-    return;
-}
-```
-**Status:** ✅ Đã implement với configurable limits
-
-#### 1.4.2 ✅ FIXED - Account Lockout đã được implement
-```java
-// AccountLockoutService.java
-public void recordFailedAttempt(String email) {
-    int attempts = failedAttempts.merge(email, 1, Integer::sum);
-    if (attempts >= maxAttempts) {
-        lockoutTimes.put(email, LocalDateTime.now());
-        securityAuditService.logAccountLocked(email, attempts);
-    }
-}
-
-public boolean isAccountLocked(String email) {
-    LocalDateTime lockTime = lockoutTimes.get(email);
-    if (lockTime == null) return false;
-    return lockTime.plusMinutes(lockoutDurationMinutes).isAfter(LocalDateTime.now());
-}
-```
-**Status:** ✅ Đã implement với configurable duration
-
-#### 1.4.3 ✅ FIXED - Security Audit Logging đã được implement
-```java
-// SecurityAuditService.java
-public void logLoginSuccess(String email, String ipAddress) {
-    saveAuditLog("LOGIN_SUCCESS", email, ipAddress, "User logged in successfully");
-}
-
-public void logLoginFailed(String email, String ipAddress, String reason) {
-    saveAuditLog("LOGIN_FAILED", email, ipAddress, "Login failed: " + reason);
-}
-
-public void logAccountLocked(String email, int attempts) {
-    saveAuditLog("ACCOUNT_LOCKED", email, null, "Account locked after " + attempts + " failed attempts");
-}
-```
-**Status:** ✅ Đã implement với database persistence
-
-#### 1.4.4 Refresh Token Rotation (Cần cải thiện)
-```java
-// TokenService.java - Đã có rotation nhưng cần thêm reuse detection
-public User validateAndRotate(String rawToken) {
-    RefreshToken rt = refreshTokenRepo.findByTokenHash(hash)
-            .orElseThrow(() -> new UnauthorizedException("Invalid refresh token"));
-    
-    if (rt.getRevokedAt() != null) {
-        // Reuse detection - revoke all tokens
-        refreshTokenRepo.revokeAllByUserId(rt.getUser().getId());
-        throw new UnauthorizedException("Token reuse detected");
-    }
-    
-    rt.setRevokedAt(LocalDateTime.now());
-    refreshTokenRepo.save(rt);
-    return rt.getUser();
-}
-```
-**Status:** ✅ Đã có rotation và reuse detection
-
-#### 1.4.5 Email service mặc định disabled
-```properties
-# application.properties
-spring.mail.enabled=false
-```
-**Vấn đề:** User có thể skip email verification
-**Giải pháp:** Bắt buộc enable email service trong production
-
-### 1.5 Code Quality Analysis
-
-| Aspect | Rating | Notes |
-|--------|--------|-------|
-| Naming conventions | ⭐⭐⭐⭐⭐ | Rõ ràng, consistent |
-| Error handling | ⭐⭐⭐⭐ | Custom exceptions tốt |
-| Logging | ⭐⭐⭐⭐⭐ | Comprehensive với timing |
-| Input validation | ⭐⭐⭐⭐ | @Valid annotations |
-| Documentation | ⭐⭐⭐ | Cần thêm Javadoc |
-
-### 1.6 Đề xuất cải thiện
-
-1. ~~**Thêm Rate Limiting**~~ - ✅ Đã implement
-2. ~~**Account lockout**~~ - ✅ Đã implement
-3. ~~**Security Audit Logging**~~ - ✅ Đã implement
-4. **Implement 2FA** - Tăng security (TOTP/Google Authenticator)
-5. **Password policy** validation (độ dài, complexity) - ✅ Đã có PasswordPolicyValidator
+**Đánh giá:**
+| Tiêu chí | Điểm |
+|----------|------|
+| Code quality | ⭐⭐⭐⭐⭐ |
+| Security | ⭐⭐⭐⭐⭐ |
+| Error handling | ⭐⭐⭐⭐⭐ |
+| Logging | ⭐⭐⭐⭐⭐ |
 
 ---
 
+### 2. Module CREDIT (⭐⭐⭐⭐⭐ 5/5)
 
-## 2. 📝 MODULE QUIZ
+#### 2.1 CreditService.java - Reserve/Confirm/Refund Pattern
 
-### 2.1 Tổng quan
-Module quản lý bộ đề quiz, câu hỏi, làm bài thi, lịch sử và xuất PDF.
-
-### 2.2 Files chính
-- `QuizController.java` - REST endpoints
-- `QuizService.java` - CRUD operations
-- `QuizExamService.java` - Exam logic với anti-cheat
-- `QuizPdfExportService.java` - PDF generation
-
-### 2.3 Điểm mạnh ✅
-
-#### 2.3.1 Anti-cheat System xuất sắc
 ```java
-// QuizExamService.java - Server-side answer validation
-private final ConcurrentHashMap<String, ExamSession> examSessions = new ConcurrentHashMap<>();
+// ✅ ĐIỂM NỔI BẬT: Pattern này đảm bảo user không mất credit khi AI fail
 
-private static class ExamSession {
-    final Map<Long, String> correctKeyMapping; // questionId -> correctKey sau shuffle
-    final Map<Long, List<ExamOptionDto>> shuffledOptionsMapping;
-    final LocalDateTime startedAt;
-}
-```
-**Ưu điểm:**
-- Đáp án đúng KHÔNG gửi về frontend
-- Shuffle câu hỏi và đáp án mỗi lần thi
-- Server-side validation khi submit
+// BƯỚC 1: Reserve credit TRƯỚC khi gọi AI
+CreditReservation reservation = creditService.reserveCredit(userId, "CHAT", "AI_CHAT");
 
-#### 2.3.2 N+1 Query Prevention
-```java
-// QuizService.java - Batch query cho question counts
-public Map<Long, Long> countQuestionsForQuizSets(List<Long> quizSetIds) {
-    return questionRepo.countByQuizSetIds(quizSetIds).stream()
-            .collect(Collectors.toMap(
-                    row -> toLong(row[0]),
-                    row -> toLong(row[1])
-            ));
-}
-```
-**Ưu điểm:** Tránh N+1 khi hiển thị danh sách quiz sets
-
-#### 2.3.3 Session Cleanup tự động
-```java
-// QuizExamService.java
-@Scheduled(fixedRate = 600000) // 10 phút
-public void cleanupExpiredExamSessions() {
-    examSessions.entrySet().removeIf(entry -> entry.getValue().isExpired());
-}
-```
-**Ưu điểm:** Tránh memory leak khi user không submit bài
-
-#### 2.3.4 PDF Export với Vietnamese support
-```java
-// QuizPdfExportService.java - Cross-platform font handling
-private static final String[] FONT_PATHS = {
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-    "/usr/share/fonts/liberation/LiberationSans-Regular.ttf",
-    "C:/Windows/Fonts/arial.ttf"
-};
-```
-
-### 2.4 Điểm yếu ⚠️
-
-#### 2.4.1 ✅ FIXED - Session Store đã hỗ trợ Redis
-```java
-// ExamSessionStoreManager.java - Factory pattern cho session store
-@Component
-public class ExamSessionStoreManager {
-    private final ExamSessionStore sessionStore;
+try {
+    // BƯỚC 2: Thực hiện AI operation
+    String answer = aiService.generateText(prompt);
     
-    public ExamSessionStoreManager(
-            @Autowired(required = false) RedisExamSessionStore redisStore,
-            InMemoryExamSessionStore inMemoryStore) {
-        // Use Redis if available, fallback to in-memory
-        this.sessionStore = (redisStore != null) ? redisStore : inMemoryStore;
-    }
-}
-
-// RedisExamSessionStore.java - Redis implementation
-@ConditionalOnBean(RedisTemplate.class)
-public class RedisExamSessionStore implements ExamSessionStore {
-    public void save(String sessionKey, ExamSession session) {
-        redisTemplate.opsForValue().set(sessionKey, session, sessionTimeoutHours, TimeUnit.HOURS);
-    }
-}
-```
-**Status:** ✅ Đã implement với Redis optional, fallback to in-memory
-
-#### 2.4.2 ✅ FIXED - Session timeout configurable
-```properties
-# application.properties
-app.quiz.session-timeout-hours=2
-app.quiz.min-duration-minutes=5
-app.quiz.max-duration-minutes=180
-app.quiz.default-duration-minutes=45
-```
-**Status:** ✅ Đã configurable qua properties
-
-#### 2.4.3 ✅ FIXED - Duration validation đã được implement
-```java
-// QuizService.java
-private int validateDuration(Integer requestedDuration) {
-    if (requestedDuration == null) {
-        return defaultDurationMinutes;
-    }
-    if (requestedDuration < minDurationMinutes || requestedDuration > maxDurationMinutes) {
-        throw new BadRequestException(
-            String.format("Duration phải từ %d-%d phút", minDurationMinutes, maxDurationMinutes));
-    }
-    return requestedDuration;
-}
-```
-**Status:** ✅ Đã validate range
-
-### 2.5 Code Quality Analysis
-
-| Aspect | Rating | Notes |
-|--------|--------|-------|
-| Security | ⭐⭐⭐⭐⭐ | Anti-cheat xuất sắc |
-| Performance | ⭐⭐⭐⭐ | Batch queries tốt |
-| Scalability | ⭐⭐⭐ | Cần Redis cho multi-instance |
-| Error handling | ⭐⭐⭐⭐ | Custom exceptions |
-| Code organization | ⭐⭐⭐⭐⭐ | Tách biệt rõ ràng |
-
-### 2.6 Đề xuất cải thiện
-
-1. ~~**Migrate session sang Redis**~~ - ✅ Đã implement (optional)
-2. **Thêm quiz sharing** - Public quiz feature
-3. **Quiz analytics** - Thống kê câu hỏi khó/dễ
-4. **Import/Export quiz** - JSON/Excel format
-5. **Quiz categories/tags** - Phân loại bộ đề
-
----
-
-
-## 3. ⚖️ MODULE LEGAL (RAG Chatbot)
-
-### 3.1 Tổng quan
-Module AI chatbot pháp luật sử dụng RAG pattern với vector search và keyword matching.
-
-### 3.2 Files chính
-- `LegalChatService.java` - RAG pipeline
-- `LegalSearchService.java` - Keyword search
-- `VectorSearchService.java` - Semantic search với pgvector
-- `LegalDocumentService.java` - Document management
-- `EmbeddingService.java` - OpenAI embeddings
-
-### 3.3 Điểm mạnh ✅
-
-#### 3.3.1 RAG Pipeline hoàn chỉnh
-```java
-// LegalChatService.java - 4-step RAG pipeline
-public ChatResponse chat(Long userId, String question, ConversationContext context) {
-    // Step 1: Retrieve candidate articles
-    List<LegalArticle> candidateArticles = retrieveRelevantArticles(searchQuery);
+    // BƯỚC 3: Confirm nếu thành công
+    creditService.confirmReservation(reservation.getId());
     
-    // Step 2: AI re-ranking
-    List<LegalArticle> relevantArticles = aiReRankArticles(question, candidateArticles);
-    
-    // Step 3: Generate answer with context
-    String answer = generateAnswer(question, relevantArticles, conversationContext);
-    
-    // Step 4: Build citations
-    List<CitationDTO> citations = buildCitations(relevantArticles);
+} catch (Exception e) {
+    // BƯỚC 4: REFUND nếu thất bại → User KHÔNG MẤT credit!
+    creditService.refundReservation(reservation.getId());
+    throw e;
 }
 ```
-**Ưu điểm:**
-- AI re-ranking loại bỏ false positives từ keyword matching
-- Conversation memory để hiểu context
-- Citation tracking cho transparency
 
-#### 3.3.2 Hybrid Search (Vector + Keyword)
+#### 2.2 Optimistic Locking với Retry
 ```java
-// VectorSearchService.java
-private static final float VECTOR_WEIGHT = 0.7f;
-private static final float KEYWORD_WEIGHT = 0.3f;
+// ✅ ĐIỂM TỐT: Xử lý concurrent access
+private static final int MAX_RETRY_ATTEMPTS = 3;
 
-// Hybrid scoring
-ORDER BY (vector_score * :vWeight + keyword_score * :kWeight) DESC
-```
-**Ưu điểm:** Kết hợp semantic understanding với exact matching
-
-#### 3.3.3 Graceful Fallback
-```java
-// VectorSearchService.java
-public List<LegalArticle> hybridSearch(String question, int limit) {
+while (attempts < MAX_RETRY_ATTEMPTS) {
     try {
-        // Try hybrid search
-        return performHybridSearch(vectorString, keywords, limit);
-    } catch (Exception e) {
-        // Fallback to keyword-only
-        return keywordOnlySearch(question, limit);
+        return doReserveCredit(userId, creditType, operationType);
+    } catch (OptimisticLockingFailureException e) {
+        attempts++;
+        Thread.sleep(100 * attempts); // Exponential backoff
     }
 }
 ```
-**Ưu điểm:** Hệ thống vẫn hoạt động khi embedding service fail
 
-#### 3.3.4 Conversation Memory
-```java
-// LegalChatService.java
-private String buildSearchQuery(String question, ConversationContext context) {
-    // Extract "Điều X" references from previous response
-    Pattern pattern = Pattern.compile("Điều\\s+(\\d+)");
-    Matcher matcher = pattern.matcher(lastAssistantMessage);
-    while (matcher.find()) {
-        queryBuilder.append(" Điều ").append(matcher.group(1));
-    }
-}
-```
-**Ưu điểm:** Hiểu context từ conversation trước
-
-### 3.4 Điểm yếu ⚠️
-
-#### 3.4.1 Embedding generation blocking
-```java
-// VectorSearchService.java
-float[] questionEmbedding = embeddingService.generateEmbedding(question);
-```
-**Vấn đề:** Mỗi chat cần gọi OpenAI API (100-500ms latency)
-**Giải pháp:**
-```java
-// Cache embeddings cho common questions
-@Cacheable(value = "questionEmbeddings", key = "#question.hashCode()")
-public float[] generateEmbedding(String question) { ... }
-```
-
-#### 3.4.2 Không có streaming response
-```java
-// LegalChatService.java
-String answer = aiService.generateText(prompt);
-return new ChatResponse(answer, citations);
-```
-**Vấn đề:** User phải đợi toàn bộ response (có thể 5-10s)
-**Giải pháp:** Implement Server-Sent Events (SSE) cho streaming
-
-#### 3.4.3 Memory usage cao khi re-ranking
-```java
-// LegalChatService.java
-List<LegalArticle> candidateArticles = retrieveRelevantArticles(searchQuery);
-// Load tất cả articles vào memory
-```
-**Vấn đề:** Với nhiều articles, có thể OOM
-**Giải pháp:** Limit candidate articles và chỉ load content khi cần
-
-#### 3.4.4 Không có cost tracking
-**Vấn đề:** Không biết chi phí OpenAI API per user
-**Giải pháp:**
-```java
-// Thêm token counting và logging
-int tokensUsed = countTokens(prompt + response);
-log.info("User {} used {} tokens, estimated cost: ${}", userId, tokensUsed, tokensUsed * 0.00001);
-```
-
-### 3.5 Code Quality Analysis
-
-| Aspect | Rating | Notes |
-|--------|--------|-------|
-| Architecture | ⭐⭐⭐⭐⭐ | RAG pattern chuẩn |
-| Error handling | ⭐⭐⭐⭐ | Graceful fallback |
-| Performance | ⭐⭐⭐ | Cần caching |
-| Scalability | ⭐⭐⭐ | Blocking calls |
-| Documentation | ⭐⭐⭐⭐ | Comments tốt |
-
-### 3.6 Đề xuất cải thiện
-
-1. **Implement streaming response** - Ưu tiên cao cho UX
-2. **Cache question embeddings** - Giảm API calls
-3. **Add cost tracking** - Monitor OpenAI usage
-4. **Conversation summarization** - Giảm token usage cho long conversations
-5. **Feedback system** - User rate câu trả lời để improve
+**Đánh giá:**
+| Tiêu chí | Điểm |
+|----------|------|
+| Business logic | ⭐⭐⭐⭐⭐ |
+| Concurrency handling | ⭐⭐⭐⭐⭐ |
+| Transaction management | ⭐⭐⭐⭐⭐ |
 
 ---
 
+### 3. Module AI (⭐⭐⭐⭐⭐ 5/5)
 
-## 4. 💳 MODULE PAYMENT (PayOS)
+#### 3.1 AIQuizService.java - Chunking Strategy
 
-### 4.1 Tổng quan
-Module thanh toán tích hợp PayOS với QR code, webhook handling, và payment reuse.
-
-### 4.2 Files chính
-- `PaymentController.java` - REST endpoints
-- `PayOSService.java` - PayOS integration
-- `QRCodeService.java` - QR code generation
-- `OrderCodeGenerator.java` - Unique order code
-
-### 4.3 Điểm mạnh ✅
-
-#### 4.3.1 Race Condition Prevention
 ```java
-// PayOSService.java - Pessimistic locking
-List<Payment> pendingPayments = paymentRepo.findPendingPaymentsByUserIdWithLock(userId);
-```
-**Ưu điểm:** Tránh tạo duplicate payment khi user click nhanh
+// ✅ ĐIỂM NỔI BẬT: Chia nhỏ request lớn để tránh timeout
 
-#### 4.3.2 Payment Reuse (Anti-spam)
-```java
-// PayOSService.java
-if (reusePendingPayment) {
-    Payment matchingPending = pendingPayments.stream()
-            .filter(p -> p.getPlan().getCode().equals(planCode))
-            .findFirst().orElse(null);
-    
-    if (matchingPending != null && isRecent) {
-        // Reuse existing payment link
-        return new CreatePaymentResponse(checkoutUrl, orderCode, qrCode, ...);
-    }
-}
-```
-**Ưu điểm:** Tránh spam tạo payment, tiết kiệm API calls
+public static final int BATCH_SIZE = 20;
 
-#### 4.3.3 Webhook Retry Mechanism
-```java
-// PayOSService.java - Handle race condition
-private Payment findPaymentWithRetry(long orderCode) {
-    for (int attempt = 1; attempt <= webhookRetryMaxAttempts; attempt++) {
-        var paymentOpt = paymentRepo.findByOrderCodeWithLock(orderCode);
-        if (paymentOpt.isPresent()) {
-            return paymentOpt.get();
-        }
-        Thread.sleep(webhookRetryDelayMs * attempt);
-    }
-}
-```
-**Ưu điểm:** Handle case webhook đến trước khi transaction commit
-
-#### 4.3.4 Test Webhook Support
-```java
-// PaymentController.java
-if (orderCodeObj != null && "123".equals(orderCodeObj.toString())) {
-    log.info("PayOS test webhook detected (orderCode=123)");
-    response.put("code", "00");
-    return ResponseEntity.ok(response);
-}
-```
-**Ưu điểm:** Hỗ trợ PayOS test webhook mà không fail
-
-#### 4.3.5 Automatic Cleanup
-```java
-// PayOSService.java
-@Scheduled(fixedDelay = 300000) // 5 phút
-public void cleanupStalePendingPayments() {
-    List<Payment> stalePayments = paymentRepo.findByStatusAndCreatedAtBefore("PENDING", staleTime);
-    // Mark as EXPIRED
-}
-```
-
-### 4.4 Điểm yếu ⚠️
-
-#### 4.4.1 Tightly coupled với PayOS SDK
-```java
-// PayOSService.java
-private final PayOS payOS;
-var paymentLink = payOS.paymentRequests().create(request);
-```
-**Vấn đề:** Khó thêm payment provider khác (VNPay, MoMo)
-**Giải pháp:**
-```java
-// Abstract payment gateway interface
-public interface PaymentGateway {
-    PaymentResponse createPayment(PaymentRequest request);
-    void handleWebhook(Map<String, Object> data);
-}
-
-@Service
-public class PayOSGateway implements PaymentGateway { ... }
-```
-
-#### 4.4.2 QR Code không persist
-```java
-// PayOSService.java
-if (qrCode == null || qrCode.isBlank()) {
-    qrCode = qrCodeService.generateQRCodeBase64(checkoutUrl);
-    qrCodeToSave = null; // Không lưu base64 vì quá lớn
-}
-```
-**Vấn đề:** Phải regenerate QR mỗi lần reuse
-**Giải pháp:** Lưu QR code URL (không phải base64) hoặc cache
-
-#### 4.4.3 Order code sequence không distributed
-```java
-// OrderCodeGenerator.java - Database sequence
-CREATE SEQUENCE order_code_sequence START WITH 10000000;
-```
-**Vấn đề:** Sequence có thể overflow (max 99999999)
-**Giải pháp:** Sử dụng UUID hoặc Snowflake ID
-
-#### 4.4.4 Không có idempotency key
-```java
-// PaymentController.java
-@PostMapping("/create")
-public ResponseEntity<CreatePaymentResponse> createPayment(...) {
-    // Không có idempotency key
-}
-```
-**Vấn đề:** Network retry có thể tạo duplicate
-**Giải pháp:**
-```java
-@PostMapping("/create")
-public ResponseEntity<CreatePaymentResponse> createPayment(
-    @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
-    ...
-) {
-    if (idempotencyKey != null) {
-        // Check cache for existing response
-    }
-}
-```
-
-### 4.5 Code Quality Analysis
-
-| Aspect | Rating | Notes |
-|--------|--------|-------|
-| Reliability | ⭐⭐⭐⭐⭐ | Retry mechanism tốt |
-| Security | ⭐⭐⭐⭐ | Signature verification |
-| Extensibility | ⭐⭐⭐ | Cần abstract interface |
-| Error handling | ⭐⭐⭐⭐ | Comprehensive logging |
-| Configuration | ⭐⭐⭐⭐⭐ | Externalized config |
-
-### 4.6 Đề xuất cải thiện
-
-1. **Abstract payment gateway** - Dễ thêm provider mới
-2. **Implement idempotency** - Tránh duplicate payments
-3. **Payment notification** - Email khi thanh toán thành công
-4. **Refund support** - Hoàn tiền khi cần
-5. **Payment analytics** - Dashboard doanh thu chi tiết
-
----
-
-
-## 5. 👨‍💼 MODULE ADMIN
-
-### 5.1 Tổng quan
-Module admin dashboard với statistics, user management, payment management, và activity logging.
-
-### 5.2 Files chính
-- `AdminController.java` - REST endpoints
-- `AdminService.java` - Business logic
-- `AdminActivityLogService.java` - Activity logging
-
-### 5.3 Điểm mạnh ✅
-
-#### 5.3.1 SQL Injection Prevention
-```java
-// AdminController.java - Whitelist sort fields
-private static final Set<String> ALLOWED_USER_SORT_FIELDS = Set.of(
-        "createdAt", "email", "fullName", "active", "enabled"
-);
-
-private String validateSortField(String sort, Set<String> allowedFields, String defaultField) {
-    if (sort == null || !allowedFields.contains(sort)) {
-        return defaultField;
-    }
-    return sort;
-}
-```
-**Ưu điểm:** Chống SQL injection qua sort parameter
-
-#### 5.3.2 Aggregated Queries (Performance)
-```java
-// AdminService.java - Giảm từ 10+ queries xuống ~5
-Object rawUserStats = userRepo.getUserStatsAggregated(thirtyDaysAgo);
-Object rawPaymentStats = paymentRepo.getPaymentStatsAggregated();
-```
-**Ưu điểm:** Dashboard load nhanh hơn nhiều
-
-#### 5.3.3 Batch Queries cho User List
-```java
-// AdminService.java - Tránh N+1
-Map<Long, UserCredit> creditsMap = userCreditRepo.findByUserIdIn(userIds).stream()...
-Map<Long, Long> paymentCountsMap = paymentRepo.countByUserIdsAndStatus(userIds).stream()...
-Map<Long, Long> quizCountsMap = quizSetRepo.countByUserIds(userIds).stream()...
-```
-**Ưu điểm:** Load 100 users chỉ cần 4 queries thay vì 400
-
-#### 5.3.4 Activity Audit Trail
-```java
-// AdminService.java
-private void logAdminActivity(User adminUser, String actionType, String targetType,
-                               Long targetId, String description) {
-    adminActivityLogService.logAction(adminUser, actionType, targetType, targetId, description);
-}
-```
-**Ưu điểm:** Track mọi hành động admin cho compliance
-
-#### 5.3.5 Soft Delete
-```java
-// AdminService.java
-public void deleteUser(Long userId, User adminUser) {
-    user.setEnabled(false);
-    user.setActive(false);
-    userRepo.save(user);
-    // Không xóa vật lý - giữ data cho audit
-}
-```
-
-### 5.4 Điểm yếu ⚠️
-
-#### 5.4.1 Chỉ có ROLE_ADMIN (không granular)
-```java
-// AdminController.java
-@PreAuthorize("hasAuthority('ROLE_ADMIN')")
-public class AdminController { ... }
-```
-**Vấn đề:** Không phân quyền chi tiết (view-only, user-manager, super-admin)
-**Giải pháp:**
-```java
-// Fine-grained permissions
-@PreAuthorize("hasAuthority('ADMIN_VIEW_USERS')")
-public ResponseEntity<?> getAllUsers(...) { ... }
-
-@PreAuthorize("hasAuthority('ADMIN_BAN_USERS')")
-public ResponseEntity<?> banUser(...) { ... }
-```
-
-#### 5.4.2 Dashboard stats không cache
-```java
-// AdminService.java
-public AdminStatsResponse getDashboardStats() {
-    // Mỗi lần gọi đều query DB
-}
-```
-**Vấn đề:** Load dashboard chậm nếu nhiều data
-**Giải pháp:**
-```java
-@Cacheable(value = "dashboardStats", key = "'stats'")
-public AdminStatsResponse getDashboardStats() { ... }
-
-// Invalidate cache mỗi 5 phút
-@Scheduled(fixedRate = 300000)
-@CacheEvict(value = "dashboardStats", allEntries = true)
-public void evictDashboardCache() { }
-```
-
-#### 5.4.3 Activity log không có rate limiting
-```java
-// AdminActivityLogService.java
-public void logAction(User adminUser, String actionType, ...) {
-    // Không giới hạn số lượng logs
-}
-```
-**Vấn đề:** Có thể spam logs
-**Giải pháp:** Thêm rate limiting hoặc batch logging
-
-#### 5.4.4 Không có export data
-**Vấn đề:** Admin không thể export users/payments ra Excel
-**Giải pháp:** Thêm endpoint export CSV/Excel
-
-### 5.5 Code Quality Analysis
-
-| Aspect | Rating | Notes |
-|--------|--------|-------|
-| Security | ⭐⭐⭐⭐ | SQL injection prevention |
-| Performance | ⭐⭐⭐⭐ | Batch queries |
-| Authorization | ⭐⭐⭐ | Cần granular permissions |
-| Audit | ⭐⭐⭐⭐⭐ | Comprehensive logging |
-| UX | ⭐⭐⭐⭐ | Pagination, search, filter |
-
-### 5.6 Đề xuất cải thiện
-
-1. **Implement RBAC** - Fine-grained permissions
-2. **Cache dashboard stats** - Improve load time
-3. **Export functionality** - CSV/Excel export
-4. **Admin notifications** - Alert khi có vấn đề
-5. **Bulk actions** - Ban/unban nhiều users cùng lúc
-
----
-
-
-## 6. 🤖 MODULE AI (OpenAI)
-
-### 6.1 Tổng quan
-Module tích hợp OpenAI cho chat completion, quiz generation, và embeddings.
-
-### 6.2 Files chính
-- `OpenAIService.java` - Chat và quiz generation
-- `EmbeddingService.java` - Text embeddings
-- `AIQuizService.java` - Quiz generation workflow
-- `DocumentParserService.java` - PDF/DOCX parsing
-
-### 6.3 Điểm mạnh ✅
-
-#### 6.3.1 Chunking Strategy cho Large Counts
-```java
-// AIQuizService.java
 private List<AIQuestionDTO> generateQuestionsWithChunking(String documentText, int totalCount) {
-    int batchSize = OpenAIService.BATCH_SIZE; // 20
+    // Nếu yêu cầu <= 20 câu → single request
+    if (totalCount <= batchSize) {
+        return aiService.generateQuestions(documentText, totalCount);
+    }
+    
+    // Nếu yêu cầu > 20 câu → chia thành nhiều batch
+    int totalBatches = (totalCount + batchSize - 1) / batchSize;
     
     for (int batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
         if (batchIndex == 0) {
+            // Batch đầu: không có context
             batchQuestions = aiService.generateQuestions(documentText, currentBatchSize);
         } else {
-            // Pass existing questions as context to avoid duplicates
+            // Batch sau: truyền câu hỏi đã tạo để tránh trùng lặp
             batchQuestions = aiService.generateQuestionsWithContext(
-                    documentText, currentBatchSize, allQuestions);
+                documentText, currentBatchSize, allQuestions
+            );
         }
     }
 }
 ```
-**Ưu điểm:** Tạo được 40 câu hỏi mà không bị duplicate
 
-#### 6.3.2 Fill Missing Questions
+#### 3.2 Retry Logic cho Missing Questions
 ```java
-// AIQuizService.java
-private List<AIQuestionDTO> fillMissingQuestions(
-        String documentText, List<AIQuestionDTO> existingQuestions, int targetCount) {
+// ✅ ĐIỂM TỐT: Tự động bổ sung nếu AI trả về thiếu câu hỏi
+private static final int MAX_FILL_RETRIES = 3;
+
+private List<AIQuestionDTO> fillMissingQuestions(...) {
     while (allQuestions.size() < targetCount && retryCount < MAX_FILL_RETRIES) {
-        List<AIQuestionDTO> additionalQuestions = aiService.generateQuestionsWithContext(...);
+        int missing = targetCount - allQuestions.size();
+        List<AIQuestionDTO> additionalQuestions = aiService.generateQuestionsWithContext(
+            documentText, missing, allQuestions
+        );
         allQuestions.addAll(additionalQuestions);
         retryCount++;
     }
 }
 ```
-**Ưu điểm:** Đảm bảo đủ số câu hỏi yêu cầu
 
-#### 6.3.3 Retry Mechanism
+---
+
+### 4. Module LEGAL CHAT (⭐⭐⭐⭐⭐ 5/5)
+
+#### 4.1 LegalChatService.java - RAG Implementation
+
 ```java
-// OpenAIService.java
-private String callOpenAIWithRetry(String prompt, int questionCount) {
-    for (int attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-        try {
-            return callOpenAI(prompt, questionCount);
-        } catch (WebClientResponseException e) {
-            if (e.getStatusCode().is4xxClientError()) {
-                break; // Don't retry client errors
+// ✅ ĐIỂM NỔI BẬT: RAG với AI Re-ranking
+
+public ChatResponse chat(Long userId, String question, ConversationContext ctx) {
+    // STEP 0: Reserve credit
+    CreditReservation reservation = creditService.reserveCredit(userId, "CHAT", "AI_CHAT");
+    
+    try {
+        // STEP 1: Retrieve candidates (nhiều hơn cần thiết)
+        List<LegalArticle> candidateArticles = retrieveRelevantArticles(searchQuery);
+        
+        // STEP 2: ✅ AI Re-ranking - AI lọc điều luật THỰC SỰ liên quan
+        List<LegalArticle> relevantArticles = aiReRankArticles(question, candidateArticles);
+        
+        // STEP 3: Generate answer với context đã lọc
+        String answer = generateAnswer(question, relevantArticles, ctx);
+        
+        // STEP 4: Build citations
+        List<CitationDTO> citations = buildCitations(relevantArticles);
+        
+        // STEP 5: Confirm credit
+        creditService.confirmReservation(reservation.getId());
+        
+        return new ChatResponse(answer, citations);
+    } catch (Exception e) {
+        creditService.refundReservation(reservation.getId());
+        throw e;
+    }
+}
+```
+
+#### 4.2 Conversation Memory
+```java
+// ✅ ĐIỂM TỐT: Hiểu ngữ cảnh từ lịch sử hội thoại
+private String buildPromptWithMemory(String question, String context, ConversationContext ctx) {
+    if (ctx != null && !ctx.isEmpty()) {
+        promptBuilder.append("LỊCH SỬ HỘI THOẠI:\n");
+        for (Message msg : ctx.getMessages()) {
+            // Truncate để tiết kiệm tokens
+            String content = msg.content().length() > 300 
+                ? msg.content().substring(0, 300) + "..." 
+                : msg.content();
+            promptBuilder.append(role).append(": ").append(content).append("\n");
+        }
+        // Hướng dẫn AI hiểu "nó", "điều đó" từ context
+        promptBuilder.append("LƯU Ý: Nếu người dùng hỏi 'nó', 'điều đó'... hãy hiểu từ context.\n");
+    }
+}
+```
+
+---
+
+### 5. Module PAYMENT (⭐⭐⭐⭐⭐ 5/5)
+
+#### 5.1 PayOSService.java - Anti-duplicate Payment
+
+```java
+// ✅ ĐIỂM NỔI BẬT: Pessimistic lock + Reuse logic
+
+@Transactional
+public CreatePaymentResponse createPayment(Long userId, String planCode) {
+    // SỬ DỤNG PESSIMISTIC LOCK để tránh race condition
+    List<Payment> pendingPayments = paymentRepo.findPendingPaymentsByUserIdWithLock(userId);
+    
+    if (!pendingPayments.isEmpty()) {
+        // Tìm pending payment cùng gói
+        Payment matchingPending = pendingPayments.stream()
+            .filter(p -> p.getPlan().getCode().equals(planCode))
+            .findFirst().orElse(null);
+        
+        if (matchingPending != null && isRecent) {
+            // Kiểm tra trên PayOS xem còn valid không
+            var paymentInfo = payOS.paymentRequests().get(matchingPending.getOrderCode());
+            
+            if ("PENDING".equals(status) || "PROCESSING".equals(status)) {
+                // ✅ REUSE payment link thay vì tạo mới
+                return existingPaymentResponse;
             }
-            Thread.sleep(RETRY_DELAY.toMillis() * attempt);
         }
     }
-}
-```
-**Ưu điểm:** Handle transient failures gracefully
-
-#### 6.3.4 Input Sanitization
-```java
-// AIQuizService.java
-private String sanitizeInput(String input) {
-    return input
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-        .replace("\"", "&quot;")
-        .replace("'", "&#x27;")
-        .trim();
-}
-```
-**Ưu điểm:** Prevent XSS từ AI-generated content
-
-#### 6.3.5 Prompt Engineering tốt
-```java
-// OpenAIService.java
-promptBuilder.append("""
-    Bạn là chuyên gia tạo câu hỏi trắc nghiệm về pháp luật Việt Nam.
     
-    YÊU CẦU BẮT BUỘC:
-    - PHẢI tạo ĐÚNG %d câu hỏi, không hơn không kém
-    - Mỗi câu hỏi có 4 đáp án (A, B, C, D)
-    - Chỉ có 1 đáp án đúng
+    // Tạo payment mới nếu không có pending valid
     ...
-""");
-```
-
-### 6.4 Điểm yếu ⚠️
-
-#### 6.4.1 Không có Rate Limiting
-```java
-// OpenAIService.java
-public String generateText(String prompt) {
-    return callOpenAIWithRetry(prompt, 0);
-}
-```
-**Vấn đề:** Có thể exceed OpenAI rate limits
-**Giải pháp:**
-```java
-// Sử dụng Resilience4j RateLimiter
-@RateLimiter(name = "openaiRateLimiter")
-public String generateText(String prompt) { ... }
-```
-
-#### 6.4.2 Không có Cost Tracking
-**Vấn đề:** Không biết chi phí API per user/request
-**Giải pháp:**
-```java
-// Track token usage
-public class OpenAIResponse {
-    private String content;
-    private int promptTokens;
-    private int completionTokens;
-    private double estimatedCost;
 }
 ```
 
-#### 6.4.3 Timeout có thể không đủ
+#### 5.2 Webhook Handling với Retry
 ```java
-private static final Duration API_TIMEOUT = Duration.ofSeconds(180);
-```
-**Vấn đề:** Large documents có thể cần > 180s
-**Giải pháp:** Configurable timeout hoặc async processing
+// ✅ ĐIỂM TỐT: Xử lý race condition khi webhook đến trước createPayment commit
 
-#### 6.4.4 Document text truncation
+private Payment findPaymentWithRetry(long orderCode) {
+    // Retry tối đa 5 lần với delay tăng dần
+    for (int attempt = 1; attempt <= webhookRetryMaxAttempts; attempt++) {
+        var paymentOpt = paymentRepo.findByOrderCodeWithLock(orderCode);
+        
+        if (paymentOpt.isPresent()) {
+            return paymentOpt.get();
+        }
+        
+        // Đợi và retry (payment có thể chưa commit)
+        Thread.sleep(webhookRetryDelayMs * attempt);
+    }
+    throw new NotFoundException("Payment not found after retries");
+}
+```
+
+#### 5.3 Scheduled Cleanup
 ```java
-// DocumentParserService.java
-private static final int MAX_TEXT_LENGTH = 150000; // 150K chars
+// ✅ ĐIỂM TỐT: Tự động dọn dẹp payment cũ
+
+@Scheduled(fixedDelay = 300000) // Mỗi 5 phút
+public void cleanupStalePendingPayments() {
+    // Đánh dấu pending payments > 30 phút là EXPIRED
+}
+
+@Scheduled(cron = "0 0 3 * * ?") // 3:00 AM mỗi ngày
+public void cleanupOldFailedPayments() {
+    // Xóa payments EXPIRED/CANCELLED/FAILED > 30 ngày
+}
 ```
-**Vấn đề:** Có thể mất thông tin quan trọng ở cuối document
-**Giải pháp:** Smart truncation giữ lại sections quan trọng
-
-### 6.5 Code Quality Analysis
-
-| Aspect | Rating | Notes |
-|--------|--------|-------|
-| Reliability | ⭐⭐⭐⭐ | Retry mechanism |
-| Error handling | ⭐⭐⭐⭐ | Graceful degradation |
-| Security | ⭐⭐⭐⭐ | Input sanitization |
-| Cost efficiency | ⭐⭐⭐ | Cần tracking |
-| Scalability | ⭐⭐⭐ | Cần rate limiting |
-
-### 6.6 Đề xuất cải thiện
-
-1. **Add rate limiting** - Tránh exceed API limits
-2. **Implement cost tracking** - Monitor usage per user
-3. **Async quiz generation** - Background processing với progress
-4. **Smart document chunking** - Giữ context khi truncate
-5. **Model fallback** - Fallback sang model rẻ hơn khi cần
 
 ---
 
+### 6. Module QUIZ (⭐⭐⭐⭐ 4/5)
 
-## 7. 💰 MODULE CREDIT
+#### 6.1 QuizService.java - N+1 Optimization
 
-### 7.1 Tổng quan
-Module quản lý credits cho các tính năng AI (chat, quiz generation).
-
-### 7.2 Files chính
-- `CreditService.java` - Credit management
-- `UserCredit.java` - Entity
-- `CreditTransaction.java` - Transaction log
-
-### 7.3 Điểm mạnh ✅
-
-#### 7.3.1 Pessimistic Locking
 ```java
-// CreditService.java
-@Transactional
-public void checkAndDeductChatCredit(Long userId) {
-    // SELECT FOR UPDATE - lock row
-    UserCredit credits = userCreditRepo.findByUserIdWithLock(userId)
-            .orElseThrow(() -> new NotFoundException("User credits not found"));
+// ✅ ĐIỂM TỐT: Batch query thay vì N+1
+
+// Lấy question count cho nhiều quiz sets trong 1 query
+@Transactional(readOnly = true)
+public Map<Long, Long> countQuestionsForQuizSets(List<Long> quizSetIds) {
+    return questionRepo.countByQuizSetIds(quizSetIds).stream()
+        .collect(Collectors.toMap(
+            row -> toLong(row[0]),  // quizSetId
+            row -> toLong(row[1])   // count
+        ));
+}
+
+// Controller sử dụng:
+Map<Long, Long> questionCounts = quizService.countQuestionsForQuizSets(quizSetIds);
+var responses = quizSets.stream()
+    .map(set -> mapToQuizSetResponse(set, questionCounts.getOrDefault(set.getId(), 0L)))
+    .toList();
+```
+
+#### 6.2 Input Validation
+```java
+// ✅ ĐIỂM TỐT: Validation chặt chẽ cho options
+
+private void validateOptions(List<OptionDto> options) {
+    // Phải có đúng 4 đáp án
+    if (options == null || options.size() != 4) {
+        throw new BadRequestException("Phải có đúng 4 đáp án");
+    }
     
-    // Check and deduct atomically
-    credits.setChatCredits(oldBalance - 1);
-    userCreditRepo.save(credits);
-}
-```
-**Ưu điểm:** Tránh race condition khi nhiều request đồng thời
-
-#### 7.3.2 Transaction Logging
-```java
-// CreditService.java
-private void logTransaction(Long userId, String type, String creditType, 
-                           int amount, int balanceAfter, String description) {
-    CreditTransaction transaction = new CreditTransaction();
-    transaction.setUser(user);
-    transaction.setType(type); // PURCHASE, USAGE, BONUS, REFUND
-    transaction.setAmount(amount);
-    transaction.setBalanceAfter(balanceAfter);
-    transactionRepo.save(transaction);
-}
-```
-**Ưu điểm:** Audit trail đầy đủ cho mọi thay đổi credit
-
-#### 7.3.3 Expiration Checking
-```java
-// CreditService.java
-if (credits.getExpiresAt() != null && LocalDateTime.now().isAfter(credits.getExpiresAt())) {
-    throw new ForbiddenException("Credits đã hết hạn. Vui lòng mua thêm credits.");
-}
-```
-**Ưu điểm:** Support time-limited credits
-
-#### 7.3.4 Fallback Credit Creation
-```java
-// CreditService.java
-public CreditBalanceResponse getCreditBalance(Long userId) {
-    UserCredit credits = userCreditRepo.findByUserId(userId).orElse(null);
+    // Keys phải là A, B, C, D
+    Set<String> keys = options.stream()
+        .map(o -> o.optionKey().trim().toUpperCase())
+        .collect(Collectors.toSet());
+    if (!keys.equals(Set.of("A", "B", "C", "D"))) {
+        throw new BadRequestException("Đáp án phải có các key: A, B, C, D");
+    }
     
-    // Fallback if trigger didn't work
-    if (credits == null) {
-        credits = createFreeCredits(userId);
+    // Chỉ có 1 đáp án đúng
+    long correctCount = options.stream().filter(OptionDto::isCorrect).count();
+    if (correctCount != 1) {
+        throw new BadRequestException("Phải có đúng 1 đáp án đúng");
     }
 }
 ```
-**Ưu điểm:** Đảm bảo user luôn có credits record
 
-### 7.4 Điểm yếu ⚠️
-
-#### 7.4.1 ✅ FIXED - Credit Reservation System đã được implement
-```java
-// CreditService.java - Reserve/Confirm/Refund pattern
-public CreditReservation reserveCredits(Long userId, String creditType, int amount, String purpose) {
-    UserCredit credits = userCreditRepo.findByUserIdWithLock(userId)
-            .orElseThrow(() -> new NotFoundException("User credits not found"));
-    
-    // Check balance
-    int currentBalance = getCreditBalance(credits, creditType);
-    if (currentBalance < amount) {
-        throw new ForbiddenException("Không đủ credits");
-    }
-    
-    // Create reservation (pending state)
-    CreditReservation reservation = new CreditReservation();
-    reservation.setUserId(userId);
-    reservation.setCreditType(creditType);
-    reservation.setAmount(amount);
-    reservation.setStatus(ReservationStatus.PENDING);
-    reservation.setExpiresAt(LocalDateTime.now().plusMinutes(reservationTimeoutMinutes));
-    
-    return reservationRepo.save(reservation);
-}
-
-public void confirmReservation(Long reservationId) {
-    CreditReservation reservation = reservationRepo.findByIdWithLock(reservationId)
-            .orElseThrow(() -> new NotFoundException("Reservation not found"));
-    
-    // Actually deduct credits
-    deductCredits(reservation.getUserId(), reservation.getCreditType(), reservation.getAmount());
-    reservation.setStatus(ReservationStatus.CONFIRMED);
-    reservationRepo.save(reservation);
-}
-
-public void refundReservation(Long reservationId) {
-    CreditReservation reservation = reservationRepo.findByIdWithLock(reservationId)
-            .orElseThrow(() -> new NotFoundException("Reservation not found"));
-    
-    // Refund - no deduction happened
-    reservation.setStatus(ReservationStatus.REFUNDED);
-    reservationRepo.save(reservation);
-}
-```
-**Status:** ✅ Đã implement với auto-cleanup scheduler
-
-#### 7.4.2 ✅ FIXED - Admin Credit Management đã được implement
-```java
-// AdminCreditService.java
-public void addCredits(Long userId, String creditType, int amount, String reason, User adminUser) {
-    UserCredit credits = userCreditRepo.findByUserId(userId)
-            .orElseGet(() -> createDefaultCredits(userId));
-    
-    // Add credits
-    if ("CHAT".equals(creditType)) {
-        credits.setChatCredits(credits.getChatCredits() + amount);
-    } else {
-        credits.setQuizGenCredits(credits.getQuizGenCredits() + amount);
-    }
-    
-    userCreditRepo.save(credits);
-    logTransaction(userId, "ADMIN_ADD", creditType, amount, getBalance(credits, creditType), reason);
-    logAdminActivity(adminUser, "ADD_CREDITS", "USER", userId, reason);
-}
-```
-**Status:** ✅ Đã implement với activity logging
-
-#### 7.4.3 Pessimistic Lock có thể gây contention
-```java
-UserCredit credits = userCreditRepo.findByUserIdWithLock(userId);
-```
-**Vấn đề:** Nhiều concurrent requests có thể bị block
-**Giải pháp:** Optimistic locking với retry hoặc Redis atomic operations
-
-#### 7.4.4 ✅ FIXED - Expired reservations auto cleanup
-```java
-// CreditReservationCleanupScheduler.java
-@Scheduled(fixedDelayString = "${credit.reservation.cleanup.interval-ms:60000}")
-public void cleanupExpiredReservations() {
-    List<CreditReservation> expired = reservationRepo.findExpiredReservations(LocalDateTime.now());
-    for (CreditReservation reservation : expired) {
-        reservation.setStatus(ReservationStatus.EXPIRED);
-        reservationRepo.save(reservation);
-        log.info("Expired reservation {} for user {}", reservation.getId(), reservation.getUserId());
-    }
-}
-```
-**Status:** ✅ Đã implement với configurable interval
-```
-**Vấn đề:** Nhiều concurrent requests có thể bị block
-**Giải pháp:** Optimistic locking với retry hoặc Redis atomic operations
-
-#### 7.4.3 Không có Admin UI để add credits
-**Vấn đề:** Admin không thể manually add credits cho user
-**Giải pháp:** Thêm admin endpoint
-
-#### 7.4.4 Expired credits không auto cleanup
-```java
-// Không có scheduled task để cleanup expired credits
-```
-**Giải pháp:**
-```java
-@Scheduled(cron = "0 0 0 * * *") // Daily at midnight
-public void cleanupExpiredCredits() {
-    userCreditRepo.resetExpiredCredits(LocalDateTime.now());
-}
-```
-
-### 7.5 Code Quality Analysis
-
-| Aspect | Rating | Notes |
-|--------|--------|-------|
-| Concurrency | ⭐⭐⭐⭐ | Pessimistic locking |
-| Audit | ⭐⭐⭐⭐⭐ | Transaction logging |
-| Reliability | ⭐⭐⭐ | Cần refund mechanism |
-| Flexibility | ⭐⭐⭐⭐ | Multiple credit types |
-| Maintainability | ⭐⭐⭐⭐ | Clean code |
-
-### 7.6 Đề xuất cải thiện
-
-1. ~~**Implement credit refund**~~ - ✅ Đã implement (Credit Reservation)
-2. ~~**Admin credit management**~~ - ✅ Đã implement
-3. **Credit usage analytics** - Dashboard usage per user
-4. **Optimistic locking option** - Giảm contention
-5. **Credit expiration notifications** - Email trước khi hết hạn
+**Điểm trừ nhẹ:** Duration validation có thể flexible hơn (hiện tại 5-180 phút)
 
 ---
 
+## 🔐 Đánh Giá Bảo Mật
 
-## 8. 🗄️ DATABASE SCHEMA
+### Security Checklist
 
-### 8.1 Tổng quan
-PostgreSQL với pgvector extension cho vector search.
+| # | Tính năng | Trạng thái | Chi tiết |
+|---|-----------|------------|----------|
+| 1 | **Password Hashing** | ✅ Đạt | BCrypt với default strength |
+| 2 | **JWT Security** | ✅ Đạt | JJWT 0.12.5, HS512 signing |
+| 3 | **Token Rotation** | ✅ Đạt | Refresh token thay đổi sau mỗi lần dùng |
+| 4 | **Token Reuse Detection** | ✅ Đạt | Revoke ALL tokens khi phát hiện reuse |
+| 5 | **Account Lockout** | ✅ Đạt | Khóa sau nhiều lần đăng nhập sai |
+| 6 | **Email Verification** | ✅ Đạt | Bắt buộc trước khi login |
+| 7 | **OAuth2** | ✅ Đạt | Google integration |
+| 8 | **SQL Injection** | ✅ Đạt | JPA parameterized queries |
+| 9 | **XSS Protection** | ⚠️ Một phần | Có ở AIQuizService, thiếu ở một số nơi |
+| 10 | **CORS** | ✅ Đạt | WebConfig configured |
+| 11 | **Rate Limiting** | ⚠️ Chưa đầy đủ | Exception handler có, implementation thiếu |
+| 12 | **Input Validation** | ✅ Đạt | @Valid + custom validators |
+| 13 | **Sensitive Data Logging** | ⚠️ Cần review | Có thể log password trong một số trường hợp |
+| 14 | **Admin Authorization** | ✅ Đạt | ROLE_ADMIN check |
+| 15 | **Ban/Unban Instant Effect** | ✅ Đạt | Check DB mỗi request trong JwtAuthFilter |
 
-### 8.2 Điểm mạnh ✅
-
-#### 8.2.1 Strategic Indexing
+### Security Audit Log Table
 ```sql
--- Partial unique index (chỉ index khi not null)
-CREATE UNIQUE INDEX ux_users_provider ON users(provider, provider_id)
-    WHERE provider_id IS NOT NULL;
-
--- Composite index cho filtering
-CREATE INDEX ix_payments_status_date ON payments(status, created_at DESC);
-```
-
-#### 8.2.2 Triggers cho Business Logic
-```sql
--- Auto create FREE credits cho new users
-CREATE TRIGGER trg_users_give_free_credits
-AFTER INSERT ON users
-FOR EACH ROW
-EXECUTE FUNCTION give_free_credits_to_new_user();
-```
-
-#### 8.2.3 Vector Search Support
-```sql
-CREATE EXTENSION IF NOT EXISTS vector;
-
--- Vector column cho embeddings
-embedding vector(1536) NULL
-
--- IVFFlat index cho fast similarity search
-CREATE INDEX ix_legal_articles_embedding ON legal_articles 
-USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
-```
-
-#### 8.2.4 Referential Integrity
-```sql
-CONSTRAINT fk_quiz_attempt_set FOREIGN KEY (quiz_set_id) 
-    REFERENCES quiz_sets(id) ON DELETE CASCADE
-```
-
-### 8.3 Điểm yếu ⚠️
-
-#### 8.3.1 Sequence có thể overflow
-```sql
-CREATE SEQUENCE order_code_sequence
-    START WITH 10000000
-    MAXVALUE 99999999
-    NO CYCLE;
-```
-**Vấn đề:** Chỉ có ~90 triệu order codes
-**Giải pháp:** Sử dụng UUID hoặc tăng range
-
-#### 8.3.2 Không có table partitioning
-```sql
--- chat_messages và credit_transactions có thể rất lớn
-CREATE TABLE chat_messages (
+CREATE TABLE security_audit_log (
     id BIGSERIAL PRIMARY KEY,
-    ...
+    event_type VARCHAR(50) NOT NULL,  -- LOGIN_SUCCESS, LOGIN_FAILED, etc.
+    user_id BIGINT,
+    email VARCHAR(255),
+    ip_address VARCHAR(45),
+    user_agent VARCHAR(500),
+    endpoint VARCHAR(255),
+    details TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 ```
-**Giải pháp:** Partition by date range
 
-#### 8.3.3 Vector index size
+---
+
+## 💾 Đánh Giá Database
+
+### Schema Design (⭐⭐⭐⭐⭐ 5/5)
+
+#### Điểm Tốt:
+
+1. **Proper Indexes**
 ```sql
--- 1536 dimensions × số articles = large index
-embedding vector(1536)
+-- Performance indexes
+CREATE INDEX ix_users_is_active ON users(is_active);
+CREATE INDEX ix_users_created_at ON users(created_at DESC);
+CREATE INDEX ix_trans_user_date ON credit_transactions(user_id, created_at DESC);
+
+-- Vector search index
+CREATE INDEX ix_legal_articles_embedding ON legal_articles 
+    USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 ```
-**Vấn đề:** Index có thể rất lớn với nhiều articles
 
-### 8.4 Đề xuất cải thiện
+2. **Triggers cho Business Logic**
+```sql
+-- Auto-create FREE credits
+CREATE TRIGGER trg_users_give_free_credits
+AFTER INSERT ON users FOR EACH ROW
+EXECUTE FUNCTION give_free_credits_to_new_user();
 
-1. **Table partitioning** cho large tables
-2. **Archive old data** - Move old transactions to archive
-3. **Index monitoring** - Track index usage và size
-4. **Connection pooling config** - Tune HikariCP
+-- Enforce only 1 correct answer
+CREATE TRIGGER trg_only_one_correct_option
+AFTER INSERT OR UPDATE ON quiz_question_options
+FOR EACH ROW WHEN (NEW.is_correct = TRUE)
+EXECUTE FUNCTION check_only_one_correct_option();
+```
+
+3. **Stored Functions cho Complex Queries**
+```sql
+-- Vector search
+CREATE FUNCTION search_articles_by_vector(query_embedding vector(1536), ...) 
+RETURNS TABLE (...);
+
+-- Hybrid search (vector + keyword)
+CREATE FUNCTION hybrid_search_articles(
+    query_embedding vector(1536),
+    keywords TEXT[],
+    vector_weight FLOAT DEFAULT 0.7,
+    keyword_weight FLOAT DEFAULT 0.3,
+    max_results INT DEFAULT 10
+) RETURNS TABLE (...);
+```
+
+4. **Views cho Admin Dashboard**
+```sql
+CREATE VIEW vw_admin_dashboard_stats AS
+SELECT
+    (SELECT COUNT(*) FROM users) AS total_users,
+    (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status = 'SUCCESS') AS total_revenue,
+    ...;
+```
+
+5. **Proper Constraints**
+```sql
+-- Check constraints
+CONSTRAINT ck_trans_type CHECK (type IN ('PURCHASE', 'USAGE', 'BONUS', ...))
+CONSTRAINT ck_option_key CHECK (option_key IN ('A','B','C','D'))
+
+-- Foreign keys với CASCADE
+FOREIGN KEY (quiz_set_id) REFERENCES quiz_sets(id) ON DELETE CASCADE
+```
 
 ---
 
-## 9. 🔒 SECURITY ANALYSIS
+## ⭐ Điểm Mạnh
 
-### 9.1 Điểm mạnh ✅
+### 1. Kiến Trúc & Code Quality
+- ✅ Clean Architecture: Controller → Service → Repository → Entity
+- ✅ DTOs cho mọi input/output
+- ✅ Global Exception Handler với custom exceptions
+- ✅ Consistent naming conventions
+- ✅ Proper transactional boundaries
 
-| Security Measure | Implementation | Status |
-|-----------------|----------------|--------|
-| SQL Injection | Parameterized queries | ✅ |
-| XSS Prevention | Input sanitization | ✅ |
-| CSRF | Disabled (stateless API) | ✅ |
-| Password Hashing | BCrypt | ✅ |
-| JWT Validation | JJWT library | ✅ |
-| File Upload | Filename validation | ✅ |
-| Path Traversal | Filename sanitization | ✅ |
-| Admin Authorization | @PreAuthorize | ✅ |
-| Webhook Signature | PayOS verification | ✅ |
-| **Rate Limiting** | Bucket-based | ✅ NEW |
-| **Account Lockout** | Configurable | ✅ NEW |
-| **Security Audit** | Database logging | ✅ NEW |
-| **Token Rotation** | Refresh token rotation | ✅ NEW |
-| **Reuse Detection** | Revoke all on reuse | ✅ NEW |
+### 2. Business Logic
+- ✅ **Credit Reserve/Confirm/Refund** - User không mất credit khi AI fail
+- ✅ **AI Chunking** - Xử lý request lớn hiệu quả
+- ✅ **RAG với AI Re-ranking** - Lọc kết quả search chính xác hơn
+- ✅ **Payment Idempotency** - Tránh duplicate payment
 
-### 9.2 Điểm yếu còn lại ⚠️
+### 3. Performance
+- ✅ N+1 query optimization với batch queries
+- ✅ Pagination support
+- ✅ Lazy loading cho relationships
+- ✅ Proper database indexes
 
-| Vulnerability | Risk | Mitigation |
-|--------------|------|------------|
-| DEBUG Logging | Medium | Disable in production |
-| CORS Config | Medium | Explicit whitelist |
-| No 2FA | Medium | Implement TOTP |
-| ~~No Rate Limiting~~ | ~~High~~ | ✅ FIXED |
-| ~~Refresh Token~~ | ~~Low~~ | ✅ FIXED |
+### 4. Security
+- ✅ JWT với rotation và reuse detection
+- ✅ Account lockout
+- ✅ Security audit logging
+- ✅ Email verification
 
-### 9.3 Security Recommendations
+### 5. Reliability
+- ✅ Retry mechanisms với exponential backoff
+- ✅ Optimistic locking cho concurrent access
+- ✅ Scheduled cleanup tasks
+- ✅ Webhook retry handling
 
-1. ~~**Rate Limiting**~~ - ✅ Đã implement
+---
 
-2. **Disable DEBUG Logging** (Ưu tiên cao)
-```properties
-# production profile
-logging.level.root=WARN
-logging.level.com.htai=INFO
+## ⚠️ Điểm Cần Cải Thiện
+
+### 1. Thiếu Unit Tests (Critical)
 ```
+src/test/java/
+└── com/htai/exe201phapluatso/
+    └── Exe201PhapLuatSoApplicationTests.java  # Chỉ có 1 file test rỗng
+```
+**Impact:** Không có automated testing, khó maintain, khó refactor  
+**Khuyến nghị:** Viết unit tests cho CreditService, AuthService, PayOSService
 
-3. **Explicit CORS**
+### 2. Spring Boot Version Issue
+```xml
+<version>4.0.0</version>  <!-- Spring Boot 4.0.0 chưa release! -->
+```
+**Impact:** Có thể gây build error hoặc incompatibility  
+**Khuyến nghị:** Sử dụng Spring Boot 3.x (3.2.x hoặc 3.3.x)
+
+### 3. Rate Limiting Chưa Implement
 ```java
-@Bean
-public CorsConfigurationSource corsConfigurationSource() {
-    CorsConfiguration config = new CorsConfiguration();
-    config.setAllowedOrigins(List.of("https://phapluatso.vn"));
-    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
-    return new UrlBasedCorsConfigurationSource();
+// RateLimitExceededException có trong GlobalExceptionHandler
+// Nhưng không thấy RateLimitService thực sự được implement
+```
+**Impact:** API có thể bị abuse, DDoS risk  
+**Khuyến nghị:** Implement Redis-based rate limiting
+
+### 4. XSS Sanitization Không Đồng Nhất
+```java
+// AIQuizService có sanitize:
+private String sanitizeInput(String input) {
+    return input.replace("<", "&lt;").replace(">", "&gt;")...;
+}
+
+// Nhưng LegalChatService không có sanitize cho question
+public ChatResponse chat(Long userId, String question) {
+    validateQuestion(question);  // Chỉ check length, không sanitize
+    ...
 }
 ```
+**Khuyến nghị:** Tạo util class cho sanitization và dùng consistently
 
-4. **2FA Implementation** (Nice to have)
+### 5. Thiếu API Documentation
 ```java
-// TOTP với Google Authenticator
-@PostMapping("/2fa/setup")
-public TwoFactorSetupResponse setup2FA(@CurrentUser User user) { ... }
-
-@PostMapping("/2fa/verify")
-public TokenResponse verify2FA(@RequestBody TwoFactorVerifyRequest req) { ... }
+// Không có Swagger/OpenAPI annotations
+@PostMapping("/register")
+public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {...}
 ```
+**Khuyến nghị:** Thêm `springdoc-openapi-starter-webmvc-ui` dependency
+
+### 6. Hardcoded Values
+```java
+// Trong AIQuizService
+private static final java.util.Set<Integer> ALLOWED_QUESTION_COUNTS = 
+    java.util.Set.of(15, 20, 30, 40);
+
+// Trong OpenAIService
+private static final int MAX_RETRIES = 2;
+private static final Duration RETRY_DELAY = Duration.ofSeconds(2);
+```
+**Khuyến nghị:** Chuyển sang application.properties
+
+### 7. Missing Async for Email
+```java
+// PaymentEmailService gọi trong webhook handler
+// Nếu email fail có thể block webhook response
+paymentEmailService.sendPaymentSuccessEmail(payment);
+```
+**Khuyến nghị:** Đảm bảo @Async được configure và method được đánh dấu
 
 ---
 
+## 📝 Khuyến Nghị Chi Tiết
 
-## 10. 📈 PERFORMANCE ANALYSIS
+### Priority 1 (Critical)
 
-### 10.1 Điểm mạnh ✅
-
-| Optimization | Implementation |
-|-------------|----------------|
-| Batch Queries | countQuestionsForQuizSets(), getUserStatsAggregated() |
-| Lazy Loading | JPA default |
-| Pagination | PageRequest throughout |
-| Database Indexes | Strategic indexes |
-| Connection Pooling | HikariCP (default) |
-| Vector Search | IVFFlat index |
-
-### 10.2 Bottlenecks ⚠️
-
-| Bottleneck | Impact | Solution |
-|-----------|--------|----------|
-| OpenAI API calls | 100-500ms per call | Caching, async |
-| Embedding generation | Blocking | Async processing |
-| PDF parsing | Blocking | Async processing |
-| Dashboard queries | Multiple queries | Caching |
-| Webhook retry | Up to 2.5s delay | Async queue |
-
-### 10.3 Performance Recommendations
-
-1. **Implement Redis Caching**
-```java
-@Cacheable(value = "legalArticles", key = "#id")
-public LegalArticle findById(Long id) { ... }
-
-@Cacheable(value = "dashboardStats", unless = "#result == null")
-public AdminStatsResponse getDashboardStats() { ... }
+1. **Fix Spring Boot Version**
+```xml
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.2.5</version>  <!-- Hoặc 3.3.x -->
+</parent>
 ```
 
-2. **Async Processing**
+2. **Add Unit Tests**
 ```java
-@Async
-public CompletableFuture<List<AIQuestionDTO>> generateQuestionsAsync(...) {
-    return CompletableFuture.completedFuture(generateQuestions(...));
-}
-```
-
-3. **Connection Pool Tuning**
-```properties
-spring.datasource.hikari.maximum-pool-size=20
-spring.datasource.hikari.minimum-idle=5
-spring.datasource.hikari.connection-timeout=30000
-```
-
----
-
-## 11. 📝 CODE QUALITY SUMMARY
-
-### 11.1 Excellent Practices ✅
-
-1. **Layered Architecture** - Clear separation of concerns
-2. **DTOs** - Request/response objects prevent entity exposure
-3. **Custom Exceptions** - Meaningful error messages
-4. **Comprehensive Logging** - With timing information
-5. **Transaction Management** - @Transactional annotations
-6. **Input Validation** - @Valid annotations
-7. **Externalized Configuration** - application.properties
-
-### 11.2 Areas for Improvement ⚠️
-
-1. **Magic Numbers** - Extract to constants
-```java
-// Bad
-if (question.length() > 500) { ... }
-
-// Good
-private static final int MAX_QUESTION_LENGTH = 500;
-if (question.length() > MAX_QUESTION_LENGTH) { ... }
-```
-
-2. **Optional Usage** - More consistent
-```java
-// Bad
-User user = userRepo.findById(id).orElse(null);
-if (user == null) { ... }
-
-// Good
-userRepo.findById(id)
-    .orElseThrow(() -> new NotFoundException("User not found"));
-```
-
-3. **API Documentation** - Add Swagger/OpenAPI
-```java
-@Operation(summary = "Create payment", description = "Create PayOS payment link")
-@ApiResponses(value = {
-    @ApiResponse(responseCode = "200", description = "Payment created"),
-    @ApiResponse(responseCode = "400", description = "Invalid request")
-})
-@PostMapping("/create")
-public ResponseEntity<CreatePaymentResponse> createPayment(...) { ... }
-```
-
-4. **Unit Tests** - Add comprehensive tests
-```java
-@Test
-void shouldDeductCreditWhenSufficientBalance() {
-    // Given
-    UserCredit credit = new UserCredit();
-    credit.setChatCredits(10);
+@SpringBootTest
+class CreditServiceTest {
+    @Test
+    void reserveCredit_shouldDeductBalance() {...}
     
-    // When
-    creditService.checkAndDeductChatCredit(userId);
+    @Test
+    void refundReservation_shouldRestoreBalance() {...}
     
-    // Then
-    assertThat(credit.getChatCredits()).isEqualTo(9);
+    @Test
+    void reserveCredit_insufficientBalance_shouldThrow() {...}
 }
 ```
 
----
+### Priority 2 (High)
 
-## 12. 🎯 PRIORITY RECOMMENDATIONS
-
-### High Priority (Nên làm ngay)
-
-| # | Task | Impact | Effort | Status |
-|---|------|--------|--------|--------|
-| 1 | ~~Add Rate Limiting~~ | Security | Medium | ✅ DONE |
-| 2 | ~~Implement Account Lockout~~ | Security | Medium | ✅ DONE |
-| 3 | ~~Credit Reservation System~~ | Reliability | Medium | ✅ DONE |
-| 4 | Disable DEBUG logging | Security | Low | ⬜ TODO |
-| 5 | ~~Migrate exam sessions to Redis~~ | Scalability | Medium | ✅ DONE |
-| 6 | Add API Documentation (Swagger) | Maintainability | Medium | ⬜ TODO |
-
-### Medium Priority (Nên làm sớm)
-
-| # | Task | Impact | Effort | Status |
-|---|------|--------|--------|--------|
-| 7 | Implement streaming response | UX | High | ⬜ TODO |
-| 8 | Add cost tracking for OpenAI | Cost control | Medium | ⬜ TODO |
-| 9 | ~~Implement credit refund~~ | Reliability | Medium | ✅ DONE |
-| 10 | Add comprehensive tests | Quality | High | ⬜ TODO |
-| 11 | Abstract payment gateway | Extensibility | Medium | ⬜ TODO |
-| 12 | ~~Admin credit management~~ | Features | Medium | ✅ DONE |
-
-### Low Priority (Nice to have)
-
-| # | Task | Impact | Effort | Status |
-|---|------|--------|--------|--------|
-| 13 | Implement 2FA | Security | High | ⬜ TODO |
-| 14 | Add export functionality | Features | Medium | ⬜ TODO |
-| 15 | Implement RBAC | Security | High | ⬜ TODO |
-| 16 | Add payment notifications | UX | Low | ⬜ TODO |
-| 17 | Quiz analytics | Features | Medium | ⬜ TODO |
-| 18 | Frontend build process | Performance | Medium | ⬜ TODO |
-
----
-
-## 13. 📊 FINAL VERDICT
-
-### Strengths
-- **Architecture**: Well-structured layered architecture
-- **Security**: Solid JWT + OAuth2 + Rate Limiting + Account Lockout + Security Audit ✅
-- **Features**: Comprehensive feature set with AI integration
-- **Code Quality**: Clean, readable code with good practices
-- **Documentation**: Good inline documentation
-- **Credit System**: Reserve/Confirm/Refund pattern for reliability ✅
-- **Session Management**: Redis-ready with fallback to in-memory ✅
-
-### Weaknesses
-- **Performance**: Missing caching layer (Redis optional but not for caching)
-- **Testing**: Limited test coverage
-- **Monitoring**: No metrics or health checks
-- **Frontend**: Needs build process and modularization
-
-### Improvements Since v1.0
-| Feature | Status |
-|---------|--------|
-| Rate Limiting | ✅ Implemented |
-| Account Lockout | ✅ Implemented |
-| Security Audit Logging | ✅ Implemented |
-| Credit Reservation | ✅ Implemented |
-| Redis Session Store | ✅ Implemented (optional) |
-| Admin Credit Management | ✅ Implemented |
-| Payment Idempotency | ✅ Implemented |
-| Quiz Duration Validation | ✅ Implemented |
-
-### Conclusion
-Đây là một dự án **production-ready** với kiến trúc tốt và nhiều tính năng phức tạp được implement đúng cách. Các cải thiện về security (rate limiting, account lockout, audit logging) và reliability (credit reservation) đã được implement. Với các cải thiện còn lại về testing, monitoring, và frontend build process, dự án sẽ sẵn sàng cho scale lớn hơn.
-
-**Overall Score: 7.8/10** - Good quality, production-ready with security improvements already implemented.
-
----
-
-## 14. 🎨 FRONTEND ANALYSIS
-
-### 14.1 Tổng quan
-Frontend sử dụng vanilla JavaScript với Bootstrap 5, không có framework SPA.
-
-### 14.2 Files chính
-- `api-client.js` - HTTP client với auto token refresh
-- `error-handler.js` - Global error handling
-- `toast-notification.js` - Toast notifications
-- `credits-counter.js` - Credit display component
-- HTML pages: `login.html`, `legal-chat.html`, `quiz-take.html`, etc.
-
-### 14.3 Điểm mạnh ✅
-
-#### 14.3.1 API Client với Auto Token Refresh
-```javascript
-// api-client.js
-async fetchWithAuth(url, options = {}) {
-    let response = await fetch(url, { ...options, headers });
+3. **Implement Rate Limiting**
+```java
+@Service
+public class RateLimitService {
+    private final RedisTemplate<String, String> redis;
     
-    // Nếu 401 Unauthorized → thử refresh token
-    if (response.status === 401) {
-        const refreshSuccess = await this.refreshToken();
-        if (refreshSuccess) {
-            // Retry request với token mới
-            const newToken = localStorage.getItem('accessToken');
-            response = await fetch(url, { ...options, headers: { 'Authorization': `Bearer ${newToken}` }});
-        } else {
-            this.redirectToLogin();
-        }
-    }
-    return response;
-}
-```
-**Ưu điểm:** Seamless token refresh, user không bị logout đột ngột
-
-#### 14.3.2 Account Banned Handling
-```javascript
-// api-client.js
-if (response.status === 403) {
-    const data = await clonedResponse.json();
-    if (data.error === 'ACCOUNT_BANNED') {
-        this.handleAccountBanned(data.message);
-        return response;
+    public void checkRateLimit(String key, int limit, Duration window) {
+        // Sliding window rate limiting
     }
 }
-
-handleAccountBanned(message) {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    this.showBanToast(message);
-    setTimeout(() => window.location.href = '/html/login.html', 2000);
-}
 ```
-**Ưu điểm:** UX tốt khi account bị ban
 
-#### 14.3.3 Global Error Handler
-```javascript
-// error-handler.js
-window.addEventListener('error', (event) => {
-    this.handleError(event.error, 'Đã xảy ra lỗi không mong muốn');
-    event.preventDefault();
-});
-
-window.addEventListener('unhandledrejection', (event) => {
-    this.handleError(event.reason, 'Đã xảy ra lỗi khi xử lý yêu cầu');
-    event.preventDefault();
-});
+4. **Add Swagger Documentation**
+```xml
+<dependency>
+    <groupId>org.springdoc</groupId>
+    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    <version>2.3.0</version>
+</dependency>
 ```
-**Ưu điểm:** Catch tất cả errors, tránh crash
 
-#### 14.3.4 Quiz Anti-Cheat UI
-```javascript
-// quiz-take.html
-// Chặn browser back button khi đang làm bài
-window.addEventListener('popstate', (e) => {
-    if (examStarted) {
-        window.history.pushState(null, '', window.location.href);
-        Toast.warning('Vui lòng nộp bài trước khi rời trang');
+### Priority 3 (Medium)
+
+5. **Centralize Sanitization**
+```java
+@Component
+public class SanitizationUtil {
+    public String sanitizeHtml(String input) {
+        if (input == null) return null;
+        return input
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&#x27;")
+            .trim();
     }
-});
-
-// Chặn đóng tab/refresh khi đang làm bài
-window.addEventListener('beforeunload', (e) => {
-    if (examStarted) {
-        e.preventDefault();
-        e.returnValue = 'Bạn đang làm bài thi. Bạn có chắc muốn rời trang?';
-    }
-});
-```
-**Ưu điểm:** Ngăn user vô tình rời trang khi đang thi
-
-#### 14.3.5 Chat Session Management
-```javascript
-// legal-chat.html
-function groupSessionsByDate(sessions) {
-    const groups = {
-        'Hôm nay': [],
-        'Hôm qua': [],
-        'Tuần này': [],
-        'Cũ hơn': []
-    };
-    // Group sessions by date
 }
 ```
-**Ưu điểm:** UX tốt với grouping theo thời gian
 
-### 14.4 Điểm yếu ⚠️
-
-#### 14.4.1 Không có build process
-```html
-<!-- Inline scripts trong HTML -->
-<script>
-let currentSessionId = null;
-// ... 300+ lines of JavaScript
-</script>
+6. **Externalize Config**
+```yaml
+# application.yml
+ai:
+  quiz:
+    allowed-question-counts: [15, 20, 30, 40]
+    batch-size: 20
+    max-fill-retries: 3
+  openai:
+    max-retries: 2
+    retry-delay-seconds: 2
 ```
-**Vấn đề:** Không minify, không bundle, khó maintain
-**Giải pháp:** Sử dụng Vite/Webpack để bundle và minify
-
-#### 14.4.2 Không có TypeScript
-```javascript
-// Không có type checking
-const data = await response.json();
-// data có thể là bất kỳ structure nào
-```
-**Vấn đề:** Dễ có runtime errors
-**Giải pháp:** Migrate sang TypeScript hoặc thêm JSDoc types
-
-#### 14.4.3 Duplicate code giữa các pages
-```javascript
-// Mỗi page đều có code check auth tương tự
-const token = localStorage.getItem('accessToken');
-if (!token) {
-    window.location.href = '/html/login.html';
-    return;
-}
-```
-**Giải pháp:** Extract thành shared module
-
-#### 14.4.4 Không có loading skeleton
-```javascript
-// Chỉ có spinner, không có skeleton
-ERROR_HANDLER.showLoading(true);
-```
-**Vấn đề:** UX kém khi loading
-**Giải pháp:** Thêm skeleton loading states
-
-#### 14.4.5 Không có offline support
-**Vấn đề:** App không hoạt động khi mất mạng
-**Giải pháp:** Service Worker + IndexedDB cho offline mode
-
-### 14.5 Code Quality Analysis
-
-| Aspect | Rating | Notes |
-|--------|--------|-------|
-| Error handling | ⭐⭐⭐⭐⭐ | Global handler + toast |
-| Auth flow | ⭐⭐⭐⭐⭐ | Auto refresh excellent |
-| Code organization | ⭐⭐⭐ | Cần modularization |
-| UX | ⭐⭐⭐⭐ | Toast, confirm modals |
-| Accessibility | ⭐⭐⭐ | Cần ARIA labels |
-| Performance | ⭐⭐⭐ | Cần bundling |
-
-### 14.6 Đề xuất cải thiện
-
-1. **Add build process** - Vite/Webpack cho bundling
-2. **Extract shared modules** - Auth, API client, utils
-3. **Add TypeScript** - Type safety
-4. **Skeleton loading** - Better UX
-5. **PWA support** - Offline mode
-6. **Accessibility** - ARIA labels, keyboard navigation
 
 ---
 
-## 15. ⚙️ CONFIGURATION ANALYSIS
+## 📊 Điểm Đánh Giá Tổng Thể
 
-### 15.1 application.properties Review
+| Tiêu chí | Điểm | Ghi chú |
+|----------|------|---------|
+| **Code Quality** | ⭐⭐⭐⭐⭐ 9/10 | Clean, consistent, well-structured |
+| **Architecture** | ⭐⭐⭐⭐⭐ 9/10 | Proper layering, modular |
+| **Security** | ⭐⭐⭐⭐ 8/10 | Nhiều features tốt, thiếu rate limiting |
+| **Business Logic** | ⭐⭐⭐⭐⭐ 10/10 | Credit pattern xuất sắc |
+| **Database Design** | ⭐⭐⭐⭐⭐ 9/10 | Proper indexes, triggers, functions |
+| **Error Handling** | ⭐⭐⭐⭐⭐ 9/10 | Comprehensive exception handling |
+| **Performance** | ⭐⭐⭐⭐ 8/10 | N+1 fixed, cần thêm caching |
+| **Testing** | ⭐ 2/10 | Gần như không có tests |
+| **Documentation** | ⭐⭐⭐ 6/10 | README tốt, thiếu API docs |
 
-#### 15.1.1 Điểm mạnh ✅
-```properties
-# Externalized secrets
-app.jwt.secret=${JWT_SECRET:CHANGE_ME_TO_A_LONG_RANDOM_SECRET_AT_LEAST_32_CHARS}
-ai.openai.api-key=${OPENAI_API_KEY:your-api-key}
-payos.client-id=${PAYOS_CLIENT_ID:your-client-id}
-
-# Configurable rate limiting
-app.rate-limit.login.limit=5
-app.rate-limit.login.window-seconds=60
-
-# Configurable lockout
-app.security.lockout.max-attempts=5
-app.security.lockout.duration-minutes=15
-
-# Redis optional
-spring.data.redis.host=${REDIS_HOST:localhost}
-```
-**Ưu điểm:** Secrets externalized, configurable security settings
-
-#### 15.1.2 Điểm yếu ⚠️
-```properties
-# DEBUG logging in production
-logging.level.com.htai.exe201phapluatso=DEBUG
-logging.level.org.springframework.web=DEBUG
-logging.level.org.hibernate.SQL=DEBUG
-```
-**Vấn đề:** DEBUG logging không nên enable trong production
-**Giải pháp:** Sử dụng Spring profiles
-
-```properties
-# application-prod.properties
-logging.level.root=WARN
-logging.level.com.htai=INFO
-```
-
-### 15.2 Database Migration Review (V1-V9)
-
-#### 15.2.1 Điểm mạnh ✅
-- Flyway migrations có version control
-- Strategic indexes cho performance
-- Triggers cho business logic (auto credits)
-- pgvector extension cho vector search
-- Constraints cho data integrity
-
-#### 15.2.2 Migration History
-| Version | Description | Status |
-|---------|-------------|--------|
-| V1 | Initial schema | ✅ |
-| V2 | Vector search | ✅ |
-| V3-V4 | Various updates | ✅ |
-| V5 | Auth security (audit logs) | ✅ |
-| V6-V7 | Various updates | ✅ |
-| V8 | Admin credit types | ✅ |
-| V9 | Credit reserve types | ✅ |
+### 🏆 ĐIỂM TỔNG: **8.5/10**
 
 ---
 
-*Document updated on: 12/01/2026*
-*Reviewer: AI Code Reviewer*
-*Version: 2.0*
+## 🎯 Kết Luận
+
+Dự án **Pháp Luật Số** có chất lượng code **rất tốt** với nhiều best practices:
+
+1. **Kiến trúc chuyên nghiệp** - Clean Architecture được implement đúng
+2. **Business logic thông minh** - Đặc biệt là Credit Reserve/Confirm/Refund pattern
+3. **Security mạnh mẽ** - JWT rotation, lockout, audit logging
+4. **AI integration hiệu quả** - Chunking, retry, context-aware generation
+
+**Điểm cần ưu tiên cải thiện:**
+1. 🔴 Viết unit tests (đây là điểm yếu lớn nhất)
+2. 🔴 Fix Spring Boot version
+3. 🟡 Implement rate limiting
+4. 🟡 Add API documentation
+
+Với những cải thiện trên, dự án sẽ đạt mức **production-ready** và có thể deploy lên môi trường thực tế.
+
+---
+
+*Đánh giá bởi: AI Code Review*  
+*Ngày: 13/01/2026*  
+*Phiên bản review: 1.0*

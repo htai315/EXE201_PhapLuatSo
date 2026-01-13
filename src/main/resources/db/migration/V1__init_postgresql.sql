@@ -1,10 +1,10 @@
 -- ============================================================================
--- POSTGRESQL DATABASE INITIALIZATION
--- Converted from SQL Server schema
--- Includes: pgvector extension for future vector search capability
+-- POSTGRESQL DATABASE INITIALIZATION - CLEAN VERSION
+-- Consolidated from V1-V10 migrations
+-- Last updated: January 2026
 -- ============================================================================
 
--- Enable pgvector extension (for future RAG/vector search)
+-- Enable pgvector extension for vector search
 CREATE EXTENSION IF NOT EXISTS vector;
 
 -- ============================================================================
@@ -30,18 +30,17 @@ CREATE TABLE users (
     ban_reason VARCHAR(500) NULL,
     banned_at TIMESTAMP NULL,
     banned_by BIGINT NULL,
+    -- V5: Auth security fields
+    failed_login_attempts INT DEFAULT 0,
+    locked_until TIMESTAMP NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Partial unique index for provider_id (only when not null)
-CREATE UNIQUE INDEX ux_users_provider ON users(provider, provider_id)
-    WHERE provider_id IS NOT NULL;
-
--- Index for admin queries
+CREATE UNIQUE INDEX ux_users_provider ON users(provider, provider_id) WHERE provider_id IS NOT NULL;
 CREATE INDEX ix_users_is_active ON users(is_active);
 CREATE INDEX ix_users_created_at ON users(created_at DESC);
+CREATE INDEX ix_users_locked_until ON users(locked_until) WHERE locked_until IS NOT NULL;
 
--- Self-referencing foreign key for banned_by
 ALTER TABLE users ADD CONSTRAINT fk_users_banned_by 
     FOREIGN KEY (banned_by) REFERENCES users(id);
 
@@ -59,9 +58,14 @@ CREATE TABLE refresh_tokens (
     token_hash VARCHAR(255) NOT NULL UNIQUE,
     expires_at TIMESTAMP NOT NULL,
     revoked_at TIMESTAMP NULL,
+    -- V5: Token rotation fields
+    used_at TIMESTAMP NULL,
+    replaced_by_token_id BIGINT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    CONSTRAINT fk_rt_user FOREIGN KEY (user_id) REFERENCES users(id)
+    CONSTRAINT fk_rt_user FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT fk_refresh_token_replaced_by FOREIGN KEY (replaced_by_token_id) REFERENCES refresh_tokens(id) ON DELETE SET NULL
 );
+
 
 -- ============================================================================
 -- CREDITS SYSTEM: Plans & Credits
@@ -86,6 +90,8 @@ CREATE TABLE user_credits (
     chat_credits INT NOT NULL DEFAULT 0,
     quiz_gen_credits INT NOT NULL DEFAULT 0,
     expires_at TIMESTAMP NULL,
+    -- V7: Optimistic locking
+    version INTEGER NOT NULL DEFAULT 0,
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     CONSTRAINT fk_credits_user FOREIGN KEY (user_id) REFERENCES users(id)
 );
@@ -103,12 +109,32 @@ CREATE TABLE credit_transactions (
     description VARCHAR(500) NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     CONSTRAINT fk_trans_user FOREIGN KEY (user_id) REFERENCES users(id),
-    CONSTRAINT ck_trans_type CHECK (type IN ('PURCHASE', 'USAGE', 'BONUS', 'REFUND', 'EXPIRE')),
+    -- V8/V9: Extended types for admin and reservation
+    CONSTRAINT ck_trans_type CHECK (type IN ('PURCHASE', 'USAGE', 'BONUS', 'REFUND', 'EXPIRE', 'ADMIN_ADD', 'ADMIN_REMOVE', 'RESERVE', 'CONFIRM')),
     CONSTRAINT ck_trans_credit_type CHECK (credit_type IN ('CHAT', 'QUIZ_GEN'))
 );
 
 CREATE INDEX ix_trans_user_date ON credit_transactions(user_id, created_at DESC);
 CREATE INDEX ix_credit_trans_date ON credit_transactions(created_at DESC);
+
+-- V7: Credit reservations table
+CREATE TABLE credit_reservations (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    credit_type VARCHAR(20) NOT NULL,
+    amount INTEGER NOT NULL DEFAULT 1,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    confirmed_at TIMESTAMP,
+    refunded_at TIMESTAMP,
+    operation_type VARCHAR(50),
+    CONSTRAINT chk_reservation_status CHECK (status IN ('PENDING', 'CONFIRMED', 'REFUNDED', 'EXPIRED')),
+    CONSTRAINT chk_reservation_amount CHECK (amount > 0)
+);
+
+CREATE INDEX idx_credit_reservations_user_status ON credit_reservations(user_id, status);
+CREATE INDEX idx_credit_reservations_expires ON credit_reservations(expires_at) WHERE status = 'PENDING';
 
 -- ============================================================================
 -- QUIZ SYSTEM
@@ -121,6 +147,8 @@ CREATE TABLE quiz_sets (
     description VARCHAR(1000) NULL,
     visibility VARCHAR(20) NOT NULL DEFAULT 'PRIVATE',
     status VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
+    -- V3: Quiz duration
+    duration_minutes INTEGER NOT NULL DEFAULT 45,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NULL,
     CONSTRAINT fk_quiz_sets_user FOREIGN KEY (created_by) REFERENCES users(id)
@@ -177,6 +205,7 @@ CREATE TABLE quiz_attempt_answers (
     CONSTRAINT fk_quiz_attempt_answer_question FOREIGN KEY (question_id) REFERENCES quiz_questions(id) ON DELETE NO ACTION
 );
 
+
 -- ============================================================================
 -- LEGAL DOCUMENTS SYSTEM
 -- ============================================================================
@@ -206,14 +235,17 @@ CREATE TABLE legal_articles (
     article_number INT NOT NULL,
     article_title VARCHAR(1000),
     content TEXT NOT NULL,
+    -- V2: Vector search columns
+    embedding vector(1536) NULL,
+    embedding_updated_at TIMESTAMP NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    -- Vector column for future semantic search (1536 dimensions for OpenAI embeddings)
-    -- embedding vector(1536) NULL,
     CONSTRAINT fk_legal_articles_document FOREIGN KEY (document_id) REFERENCES legal_documents(id) ON DELETE CASCADE
 );
 
 CREATE INDEX ix_legal_articles_document_id ON legal_articles(document_id);
 CREATE INDEX ix_legal_articles_article_number ON legal_articles(article_number);
+-- V2: Vector search index
+CREATE INDEX ix_legal_articles_embedding ON legal_articles USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 
 -- ============================================================================
 -- CHAT HISTORY SYSTEM
@@ -264,7 +296,7 @@ CREATE TABLE payments (
     plan_id BIGINT NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
     
-    -- VNPay fields (kept for backward compatibility)
+    -- VNPay fields
     vnp_txn_ref VARCHAR(100) UNIQUE NOT NULL,
     vnp_transaction_no VARCHAR(100),
     vnp_bank_code VARCHAR(20),
@@ -274,6 +306,9 @@ CREATE TABLE payments (
     order_code BIGINT NULL,
     transaction_id VARCHAR(100) NULL,
     webhook_processed BOOLEAN DEFAULT FALSE,
+    -- V4: QR code fields
+    checkout_url VARCHAR(500),
+    qr_code TEXT,
     
     -- Status
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
@@ -296,6 +331,25 @@ CREATE INDEX ix_payments_vnp_txn_ref ON payments(vnp_txn_ref);
 CREATE INDEX ix_payments_status ON payments(status);
 CREATE INDEX ix_payments_status_date ON payments(status, created_at DESC);
 CREATE UNIQUE INDEX ix_payments_order_code ON payments(order_code) WHERE order_code IS NOT NULL;
+
+-- V6: Payment idempotency records
+CREATE TABLE payment_idempotency_records (
+    id BIGSERIAL PRIMARY KEY,
+    scoped_key VARCHAR(255) NOT NULL,
+    user_id BIGINT NOT NULL,
+    plan_code VARCHAR(50),
+    payment_id BIGINT,
+    status VARCHAR(20) DEFAULT 'PENDING',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    CONSTRAINT uk_idempotency_scoped_key UNIQUE (scoped_key),
+    CONSTRAINT fk_idempotency_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_idempotency_payment FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE SET NULL
+);
+
+CREATE INDEX idx_idempotency_expires_at ON payment_idempotency_records(expires_at);
+CREATE INDEX idx_idempotency_user_id ON payment_idempotency_records(user_id);
+
 
 -- ============================================================================
 -- PASSWORD RESET OTP
@@ -346,24 +400,43 @@ CREATE TABLE admin_activity_logs (
     ip_address VARCHAR(50) NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     CONSTRAINT fk_admin_logs_user FOREIGN KEY (admin_user_id) REFERENCES users(id),
-    CONSTRAINT ck_action_type CHECK (action_type IN ('BAN_USER', 'UNBAN_USER', 'DELETE_USER', 'VIEW_USER', 'DELETE_PAYMENT', 'DELETE_DOCUMENT', 'OTHER'))
+    -- V8: Extended action types
+    CONSTRAINT ck_action_type CHECK (action_type IN ('BAN_USER', 'UNBAN_USER', 'DELETE_USER', 'VIEW_USER', 'DELETE_PAYMENT', 'DELETE_DOCUMENT', 'ADD_CREDITS', 'REMOVE_CREDITS', 'OTHER'))
 );
 
 CREATE INDEX ix_admin_logs_admin_user ON admin_activity_logs(admin_user_id, created_at DESC);
 CREATE INDEX ix_admin_logs_created_at ON admin_activity_logs(created_at DESC);
+
+-- V5: Security audit log
+CREATE TABLE security_audit_log (
+    id BIGSERIAL PRIMARY KEY,
+    event_type VARCHAR(50) NOT NULL,
+    user_id BIGINT,
+    email VARCHAR(255),
+    ip_address VARCHAR(45),
+    user_agent VARCHAR(500),
+    endpoint VARCHAR(255),
+    details TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    CONSTRAINT fk_security_audit_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE INDEX ix_security_audit_event_type ON security_audit_log(event_type);
+CREATE INDEX ix_security_audit_user_id ON security_audit_log(user_id);
+CREATE INDEX ix_security_audit_ip ON security_audit_log(ip_address);
+CREATE INDEX ix_security_audit_created_at ON security_audit_log(created_at DESC);
+CREATE INDEX ix_security_audit_user_event ON security_audit_log(user_id, event_type, created_at DESC);
 
 -- ============================================================================
 -- SEQUENCE FOR ORDER CODE
 -- ============================================================================
 
 CREATE SEQUENCE order_code_sequence
-    START WITH 10000000
+    START WITH 22222222
     INCREMENT BY 1
-    MINVALUE 10000000
+    MINVALUE 22222222
     MAXVALUE 99999999
     NO CYCLE;
-
-
 
 -- ============================================================================
 -- SEED DATA
@@ -372,18 +445,19 @@ CREATE SEQUENCE order_code_sequence
 -- Roles
 INSERT INTO roles(name) VALUES ('USER'), ('ADMIN');
 
--- Plans with credits
+-- Plans with NEW PRICES (V10)
 INSERT INTO plans(code, name, price, chat_credits, quiz_gen_credits, duration_months, description) 
 VALUES
     ('FREE', 'Miễn Phí', 0, 10, 0, 0, 'Gói dùng thử với 10 lượt chat AI'),
-    ('REGULAR', 'Người Dân', 159000, 100, 0, 12, '100 lượt chat AI, hạn sử dụng 12 tháng'),
-    ('STUDENT', 'Sinh Viên', 249000, 100, 20, 12, '100 lượt chat AI + 20 lượt AI tạo đề, hạn sử dụng 12 tháng');
+    ('REGULAR', 'Người Dân', 59000, 100, 0, 12, '100 lượt chat AI, hạn sử dụng 12 tháng'),
+    ('STUDENT', 'Sinh Viên', 99000, 100, 20, 12, '100 lượt chat AI + 20 lượt AI tạo đề, hạn sử dụng 12 tháng');
+
 
 -- ============================================================================
--- TRIGGERS (PostgreSQL syntax)
+-- TRIGGERS
 -- ============================================================================
 
--- Trigger function: Only one correct option per question
+-- Trigger: Only one correct option per question
 CREATE OR REPLACE FUNCTION check_only_one_correct_option()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -401,12 +475,12 @@ FOR EACH ROW
 WHEN (NEW.is_correct = TRUE)
 EXECUTE FUNCTION check_only_one_correct_option();
 
--- Trigger function: Auto give FREE credits to new users
+-- Trigger: Auto give FREE credits to new users
 CREATE OR REPLACE FUNCTION give_free_credits_to_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO user_credits(user_id, chat_credits, quiz_gen_credits, expires_at)
-    VALUES (NEW.id, 10, 0, NULL);
+    INSERT INTO user_credits(user_id, chat_credits, quiz_gen_credits, expires_at, version)
+    VALUES (NEW.id, 10, 0, NULL, 0);
     
     INSERT INTO credit_transactions(user_id, type, credit_type, amount, balance_after, description)
     VALUES (NEW.id, 'BONUS', 'CHAT', 10, 10, 'Welcome bonus - 10 free chat credits');
@@ -421,31 +495,138 @@ FOR EACH ROW
 EXECUTE FUNCTION give_free_credits_to_new_user();
 
 -- ============================================================================
+-- V2: VECTOR SEARCH FUNCTIONS
+-- ============================================================================
+
+-- Function to search by vector similarity
+CREATE OR REPLACE FUNCTION search_articles_by_vector(
+    query_embedding vector(1536),
+    similarity_threshold FLOAT DEFAULT 0.3,
+    max_results INT DEFAULT 10
+)
+RETURNS TABLE (
+    article_id BIGINT,
+    document_id BIGINT,
+    article_number INT,
+    article_title VARCHAR(1000),
+    content TEXT,
+    document_name VARCHAR(500),
+    document_status VARCHAR(50),
+    similarity FLOAT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        a.id AS article_id,
+        a.document_id,
+        a.article_number,
+        a.article_title,
+        a.content,
+        d.document_name,
+        d.status AS document_status,
+        1 - (a.embedding <=> query_embedding) AS similarity
+    FROM legal_articles a
+    JOIN legal_documents d ON a.document_id = d.id
+    WHERE a.embedding IS NOT NULL
+      AND d.status = 'Còn hiệu lực'
+      AND 1 - (a.embedding <=> query_embedding) >= similarity_threshold
+    ORDER BY a.embedding <=> query_embedding
+    LIMIT max_results;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Hybrid search function (vector + keyword)
+CREATE OR REPLACE FUNCTION hybrid_search_articles(
+    query_embedding vector(1536),
+    keywords TEXT[],
+    vector_weight FLOAT DEFAULT 0.7,
+    keyword_weight FLOAT DEFAULT 0.3,
+    max_results INT DEFAULT 10
+)
+RETURNS TABLE (
+    article_id BIGINT,
+    document_id BIGINT,
+    article_number INT,
+    article_title VARCHAR(1000),
+    content TEXT,
+    document_name VARCHAR(500),
+    vector_score FLOAT,
+    keyword_score FLOAT,
+    combined_score FLOAT
+) AS $$
+BEGIN
+    RETURN QUERY
+    WITH vector_results AS (
+        SELECT 
+            a.id,
+            a.document_id,
+            a.article_number,
+            a.article_title,
+            a.content,
+            d.document_name,
+            CASE 
+                WHEN a.embedding IS NOT NULL 
+                THEN 1 - (a.embedding <=> query_embedding)
+                ELSE 0 
+            END AS v_score
+        FROM legal_articles a
+        JOIN legal_documents d ON a.document_id = d.id
+        WHERE d.status = 'Còn hiệu lực'
+    ),
+    keyword_results AS (
+        SELECT 
+            vr.id,
+            COALESCE(
+                (SELECT SUM(
+                    CASE 
+                        WHEN vr.article_title ILIKE '%' || kw || '%' THEN 3
+                        ELSE 0 
+                    END +
+                    CASE 
+                        WHEN vr.content ILIKE '%' || kw || '%' THEN 1
+                        ELSE 0 
+                    END
+                ) FROM unnest(keywords) AS kw),
+                0
+            )::FLOAT / GREATEST(array_length(keywords, 1), 1) AS k_score
+        FROM vector_results vr
+    )
+    SELECT 
+        vr.id AS article_id,
+        vr.document_id,
+        vr.article_number,
+        vr.article_title,
+        vr.content,
+        vr.document_name,
+        vr.v_score AS vector_score,
+        kr.k_score AS keyword_score,
+        (vr.v_score * vector_weight + kr.k_score * keyword_weight) AS combined_score
+    FROM vector_results vr
+    JOIN keyword_results kr ON vr.id = kr.id
+    WHERE vr.v_score > 0.2 OR kr.k_score > 0
+    ORDER BY (vr.v_score * vector_weight + kr.k_score * keyword_weight) DESC
+    LIMIT max_results;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- ============================================================================
 -- ADMIN VIEW FOR STATISTICS
 -- ============================================================================
 
 CREATE OR REPLACE VIEW vw_admin_dashboard_stats AS
 SELECT
-    -- User statistics
     (SELECT COUNT(*) FROM users) AS total_users,
     (SELECT COUNT(*) FROM users WHERE is_active = TRUE) AS active_users,
     (SELECT COUNT(*) FROM users WHERE is_active = FALSE) AS banned_users,
     (SELECT COUNT(*) FROM users WHERE created_at >= NOW() - INTERVAL '30 days') AS new_users_last_30_days,
-    
-    -- Payment statistics
     (SELECT COUNT(*) FROM payments WHERE status = 'SUCCESS') AS total_successful_payments,
     (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status = 'SUCCESS') AS total_revenue,
     (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status = 'SUCCESS' AND created_at >= NOW() - INTERVAL '30 days') AS revenue_last_30_days,
-    
-    -- Quiz statistics
     (SELECT COUNT(*) FROM quiz_sets) AS total_quiz_sets,
     (SELECT COUNT(*) FROM quiz_attempts) AS total_quiz_attempts,
-    
-    -- Chat statistics
     (SELECT COUNT(*) FROM chat_sessions) AS total_chat_sessions,
     (SELECT COUNT(*) FROM chat_messages WHERE role = 'USER') AS total_chat_messages,
-    
-    -- Legal documents
     (SELECT COUNT(*) FROM legal_documents) AS total_legal_documents,
     (SELECT COUNT(*) FROM legal_articles) AS total_legal_articles;
 
@@ -454,10 +635,20 @@ SELECT
 -- ============================================================================
 
 COMMENT ON COLUMN users.is_active IS 'Indicates if user account is active (true) or banned (false)';
-COMMENT ON COLUMN users.ban_reason IS 'Reason why user was banned';
-COMMENT ON COLUMN users.banned_at IS 'Timestamp when user was banned';
-COMMENT ON SEQUENCE order_code_sequence IS 'Sequence for generating unique payment order codes. Range: 10000000-99999999';
+COMMENT ON COLUMN users.failed_login_attempts IS 'Number of consecutive failed login attempts';
+COMMENT ON COLUMN users.locked_until IS 'Account lockout expiration timestamp';
+COMMENT ON COLUMN refresh_tokens.used_at IS 'Timestamp when token was used for rotation';
+COMMENT ON COLUMN refresh_tokens.replaced_by_token_id IS 'ID of the new token that replaced this one';
+COMMENT ON COLUMN legal_articles.embedding IS 'Vector embedding from OpenAI text-embedding-3-small (1536 dimensions)';
+COMMENT ON COLUMN legal_articles.embedding_updated_at IS 'Timestamp when embedding was last generated/updated';
+COMMENT ON COLUMN quiz_sets.duration_minutes IS 'Exam duration in minutes (5-180, default 45)';
+COMMENT ON COLUMN payments.checkout_url IS 'PayOS checkout URL for payment';
+COMMENT ON COLUMN payments.qr_code IS 'VietQR string or base64 QR image for reuse';
+COMMENT ON TABLE credit_reservations IS 'Tracks credit reservations for refund support when AI operations fail';
+COMMENT ON TABLE payment_idempotency_records IS 'Lưu idempotency keys để tránh duplicate payment khi network retry';
+COMMENT ON TABLE security_audit_log IS 'Stores security-related events for audit and monitoring purposes';
+COMMENT ON SEQUENCE order_code_sequence IS 'Sequence for generating unique payment order codes. Range: 22222222-99999999';
 
 -- ============================================================================
--- END OF MIGRATION
+-- END OF CLEAN MIGRATION
 -- ============================================================================
