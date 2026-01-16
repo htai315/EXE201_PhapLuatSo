@@ -28,10 +28,9 @@ public class LegalSearchService {
 
     @Autowired
     public LegalSearchService(
-            EntityManager entityManager, 
+            EntityManager entityManager,
             LegalArticleRepo articleRepo,
-            VectorSearchService vectorSearchService
-    ) {
+            VectorSearchService vectorSearchService) {
         this.entityManager = entityManager;
         this.articleRepo = articleRepo;
         this.vectorSearchService = vectorSearchService;
@@ -42,7 +41,7 @@ public class LegalSearchService {
      * Falls back to keyword-only if vector search is not available
      * 
      * @param question User's question
-     * @param limit Maximum number of results
+     * @param limit    Maximum number of results
      * @return List of relevant articles, sorted by relevance score
      */
     public List<LegalArticle> searchRelevantArticles(String question, int limit) {
@@ -73,7 +72,7 @@ public class LegalSearchService {
         // Extract keywords
         List<String> keywords = extractKeywords(question);
         log.info("Keyword search with: {}", keywords);
-        
+
         if (keywords.isEmpty()) {
             log.warn("No keywords extracted from question: {}", question);
             return getFallbackArticles(limit);
@@ -82,32 +81,60 @@ public class LegalSearchService {
         // Search and score
         List<ArticleScore> scoredArticles = searchWithScoring(keywords);
         log.info("Found {} articles matching keywords", scoredArticles.size());
-        
+
         // Return top N
         List<LegalArticle> results = scoredArticles.stream()
                 .limit(limit)
                 .map(ArticleScore::article)
                 .collect(Collectors.toList());
-        
+
         logTopResults(scoredArticles, 3);
         return results;
     }
 
     /**
      * Search articles matching keywords and calculate relevance scores
+     * Filters by minimum relevance score and keyword match count
      */
     private List<ArticleScore> searchWithScoring(List<String> keywords) {
         // Find matching articles
         List<LegalArticle> articles = findArticlesByKeywords(keywords);
-        
-        // Calculate scores
+
+        // Calculate scores and filter by quality thresholds
         List<ArticleScore> scored = articles.stream()
-                .map(article -> new ArticleScore(article, calculateScore(article, keywords)))
-                .filter(as -> as.score() > 0)
+                .map(article -> {
+                    int score = calculateScore(article, keywords);
+                    int matchCount = countKeywordMatches(article, keywords);
+                    return new ArticleScore(article, score, matchCount);
+                })
+                // Filter: must meet minimum score AND minimum keyword matches
+                .filter(as -> as.score() >= LegalSearchConfig.MIN_RELEVANCE_SCORE)
+                .filter(as -> as.matchCount() >= Math.min(LegalSearchConfig.MIN_KEYWORD_MATCHES, keywords.size()))
                 .sorted(Comparator.comparingInt(ArticleScore::score).reversed())
                 .collect(Collectors.toList());
-        
+
+        log.info("Filtered from {} to {} articles (min score: {}, min matches: {})",
+                articles.size(), scored.size(),
+                LegalSearchConfig.MIN_RELEVANCE_SCORE, LegalSearchConfig.MIN_KEYWORD_MATCHES);
+
         return scored;
+    }
+
+    /**
+     * Count how many distinct keywords match in the article
+     */
+    private int countKeywordMatches(LegalArticle article, List<String> keywords) {
+        String content = normalize(article.getContent());
+        String title = normalize(article.getArticleTitle());
+
+        int matchCount = 0;
+        for (String keyword : keywords) {
+            String normalizedKeyword = keyword.toLowerCase();
+            if (title.contains(normalizedKeyword) || content.contains(normalizedKeyword)) {
+                matchCount++;
+            }
+        }
+        return matchCount;
     }
 
     /**
@@ -115,21 +142,21 @@ public class LegalSearchService {
      */
     private List<LegalArticle> findArticlesByKeywords(List<String> keywords) {
         StringBuilder sql = new StringBuilder(
-            "SELECT DISTINCT a.* FROM legal_articles a " +
-            "JOIN legal_documents d ON a.document_id = d.id " +
-            "WHERE d.status = 'Còn hiệu lực' AND ("
-        );
+                "SELECT DISTINCT a.* FROM legal_articles a " +
+                        "JOIN legal_documents d ON a.document_id = d.id " +
+                        "WHERE d.status = 'Còn hiệu lực' AND (");
 
         // Build OR conditions for each keyword
         for (int i = 0; i < keywords.size(); i++) {
-            if (i > 0) sql.append(" OR ");
+            if (i > 0)
+                sql.append(" OR ");
             sql.append("(a.content LIKE :kw").append(i);
             sql.append(" OR a.article_title LIKE :kw").append(i).append(")");
         }
         sql.append(")");
 
         Query query = entityManager.createNativeQuery(sql.toString(), LegalArticle.class);
-        
+
         // Bind parameters
         for (int i = 0; i < keywords.size(); i++) {
             query.setParameter("kw" + i, "%" + keywords.get(i) + "%");
@@ -147,20 +174,20 @@ public class LegalSearchService {
     private int calculateScore(LegalArticle article, List<String> keywords) {
         String content = normalize(article.getContent());
         String title = normalize(article.getArticleTitle());
-        
+
         int score = 0;
         for (String keyword : keywords) {
             String normalizedKeyword = keyword.toLowerCase();
-            
+
             // Title matches (higher weight)
-            score += countOccurrences(title, normalizedKeyword) 
-                   * LegalSearchConfig.TITLE_MATCH_WEIGHT;
-            
+            score += countOccurrences(title, normalizedKeyword)
+                    * LegalSearchConfig.TITLE_MATCH_WEIGHT;
+
             // Content matches
-            score += countOccurrences(content, normalizedKeyword) 
-                   * LegalSearchConfig.CONTENT_MATCH_WEIGHT;
+            score += countOccurrences(content, normalizedKeyword)
+                    * LegalSearchConfig.CONTENT_MATCH_WEIGHT;
         }
-        
+
         return score;
     }
 
@@ -171,15 +198,15 @@ public class LegalSearchService {
         if (text.isEmpty() || substring.isEmpty()) {
             return 0;
         }
-        
+
         int count = 0;
         int index = 0;
-        
+
         while ((index = text.indexOf(substring, index)) != -1) {
             count++;
             index += substring.length();
         }
-        
+
         return count;
     }
 
@@ -201,10 +228,10 @@ public class LegalSearchService {
                 .distinct()
                 .limit(LegalSearchConfig.MAX_KEYWORDS)
                 .collect(Collectors.toList());
-        
+
         // Add bigrams for better context matching
         keywords.addAll(extractBigrams(words));
-        
+
         return keywords;
     }
 
@@ -213,25 +240,25 @@ public class LegalSearchService {
      */
     private List<String> extractBigrams(String[] words) {
         List<String> bigrams = new ArrayList<>();
-        
+
         for (int i = 0; i < words.length - 1; i++) {
             String word1 = words[i];
             String word2 = words[i + 1];
-            
+
             // Skip if either is a stop word or too short
-            if (LegalSearchConfig.STOP_WORDS.contains(word1) || 
-                LegalSearchConfig.STOP_WORDS.contains(word2)) {
+            if (LegalSearchConfig.STOP_WORDS.contains(word1) ||
+                    LegalSearchConfig.STOP_WORDS.contains(word2)) {
                 continue;
             }
-            
-            if (word1.length() < LegalSearchConfig.MIN_KEYWORD_LENGTH || 
-                word2.length() < LegalSearchConfig.MIN_KEYWORD_LENGTH) {
+
+            if (word1.length() < LegalSearchConfig.MIN_KEYWORD_LENGTH ||
+                    word2.length() < LegalSearchConfig.MIN_KEYWORD_LENGTH) {
                 continue;
             }
-            
+
             bigrams.add(word1 + " " + word2);
         }
-        
+
         return bigrams.stream()
                 .limit(LegalSearchConfig.MAX_BIGRAMS)
                 .collect(Collectors.toList());
@@ -260,21 +287,22 @@ public class LegalSearchService {
         if (scored.isEmpty()) {
             return;
         }
-        
+
         log.info("Top {} search results:", Math.min(count, scored.size()));
         for (int i = 0; i < Math.min(count, scored.size()); i++) {
             ArticleScore as = scored.get(i);
-            log.info("  {}. Điều {} (score: {}) - {}", 
-                i + 1, 
-                as.article().getArticleNumber(),
-                as.score(),
-                as.article().getArticleTitle()
-            );
+            log.info("  {}. Điều {} (score: {}) - {}",
+                    i + 1,
+                    as.article().getArticleNumber(),
+                    as.score(),
+                    as.article().getArticleTitle());
         }
     }
 
     /**
-     * Internal record to hold article with its relevance score
+     * Internal record to hold article with its relevance score and keyword match
+     * count
      */
-    private record ArticleScore(LegalArticle article, int score) {}
+    private record ArticleScore(LegalArticle article, int score, int matchCount) {
+    }
 }

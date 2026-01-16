@@ -28,10 +28,10 @@ public class VectorSearchService {
     private final EntityManager entityManager;
     private final EmbeddingService embeddingService;
 
-    // Search configuration
-    private static final float SIMILARITY_THRESHOLD = 0.25f;
-    private static final float VECTOR_WEIGHT = 0.7f;
-    private static final float KEYWORD_WEIGHT = 0.3f;
+    // Search configuration - stricter thresholds for better relevance
+    private static final float SIMILARITY_THRESHOLD = 0.45f; // Increased from 0.25 for stricter matching
+    private static final float VECTOR_WEIGHT = 0.75f; // Prioritize semantic matching
+    private static final float KEYWORD_WEIGHT = 0.25f;
 
     public VectorSearchService(EntityManager entityManager, EmbeddingService embeddingService) {
         this.entityManager = entityManager;
@@ -59,7 +59,7 @@ public class VectorSearchService {
 
             // Perform vector search
             List<LegalArticle> results = vectorSearch(vectorString, limit);
-            
+
             if (results.isEmpty()) {
                 log.info("Vector search returned no results, trying keyword search");
                 return keywordOnlySearch(question, limit);
@@ -93,10 +93,10 @@ public class VectorSearchService {
 
             // Extract keywords
             List<String> keywords = extractKeywords(question);
-            
+
             // Perform hybrid search
             List<LegalArticle> results = performHybridSearch(vectorString, keywords, limit);
-            
+
             if (results.isEmpty()) {
                 log.info("Hybrid search returned no results, trying keyword-only");
                 return keywordOnlySearch(question, limit);
@@ -117,14 +117,14 @@ public class VectorSearchService {
     @SuppressWarnings("unchecked")
     private List<LegalArticle> vectorSearch(String vectorString, int limit) {
         String sql = """
-            SELECT a.* FROM legal_articles a
-            JOIN legal_documents d ON a.document_id = d.id
-            WHERE a.embedding IS NOT NULL
-              AND d.status = 'Còn hiệu lực'
-              AND 1 - (a.embedding <=> CAST(:vector AS vector)) >= :threshold
-            ORDER BY a.embedding <=> CAST(:vector AS vector)
-            LIMIT :limit
-            """;
+                SELECT a.* FROM legal_articles a
+                JOIN legal_documents d ON a.document_id = d.id
+                WHERE a.embedding IS NOT NULL
+                  AND d.status = 'Còn hiệu lực'
+                  AND 1 - (a.embedding <=> CAST(:vector AS vector)) >= :threshold
+                ORDER BY a.embedding <=> CAST(:vector AS vector)
+                LIMIT :limit
+                """;
 
         Query query = entityManager.createNativeQuery(sql, LegalArticle.class);
         query.setParameter("vector", vectorString);
@@ -142,24 +142,25 @@ public class VectorSearchService {
         // Build dynamic SQL for hybrid search
         StringBuilder sql = new StringBuilder();
         sql.append("""
-            WITH scored_articles AS (
-                SELECT 
-                    a.*,
-                    CASE 
-                        WHEN a.embedding IS NOT NULL 
-                        THEN 1 - (a.embedding <=> CAST(:vector AS vector))
-                        ELSE 0 
-                    END AS vector_score,
-                    (
-            """);
+                WITH scored_articles AS (
+                    SELECT
+                        a.*,
+                        CASE
+                            WHEN a.embedding IS NOT NULL
+                            THEN 1 - (a.embedding <=> CAST(:vector AS vector))
+                            ELSE 0
+                        END AS vector_score,
+                        (
+                """);
 
         // Build keyword scoring
         if (!keywords.isEmpty()) {
             List<String> keywordScores = new ArrayList<>();
             for (int i = 0; i < keywords.size(); i++) {
                 keywordScores.add(String.format(
-                    "(CASE WHEN a.article_title ILIKE :kw%d THEN 3 ELSE 0 END + " +
-                    "CASE WHEN a.content ILIKE :kw%d THEN 1 ELSE 0 END)", i, i));
+                        "(CASE WHEN a.article_title ILIKE :kw%d THEN 3 ELSE 0 END + " +
+                                "CASE WHEN a.content ILIKE :kw%d THEN 1 ELSE 0 END)",
+                        i, i));
             }
             sql.append(String.join(" + ", keywordScores));
         } else {
@@ -167,16 +168,16 @@ public class VectorSearchService {
         }
 
         sql.append("""
-                    )::FLOAT / GREATEST(:kwCount, 1) AS keyword_score
-                FROM legal_articles a
-                JOIN legal_documents d ON a.document_id = d.id
-                WHERE d.status = 'Còn hiệu lực'
-            )
-            SELECT * FROM scored_articles
-            WHERE vector_score > 0.15 OR keyword_score > 0
-            ORDER BY (vector_score * :vWeight + keyword_score * :kWeight) DESC
-            LIMIT :limit
-            """);
+                        )::FLOAT / GREATEST(:kwCount, 1) AS keyword_score
+                    FROM legal_articles a
+                    JOIN legal_documents d ON a.document_id = d.id
+                    WHERE d.status = 'Còn hiệu lực'
+                )
+                SELECT * FROM scored_articles
+                WHERE vector_score > 0.35 OR keyword_score > 0.5
+                ORDER BY (vector_score * :vWeight + keyword_score * :kWeight) DESC
+                LIMIT :limit
+                """);
 
         Query query = entityManager.createNativeQuery(sql.toString(), LegalArticle.class);
         query.setParameter("vector", vectorString);
@@ -199,7 +200,7 @@ public class VectorSearchService {
     @SuppressWarnings("unchecked")
     private List<LegalArticle> keywordOnlySearch(String question, int limit) {
         List<String> keywords = extractKeywords(question);
-        
+
         if (keywords.isEmpty()) {
             log.warn("No keywords extracted from question");
             return List.of();
@@ -207,15 +208,15 @@ public class VectorSearchService {
 
         StringBuilder sql = new StringBuilder();
         sql.append("""
-            SELECT DISTINCT a.* FROM legal_articles a
-            JOIN legal_documents d ON a.document_id = d.id
-            WHERE d.status = 'Còn hiệu lực' AND (
-            """);
+                SELECT DISTINCT a.* FROM legal_articles a
+                JOIN legal_documents d ON a.document_id = d.id
+                WHERE d.status = 'Còn hiệu lực' AND (
+                """);
 
         List<String> conditions = new ArrayList<>();
         for (int i = 0; i < keywords.size(); i++) {
             conditions.add(String.format(
-                "(a.content ILIKE :kw%d OR a.article_title ILIKE :kw%d)", i, i));
+                    "(a.content ILIKE :kw%d OR a.article_title ILIKE :kw%d)", i, i));
         }
         sql.append(String.join(" OR ", conditions));
         sql.append(") LIMIT :limit");
@@ -242,24 +243,23 @@ public class VectorSearchService {
 
         try {
             float[] embedding = embeddingService.generateArticleEmbedding(
-                article.getArticleTitle(), 
-                article.getContent()
-            );
+                    article.getArticleTitle(),
+                    article.getContent());
             String vectorString = embeddingService.toVectorString(embedding);
 
             // Update using native query (JPA doesn't support vector type directly)
             String sql = """
-                UPDATE legal_articles 
-                SET embedding = CAST(:vector AS vector), 
-                    embedding_updated_at = :updatedAt
-                WHERE id = :id
-                """;
-            
+                    UPDATE legal_articles
+                    SET embedding = CAST(:vector AS vector),
+                        embedding_updated_at = :updatedAt
+                    WHERE id = :id
+                    """;
+
             entityManager.createNativeQuery(sql)
-                .setParameter("vector", vectorString)
-                .setParameter("updatedAt", LocalDateTime.now())
-                .setParameter("id", articleId)
-                .executeUpdate();
+                    .setParameter("vector", vectorString)
+                    .setParameter("updatedAt", LocalDateTime.now())
+                    .setParameter("id", articleId)
+                    .executeUpdate();
 
             log.info("Generated embedding for article {}", articleId);
 
@@ -275,9 +275,9 @@ public class VectorSearchService {
     public int generateMissingEmbeddings(int batchSize) {
         @SuppressWarnings("unchecked")
         List<Long> articleIds = entityManager.createNativeQuery(
-            "SELECT id FROM legal_articles WHERE embedding IS NULL LIMIT :limit")
-            .setParameter("limit", batchSize)
-            .getResultList();
+                "SELECT id FROM legal_articles WHERE embedding IS NULL LIMIT :limit")
+                .setParameter("limit", batchSize)
+                .getResultList();
 
         int count = 0;
         for (Object idObj : articleIds) {
@@ -301,8 +301,8 @@ public class VectorSearchService {
      */
     public long countArticlesWithEmbeddings() {
         return ((Number) entityManager.createNativeQuery(
-            "SELECT COUNT(*) FROM legal_articles WHERE embedding IS NOT NULL")
-            .getSingleResult()).longValue();
+                "SELECT COUNT(*) FROM legal_articles WHERE embedding IS NOT NULL")
+                .getSingleResult()).longValue();
     }
 
     /**
@@ -310,8 +310,8 @@ public class VectorSearchService {
      */
     public long countArticlesWithoutEmbeddings() {
         return ((Number) entityManager.createNativeQuery(
-            "SELECT COUNT(*) FROM legal_articles WHERE embedding IS NULL")
-            .getSingleResult()).longValue();
+                "SELECT COUNT(*) FROM legal_articles WHERE embedding IS NULL")
+                .getSingleResult()).longValue();
     }
 
     /**
@@ -319,16 +319,16 @@ public class VectorSearchService {
      */
     private List<String> extractKeywords(String question) {
         String[] words = question.toLowerCase()
-            .replaceAll("[^\\p{L}\\s]", " ")
-            .trim()
-            .split("\\s+");
+                .replaceAll("[^\\p{L}\\s]", " ")
+                .trim()
+                .split("\\s+");
 
         return Arrays.stream(words)
-            .filter(word -> word.length() >= LegalSearchConfig.MIN_KEYWORD_LENGTH)
-            .filter(word -> !LegalSearchConfig.STOP_WORDS.contains(word))
-            .distinct()
-            .limit(LegalSearchConfig.MAX_KEYWORDS)
-            .collect(Collectors.toList());
+                .filter(word -> word.length() >= LegalSearchConfig.MIN_KEYWORD_LENGTH)
+                .filter(word -> !LegalSearchConfig.STOP_WORDS.contains(word))
+                .distinct()
+                .limit(LegalSearchConfig.MAX_KEYWORDS)
+                .collect(Collectors.toList());
     }
 
     private String truncateForLog(String text) {
