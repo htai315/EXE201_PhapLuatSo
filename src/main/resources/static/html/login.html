@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,11 +15,13 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap"
+    rel="stylesheet">
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="/css/toast-notification.css">
-  
+
   <style>
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
@@ -27,7 +30,7 @@
       position: relative;
       overflow-x: hidden;
     }
-    
+
     body::before {
       content: '';
       position: absolute;
@@ -35,61 +38,70 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: 
+      background:
         radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3), transparent 50%),
         radial-gradient(circle at 80% 80%, rgba(138, 43, 226, 0.3), transparent 50%),
         radial-gradient(circle at 40% 20%, rgba(255, 105, 180, 0.2), transparent 50%);
       animation: gradientShift 15s ease infinite;
     }
-    
+
     @keyframes gradientShift {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.8; }
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.8;
+      }
     }
-    
+
     .auth-section {
       position: relative;
       z-index: 1;
     }
-    
+
     .auth-card {
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(20px);
       border-radius: 24px;
       padding: 3rem;
-      box-shadow: 
+      box-shadow:
         0 20px 60px rgba(0, 0, 0, 0.15),
         0 0 0 1px rgba(255, 255, 255, 0.1) inset;
       border: 1px solid rgba(255, 255, 255, 0.2);
       animation: slideInRight 0.6s ease-out;
     }
-    
+
     @keyframes slideInRight {
       from {
         opacity: 0;
         transform: translateX(30px);
       }
+
       to {
         opacity: 1;
         transform: translateX(0);
       }
     }
-    
+
     .auth-hero-text {
       animation: slideInLeft 0.6s ease-out;
     }
-    
+
     @keyframes slideInLeft {
       from {
         opacity: 0;
         transform: translateX(-30px);
       }
+
       to {
         opacity: 1;
         transform: translateX(0);
       }
     }
-    
+
     .auth-title {
       font-size: 2rem;
       font-weight: 700;
@@ -97,12 +109,12 @@
       margin-bottom: 0.5rem;
       font-family: 'Inter', sans-serif;
     }
-    
+
     .auth-subtitle {
       color: #64748b;
       font-size: 0.95rem;
     }
-    
+
     .form-control {
       border: 2px solid #e2e8f0;
       border-radius: 12px;
@@ -111,12 +123,12 @@
       transition: all 0.3s ease;
       font-family: 'Inter', sans-serif;
     }
-    
+
     .form-control:focus {
       border-color: #667eea;
       box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
     }
-    
+
     .input-group-text {
       background: #f8fafc;
       border: 2px solid #e2e8f0;
@@ -124,16 +136,16 @@
       border-radius: 12px 0 0 12px;
       color: #64748b;
     }
-    
+
     .input-group .form-control {
       border-left: none;
       border-radius: 0 12px 12px 0;
     }
-    
+
     .input-group .form-control:not(:last-child) {
       border-radius: 0;
     }
-    
+
     .password-toggle {
       background: #f8fafc;
       color: #64748b;
@@ -142,22 +154,22 @@
       border: 2px solid #e2e8f0 !important;
       border-left: none !important;
     }
-    
+
     .password-toggle:hover {
       background: #f0f4ff;
       color: #667eea;
     }
-    
+
     .input-group:focus-within .password-toggle {
       border-color: #667eea !important;
     }
-    
+
     .input-group:focus-within .input-group-text {
       border-color: #667eea;
       background: #f0f4ff;
       color: #667eea;
     }
-    
+
     .btn-primary {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       border: none;
@@ -169,13 +181,13 @@
       box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
       font-family: 'Inter', sans-serif;
     }
-    
+
     .btn-primary:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
       background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
     }
-    
+
     .btn-outline-dark {
       border: 2px solid #e2e8f0;
       border-radius: 12px;
@@ -185,21 +197,21 @@
       background: white;
       font-family: 'Inter', sans-serif;
     }
-    
+
     .btn-outline-dark:hover {
       background: #f8fafc;
       border-color: #cbd5e1;
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
-    
+
     .divider-text {
       position: relative;
       color: #94a3b8;
       font-size: 0.875rem;
       font-family: 'Inter', sans-serif;
     }
-    
+
     .divider-text::before,
     .divider-text::after {
       content: '';
@@ -209,15 +221,15 @@
       height: 1px;
       background: #e2e8f0;
     }
-    
+
     .divider-text::before {
       left: 0;
     }
-    
+
     .divider-text::after {
       right: 0;
     }
-    
+
     .auth-hero-title {
       font-size: 3rem;
       font-weight: 800;
@@ -227,20 +239,20 @@
       font-family: 'Inter', sans-serif;
       line-height: 1.2;
     }
-    
+
     .auth-hero-subtitle {
       font-size: 1.125rem;
       color: rgba(255, 255, 255, 0.95);
       line-height: 1.7;
       font-family: 'Inter', sans-serif;
     }
-    
+
     .auth-hero-list {
       list-style: none;
       padding: 0;
       margin: 2rem 0 0 0;
     }
-    
+
     .auth-hero-list li {
       color: rgba(255, 255, 255, 0.95);
       font-size: 1rem;
@@ -249,13 +261,13 @@
       align-items: center;
       font-family: 'Inter', sans-serif;
     }
-    
+
     .auth-hero-list li i {
       font-size: 1.25rem;
       margin-right: 0.75rem;
       color: #fbbf24;
     }
-    
+
     .auth-logo-link {
       text-decoration: none;
       color: white;
@@ -266,333 +278,333 @@
       transition: all 0.3s ease;
       font-family: 'Inter', sans-serif;
     }
-    
+
     .auth-logo-link:hover {
       color: #fbbf24;
       transform: translateX(-5px);
     }
-    
+
     .auth-logo-img {
       width: 48px;
       height: 48px;
       object-fit: contain;
       filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
     }
-    
+
     .form-check-label,
     .form-label {
       font-family: 'Inter', sans-serif;
       font-weight: 500;
       color: #475569;
     }
-    
+
     a {
       font-family: 'Inter', sans-serif;
     }
-    
+
     .text-primary {
       color: #667eea !important;
     }
-    
+
     .text-primary:hover {
       color: #764ba2 !important;
     }
-    
+
     .invalid-feedback {
       font-family: 'Inter', sans-serif;
       font-size: 0.875rem;
     }
-    
+
     @media (max-width: 991px) {
       .auth-hero-title {
         font-size: 2.5rem;
       }
-      
+
       .auth-card {
         padding: 2rem;
       }
     }
   </style>
 </head>
+
 <body>
-<!-- Login Section -->
-<section class="auth-section min-vh-100 d-flex align-items-center py-5">
-  <div class="container auth-layout">
-    <div class="row align-items-center justify-content-between g-5">
-      <!-- Left content: logo + giới thiệu -->
-      <div class="col-lg-6 fade-in">
-        <div class="auth-hero-text">
-          <a href="../index.html" class="auth-logo-link d-inline-flex align-items-center mb-4">
-            <img src="../img/Law.png" alt="Logo" class="me-2 auth-logo-img">
-            <span class="fw-semibold text-white">AI Pháp Luật Số</span>
-          </a>
-          <h1 class="auth-hero-title mb-3">
-            Chào mừng trở lại
-          </h1>
-          <p class="auth-hero-subtitle mb-4">
-            Đăng nhập để tiếp tục tra cứu văn bản pháp luật, luyện quiz và trò chuyện với trợ lý pháp lý thông minh
-            của bạn.
-          </p>
-          <ul class="auth-hero-list">
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>Truy vấn pháp luật nhanh, chính xác</li>
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>Lưu lịch sử câu hỏi và bộ đề yêu thích</li>
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>Đồng bộ trên mọi thiết bị</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Right column: form đăng nhập -->
-      <div class="col-md-7 col-lg-6 col-xl-5 fade-in-delay">
-        <div class="auth-card auth-card-large">
-          <div class="mb-4">
-            <h2 class="auth-title">Đăng nhập tài khoản</h2>
-            <p class="auth-subtitle mb-0">Vui lòng nhập thông tin để tiếp tục.</p>
+  <!-- Login Section -->
+  <section class="auth-section min-vh-100 d-flex align-items-center py-5">
+    <div class="container auth-layout">
+      <div class="row align-items-center justify-content-between g-5">
+        <!-- Left content: logo + giới thiệu -->
+        <div class="col-lg-6 fade-in">
+          <div class="auth-hero-text">
+            <a href="../index.html" class="auth-logo-link d-inline-flex align-items-center mb-4">
+              <img src="../img/Law.png" alt="Logo" class="me-2 auth-logo-img">
+              <span class="fw-semibold text-white">AI Pháp Luật Số</span>
+            </a>
+            <h1 class="auth-hero-title mb-3">
+              Chào mừng trở lại
+            </h1>
+            <p class="auth-hero-subtitle mb-4">
+              Đăng nhập để tiếp tục tra cứu văn bản pháp luật, luyện quiz và trò chuyện với trợ lý pháp lý thông minh
+              của bạn.
+            </p>
+            <ul class="auth-hero-list">
+              <li><i class="bi bi-check-circle-fill text-primary me-2"></i>Truy vấn pháp luật nhanh, chính xác</li>
+              <li><i class="bi bi-check-circle-fill text-primary me-2"></i>Lưu lịch sử câu hỏi và bộ đề yêu thích</li>
+              <li><i class="bi bi-check-circle-fill text-primary me-2"></i>Đồng bộ trên mọi thiết bị</li>
+            </ul>
           </div>
+        </div>
 
-          <!-- Login Form -->
-          <form class="auth-form">
-            <div class="mb-3">
-              <label class="form-label">Email</label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                <input id="loginEmail" type="email" class="form-control" placeholder="name@example.com" required>
-              </div>
+        <!-- Right column: form đăng nhập -->
+        <div class="col-md-7 col-lg-6 col-xl-5 fade-in-delay">
+          <div class="auth-card auth-card-large">
+            <div class="mb-4">
+              <h2 class="auth-title">Đăng nhập tài khoản</h2>
+              <p class="auth-subtitle mb-0">Vui lòng nhập thông tin để tiếp tục.</p>
             </div>
 
-            <div class="mb-3">
-              <div class="d-flex justify-content-between">
-                <label class="form-label">Mật khẩu</label>
-                <a href="/html/forgot-password.html" class="text-primary small">Quên mật khẩu?</a>
+            <!-- Login Form -->
+            <form class="auth-form">
+              <div class="mb-3">
+                <label class="form-label">Email</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                  <input id="loginEmail" type="email" class="form-control" placeholder="name@example.com" required>
+                </div>
               </div>
-              <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                <input id="loginPassword" type="password" class="form-control" placeholder="Nhập mật khẩu" required>
-                <button class="btn btn-outline-secondary password-toggle" type="button" tabindex="-1">
-                  <i class="bi bi-eye"></i>
-                </button>
+
+              <div class="mb-3">
+                <div class="d-flex justify-content-between">
+                  <label class="form-label">Mật khẩu</label>
+                  <a href="/html/forgot-password.html" class="text-primary small">Quên mật khẩu?</a>
+                </div>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                  <input id="loginPassword" type="password" class="form-control" placeholder="Nhập mật khẩu" required>
+                  <button class="btn btn-outline-secondary password-toggle" type="button" tabindex="-1">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+                <!-- Container cho email verification error -->
+                <div id="emailVerificationError"></div>
               </div>
-              <!-- Container cho email verification error -->
-              <div id="emailVerificationError"></div>
-            </div>
 
-            <div class="mb-4 d-flex justify-content-between align-items-center">
-              <div class="form-check">
-                <input type="checkbox" class="form-check-input" id="remember">
-                <label class="form-check-label" for="remember">Ghi nhớ đăng nhập</label>
+              <div class="mb-4 d-flex justify-content-between align-items-center">
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input" id="remember">
+                  <label class="form-check-label" for="remember">Ghi nhớ đăng nhập</label>
+                </div>
               </div>
+
+              <button type="submit" class="btn btn-primary w-100 mb-3">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Đăng Nhập
+              </button>
+
+              <div class="text-center mb-3">
+                <span class="divider-text">hoặc đăng nhập với</span>
+              </div>
+
+              <button type="button" id="googleLoginBtn" class="btn btn-outline-dark w-100 mb-3">
+                <img src="../img/Google__G__logo.svg.webp" alt="Google" style="height: 18px;" class="me-2">
+                Đăng nhập bằng Google
+              </button>
+            </form>
+
+            <div class="text-center mt-4">
+              <p class="mb-0">Chưa có tài khoản? <a href="register.html" class="text-primary">Đăng ký ngay</a></p>
             </div>
-
-            <button type="submit" class="btn btn-primary w-100 mb-3">
-              <i class="bi bi-box-arrow-in-right me-2"></i>Đăng Nhập
-            </button>
-
-            <div class="text-center mb-3">
-              <span class="divider-text">hoặc đăng nhập với</span>
-            </div>
-
-            <button type="button" id="googleLoginBtn" class="btn btn-outline-dark w-100 mb-3">
-              <img src="../img/Google__G__logo.svg.webp" alt="Google" style="height: 18px;" class="me-2">
-              Đăng nhập bằng Google
-            </button>
-          </form>
-
-          <div class="text-center mt-4">
-            <p class="mb-0">Chưa có tài khoản? <a href="register.html" class="text-primary">Đăng ký ngay</a></p>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Custom JS -->
-<script src="/scripts/toast-notification.js"></script>
-<script src="/scripts/api-client.js"></script>
-<script src="/scripts/script.js"></script>
+  <!-- Custom JS -->
+  <script src="/scripts/toast-notification.js"></script>
+  <script src="/scripts/token-manager.js"></script>
+  <script src="/scripts/api-client.js"></script>
+  <script src="/scripts/script.js"></script>
 
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    // Check for OAuth2 error from URL params
-    const urlParams = new URLSearchParams(window.location.search);
-    const error = urlParams.get('error');
-    const message = urlParams.get('message');
-    
-    if (error === 'oauth2_failed' && message) {
-      // Show error toast with decoded message
-      Toast.error(decodeURIComponent(message));
-      // Clean up URL params
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-    
-    // Check if user is already logged in
-    const accessToken = localStorage.getItem('accessToken');
-    if (accessToken) {
-      // Verify token is valid by calling /api/auth/me
-      API_CLIENT.get('/api/auth/me')
-        .then(() => {
-          // Token valid, redirect to home
-          console.log('User already logged in, redirecting to home...');
-          window.location.href = '/index.html';
-        })
-        .catch(() => {
-          // Token invalid, stay on login page
-          console.log('Token invalid, staying on login page');
-        });
-    }
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Check for OAuth2 error from URL params
+      const urlParams = new URLSearchParams(window.location.search);
+      const error = urlParams.get('error');
+      const message = urlParams.get('message');
 
-    const form = document.querySelector(".auth-form");
-    const emailInput = document.getElementById("loginEmail");
-    const passwordInput = document.getElementById("loginPassword");
-    const googleBtn = document.getElementById("googleLoginBtn");
-
-    // Validate email format
-    function isValidEmail(email) {
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
-
-    if (googleBtn) {
-      googleBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        // Redirect to Google OAuth2 authorization endpoint
-        window.location.href = "/oauth2/authorization/google";
-      });
-    }
-    
-    // Password toggle functionality
-    document.querySelectorAll('.password-toggle').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const input = btn.previousElementSibling;
-        const icon = btn.querySelector('i');
-        if (input.type === 'password') {
-          input.type = 'text';
-          icon.classList.remove('bi-eye');
-          icon.classList.add('bi-eye-slash');
-        } else {
-          input.type = 'password';
-          icon.classList.remove('bi-eye-slash');
-          icon.classList.add('bi-eye');
-        }
-      });
-    });
-
-    if (!form) return;
-
-    // Real-time validation - chỉ highlight input, không hiện text error
-    emailInput.addEventListener('blur', () => {
-      const value = emailInput.value.trim();
-      if (!value || !isValidEmail(value)) {
-        emailInput.classList.add('is-invalid');
-      } else {
-        emailInput.classList.remove('is-invalid');
-      }
-    });
-
-    emailInput.addEventListener('input', () => {
-      if (emailInput.value.trim()) {
-        emailInput.classList.remove('is-invalid');
-      }
-    });
-
-    passwordInput.addEventListener('blur', () => {
-      if (!passwordInput.value) {
-        passwordInput.classList.add('is-invalid');
-      } else {
-        passwordInput.classList.remove('is-invalid');
-      }
-    });
-
-    passwordInput.addEventListener('input', () => {
-      if (passwordInput.value) {
-        passwordInput.classList.remove('is-invalid');
-      }
-    });
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      // Clear all errors
-      emailInput.classList.remove('is-invalid');
-      passwordInput.classList.remove('is-invalid');
-
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
-
-      // Validate fields - sử dụng Toast thay vì inline error
-      if (!email) {
-        emailInput.classList.add('is-invalid');
-        Toast.error('Vui lòng nhập email');
-        emailInput.focus();
-        return;
-      }
-      
-      if (!isValidEmail(email)) {
-        emailInput.classList.add('is-invalid');
-        Toast.error('Email không hợp lệ');
-        emailInput.focus();
-        return;
+      if (error === 'oauth2_failed' && message) {
+        // Show error toast with decoded message
+        Toast.error(decodeURIComponent(message));
+        // Clean up URL params
+        window.history.replaceState({}, document.title, window.location.pathname);
       }
 
-      if (!password) {
-        passwordInput.classList.add('is-invalid');
-        Toast.error('Vui lòng nhập mật khẩu');
-        passwordInput.focus();
-        return;
-      }
-
-      try {
-        const data = await API_CLIENT.post("/api/auth/login", { email, password });
-        
-        // Lưu token để dùng cho các trang khác
-        localStorage.setItem("accessToken", data.accessToken);
-        localStorage.setItem("refreshToken", data.refreshToken);
-        
-        // Fetch user info to save role for auth-guard
-        try {
-          const user = await API_CLIENT.get('/api/auth/me');
-          if (user.fullName) {
-            localStorage.setItem('userName', user.fullName);
-          }
-          if (user.role) {
-            localStorage.setItem('userRole', user.role);
-          }
-        } catch (e) {
-          console.warn('Could not fetch user info:', e);
-        }
-        
-        Toast.success('Đăng nhập thành công!');
-
-        // Check if there's a returnUrl to redirect to
-        const urlParams = new URLSearchParams(window.location.search);
-        const returnUrl = urlParams.get('returnUrl');
-        
-        setTimeout(() => {
-          if (returnUrl && returnUrl.startsWith('/')) {
-            window.location.href = returnUrl;
+      // Check if user is already logged in via cookie
+      // Try to rehydrate from refresh token cookie first
+      if (window.TokenManager) {
+        window.TokenManager.refreshAccessToken().then(function (success) {
+          if (success) {
+            console.log('User already logged in via cookie, redirecting to home...');
+            window.location.href = '/index.html';
           } else {
-            window.location.href = "/index.html";
+            console.log('No valid session, staying on login page');
           }
-        }, 500);
-      } catch (error) {
-        console.error("Login error", error);
-        const errorMessage = error.error || error.message || 'Đăng nhập thất bại';
-        
-        // Kiểm tra nếu lỗi là email chưa xác thực
-        if (errorMessage.includes('xác thực email') || errorMessage.includes('Vui lòng xác thực')) {
-          showEmailNotVerifiedError(email);
-        } else {
-          // Hiển thị lỗi bằng Toast notification
-          Toast.error(errorMessage, 4000);
-        }
+        });
       }
-    });
-    
-    // Hiển thị lỗi email chưa xác thực với nút gửi lại
-    function showEmailNotVerifiedError(email) {
-      const errorDiv = document.getElementById('emailVerificationError');
-      errorDiv.innerHTML = `
+
+      const form = document.querySelector(".auth-form");
+      const emailInput = document.getElementById("loginEmail");
+      const passwordInput = document.getElementById("loginPassword");
+      const googleBtn = document.getElementById("googleLoginBtn");
+
+      // Validate email format
+      function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      }
+
+      if (googleBtn) {
+        googleBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          // Redirect to Google OAuth2 authorization endpoint
+          window.location.href = "/oauth2/authorization/google";
+        });
+      }
+
+      // Password toggle functionality
+      document.querySelectorAll('.password-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const input = btn.previousElementSibling;
+          const icon = btn.querySelector('i');
+          if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+          } else {
+            input.type = 'password';
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+          }
+        });
+      });
+
+      if (!form) return;
+
+      // Real-time validation - chỉ highlight input, không hiện text error
+      emailInput.addEventListener('blur', () => {
+        const value = emailInput.value.trim();
+        if (!value || !isValidEmail(value)) {
+          emailInput.classList.add('is-invalid');
+        } else {
+          emailInput.classList.remove('is-invalid');
+        }
+      });
+
+      emailInput.addEventListener('input', () => {
+        if (emailInput.value.trim()) {
+          emailInput.classList.remove('is-invalid');
+        }
+      });
+
+      passwordInput.addEventListener('blur', () => {
+        if (!passwordInput.value) {
+          passwordInput.classList.add('is-invalid');
+        } else {
+          passwordInput.classList.remove('is-invalid');
+        }
+      });
+
+      passwordInput.addEventListener('input', () => {
+        if (passwordInput.value) {
+          passwordInput.classList.remove('is-invalid');
+        }
+      });
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        // Clear all errors
+        emailInput.classList.remove('is-invalid');
+        passwordInput.classList.remove('is-invalid');
+
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+
+        // Validate fields - sử dụng Toast thay vì inline error
+        if (!email) {
+          emailInput.classList.add('is-invalid');
+          Toast.error('Vui lòng nhập email');
+          emailInput.focus();
+          return;
+        }
+
+        if (!isValidEmail(email)) {
+          emailInput.classList.add('is-invalid');
+          Toast.error('Email không hợp lệ');
+          emailInput.focus();
+          return;
+        }
+
+        if (!password) {
+          passwordInput.classList.add('is-invalid');
+          Toast.error('Vui lòng nhập mật khẩu');
+          passwordInput.focus();
+          return;
+        }
+
+        try {
+          const data = await API_CLIENT.post("/api/auth/login", { email, password });
+
+          // Store access token in memory only (refresh token is in HttpOnly cookie)
+          if (window.TokenManager) {
+            window.TokenManager.setAccessToken(data.accessToken, data.expiresIn);
+          }
+
+          // Fetch user info to save role for auth-guard
+          try {
+            const user = await API_CLIENT.get('/api/auth/me');
+            if (user.fullName) {
+              localStorage.setItem('userName', user.fullName);
+            }
+            if (user.role) {
+              localStorage.setItem('userRole', user.role);
+            }
+          } catch (e) {
+            console.warn('Could not fetch user info:', e);
+          }
+
+          Toast.success('Đăng nhập thành công!');
+
+          // Check if there's a returnUrl to redirect to
+          const urlParams = new URLSearchParams(window.location.search);
+          const returnUrl = urlParams.get('returnUrl');
+
+          setTimeout(() => {
+            if (returnUrl && returnUrl.startsWith('/')) {
+              window.location.href = returnUrl;
+            } else {
+              window.location.href = "/index.html";
+            }
+          }, 500);
+        } catch (error) {
+          console.error("Login error", error);
+          const errorMessage = error.error || error.message || 'Đăng nhập thất bại';
+
+          // Kiểm tra nếu lỗi là email chưa xác thực
+          if (errorMessage.includes('xác thực email') || errorMessage.includes('Vui lòng xác thực')) {
+            showEmailNotVerifiedError(email);
+          } else {
+            // Hiển thị lỗi bằng Toast notification
+            Toast.error(errorMessage, 4000);
+          }
+        }
+      });
+
+      // Hiển thị lỗi email chưa xác thực với nút gửi lại
+      function showEmailNotVerifiedError(email) {
+        const errorDiv = document.getElementById('emailVerificationError');
+        errorDiv.innerHTML = `
         <div class="alert alert-warning py-2 px-3 mb-0 mt-2" style="border-radius: 10px;">
           <i class="bi bi-exclamation-triangle me-2"></i>
           Email chưa được xác thực.
@@ -601,30 +613,31 @@
           </button>
         </div>
       `;
-      
-      document.getElementById('resendVerifyBtn').addEventListener('click', async (e) => {
-        e.preventDefault();
-        const btn = e.target;
-        btn.disabled = true;
-        btn.textContent = 'Đang gửi...';
-        
-        try {
-          await API_CLIENT.post('/api/auth/resend-verification', { email });
-          Toast.success('Email xác thực đã được gửi! Vui lòng kiểm tra hộp thư.');
-          errorDiv.innerHTML = `
+
+        document.getElementById('resendVerifyBtn').addEventListener('click', async (e) => {
+          e.preventDefault();
+          const btn = e.target;
+          btn.disabled = true;
+          btn.textContent = 'Đang gửi...';
+
+          try {
+            await API_CLIENT.post('/api/auth/resend-verification', { email });
+            Toast.success('Email xác thực đã được gửi! Vui lòng kiểm tra hộp thư.');
+            errorDiv.innerHTML = `
             <div class="alert alert-success py-2 px-3 mb-0 mt-2" style="border-radius: 10px;">
               <i class="bi bi-check-circle me-2"></i>
               Email xác thực đã được gửi. Kiểm tra hộp thư của bạn.
             </div>
           `;
-        } catch (err) {
-          Toast.error(err.message || 'Không thể gửi email');
-          btn.disabled = false;
-          btn.textContent = 'Gửi lại email xác thực';
-        }
-      });
-    }
-  });
-</script>
+          } catch (err) {
+            Toast.error(err.message || 'Không thể gửi email');
+            btn.disabled = false;
+            btn.textContent = 'Gửi lại email xác thực';
+          }
+        });
+      }
+    });
+  </script>
 </body>
+
 </html>

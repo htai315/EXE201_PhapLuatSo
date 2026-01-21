@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,7 +15,9 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap"
+        rel="stylesheet">
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/style.css">
@@ -24,252 +27,275 @@
     <link rel="stylesheet" href="/css/quiz-pages.css">
     <link rel="stylesheet" href="/css/toast-notification.css">
 </head>
+
 <body data-auth-required="true">
-<nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
-    <div class="container">
-        <a class="navbar-brand" href="/index.html">
-            <img src="/img/Law.png" alt="Logo">
-            <span>Pháp Luật Số</span>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+        <div class="container">
+            <a class="navbar-brand" href="/index.html">
+                <img src="/img/Law.png" alt="Logo">
+                <span>Pháp Luật Số</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto align-items-lg-center">
-                <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/legal-chat.html">Chat AI</a></li>
-                <li class="nav-item"><a class="nav-link active" href="/html/my-quizzes.html">Bộ đề</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
-                <li class="nav-item ms-lg-3 guest-only">
-                    <a class="btn btn-outline-primary btn-sm px-3" href="/html/login.html">
-                        <i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập
-                    </a>
-                </li>
-                <li class="nav-item ms-lg-2 guest-only">
-                    <a class="btn btn-primary btn-sm px-3" href="/html/register.html">
-                        <i class="bi bi-person-plus me-1"></i>Đăng Ký
-                    </a>
-                </li>
-                <li class="nav-item dropdown ms-lg-3 auth-only d-none">
-                    <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img id="navUserAvatar" src="https://ui-avatars.com/api/?name=User&size=40&background=1a4b84&color=fff" 
-                             alt="Avatar" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #e2e8f0;">
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="/html/profile.html"><i class="bi bi-person me-2"></i>Hồ sơ</a></li>
-                        <li><a class="dropdown-item" href="/html/payment-history.html"><i class="bi bi-clock-history me-2"></i>Lịch sử thanh toán</a></li>
-                        <li><a class="dropdown-item" href="/html/plans.html"><i class="bi bi-credit-card me-2"></i>Nâng cấp</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
-                    </ul>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
-
-<div class="page-wrapper">
-    <div class="question-wrapper">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-                <div class="step-badge mb-2">
-                    <i class="bi bi-2-circle me-1"></i>Bước 2 / 2 · Thêm câu hỏi
-                </div>
-                <h1 class="page-title mb-1">Thêm Câu hỏi Mới</h1>
-                <p class="question-meta mb-0" id="setTitleText">Đang tải thông tin bộ đề...</p>
-            </div>
-            <button class="btn btn-outline-secondary btn-rounded" id="btnBackToManager">
-                <i class="bi bi-arrow-left me-1"></i>Quay lại Bộ đề
+                <span class="navbar-toggler-icon"></span>
             </button>
-        </div>
-
-        <div id="alertArea"></div>
-
-        <div class="card mt-2">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-chat-square-text me-2"></i>Nội dung câu hỏi &amp; đáp án</span>
-                <span class="question-meta d-none d-md-inline">Một câu hỏi nên tập trung vào <strong>1 ý chính</strong>.</span>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-lg-center">
+                    <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/legal-chat.html">Chat AI</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/html/my-quizzes.html">Bộ đề</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
+                    <li class="nav-item ms-lg-3 guest-only">
+                        <a class="btn btn-outline-primary btn-sm px-3" href="/html/login.html">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập
+                        </a>
+                    </li>
+                    <li class="nav-item ms-lg-2 guest-only">
+                        <a class="btn btn-primary btn-sm px-3" href="/html/register.html">
+                            <i class="bi bi-person-plus me-1"></i>Đăng Ký
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown ms-lg-3 auth-only d-none">
+                        <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <img id="navUserAvatar"
+                                src="https://ui-avatars.com/api/?name=User&size=40&background=1a4b84&color=fff"
+                                alt="Avatar" class="rounded-circle"
+                                style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #e2e8f0;">
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="/html/profile.html"><i class="bi bi-person me-2"></i>Hồ
+                                    sơ</a></li>
+                            <li><a class="dropdown-item" href="/html/payment-history.html"><i
+                                        class="bi bi-clock-history me-2"></i>Lịch sử thanh toán</a></li>
+                            <li><a class="dropdown-item" href="/html/plans.html"><i
+                                        class="bi bi-credit-card me-2"></i>Nâng cấp</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i
+                                        class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+                        </ul>
+                    </li>
+                </ul>
             </div>
-            <div class="card-body">
-                <form id="addQuestionForm">
-                    <div class="mb-3">
-                        <label for="questionText" class="form-label">Nội dung câu hỏi <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="questionText" rows="3" required
-                                  placeholder="Nhập nội dung câu hỏi..." maxlength="2000"></textarea>
-                        <div class="helper-text mt-1">
-                            Viết rõ ràng, tránh mơ hồ. Nếu là câu tình huống, hãy nêu đầy đủ bối cảnh trước khi hỏi.
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="explanation" class="form-label">Giải thích</label>
-                        <textarea class="form-control" id="explanation" rows="2"
-                                  placeholder="Giải thích đáp án (tùy chọn)..." maxlength="2000"></textarea>
-                        <div class="helper-text mt-1">
-                            Ghi chú căn cứ pháp lý hoặc cách suy luận giúp người làm hiểu tại sao đáp án đúng.
-                        </div>
-                    </div>
+        </div>
+    </nav>
 
-                    <h6 class="mb-3">Các phương án trả lời <span class="text-danger">*</span></h6>
-                    <p class="helper-text mb-2">
-                        Chọn <strong>1 đáp án đúng</strong>, các phương án còn lại nên hợp lý để tăng chất lượng luyện tập.
-                    </p>
-                    <div class="option-item mb-2">
-                        <div class="form-check mb-0">
-                            <input class="form-check-input" type="radio" name="correctOption" value="A" id="correctA" required>
-                            <label class="form-check-label option-label-strong" for="correctA"><strong>A.</strong></label>
-                        </div>
-                        <input type="text" class="form-control" id="optionA" required
-                               placeholder="Phương án A" maxlength="1000">
+    <div class="page-wrapper">
+        <div class="question-wrapper">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <div class="step-badge mb-2">
+                        <i class="bi bi-2-circle me-1"></i>Bước 2 / 2 · Thêm câu hỏi
                     </div>
-                    <div class="option-item mb-2">
-                        <div class="form-check mb-0">
-                            <input class="form-check-input" type="radio" name="correctOption" value="B" id="correctB">
-                            <label class="form-check-label option-label-strong" for="correctB"><strong>B.</strong></label>
-                        </div>
-                        <input type="text" class="form-control" id="optionB" required
-                               placeholder="Phương án B" maxlength="1000">
-                    </div>
-                    <div class="option-item mb-2">
-                        <div class="form-check mb-0">
-                            <input class="form-check-input" type="radio" name="correctOption" value="C" id="correctC">
-                            <label class="form-check-label option-label-strong" for="correctC"><strong>C.</strong></label>
-                        </div>
-                        <input type="text" class="form-control" id="optionC" required
-                               placeholder="Phương án C" maxlength="1000">
-                    </div>
-                    <div class="option-item mb-2">
-                        <div class="form-check mb-0">
-                            <input class="form-check-input" type="radio" name="correctOption" value="D" id="correctD">
-                            <label class="form-check-label option-label-strong" for="correctD"><strong>D.</strong></label>
-                        </div>
-                        <input type="text" class="form-control" id="optionD" required
-                               placeholder="Phương án D" maxlength="1000">
-                    </div>
+                    <h1 class="page-title mb-1">Thêm Câu hỏi Mới</h1>
+                    <p class="question-meta mb-0" id="setTitleText">Đang tải thông tin bộ đề...</p>
+                </div>
+                <button class="btn btn-outline-secondary btn-rounded" id="btnBackToManager">
+                    <i class="bi bi-arrow-left me-1"></i>Quay lại Bộ đề
+                </button>
+            </div>
 
-                    <div class="mt-3 d-flex justify-content-between">
-                        <button type="button" class="btn btn-outline-secondary btn-rounded" id="btnFinishSet">
-                            <i class="bi bi-check2-circle me-1"></i>Hoàn tất Bộ đề
-                        </button>
-                        <button type="submit" class="btn btn-primary btn-rounded px-4">
-                            <i class="bi bi-plus-circle me-1"></i>Lưu &amp; Thêm câu khác
-                        </button>
-                    </div>
-                </form>
+            <div id="alertArea"></div>
+
+            <div class="card mt-2">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-chat-square-text me-2"></i>Nội dung câu hỏi &amp; đáp án</span>
+                    <span class="question-meta d-none d-md-inline">Một câu hỏi nên tập trung vào <strong>1 ý
+                            chính</strong>.</span>
+                </div>
+                <div class="card-body">
+                    <form id="addQuestionForm">
+                        <div class="mb-3">
+                            <label for="questionText" class="form-label">Nội dung câu hỏi <span
+                                    class="text-danger">*</span></label>
+                            <textarea class="form-control" id="questionText" rows="3" required
+                                placeholder="Nhập nội dung câu hỏi..." maxlength="2000"></textarea>
+                            <div class="helper-text mt-1">
+                                Viết rõ ràng, tránh mơ hồ. Nếu là câu tình huống, hãy nêu đầy đủ bối cảnh trước khi hỏi.
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="explanation" class="form-label">Giải thích</label>
+                            <textarea class="form-control" id="explanation" rows="2"
+                                placeholder="Giải thích đáp án (tùy chọn)..." maxlength="2000"></textarea>
+                            <div class="helper-text mt-1">
+                                Ghi chú căn cứ pháp lý hoặc cách suy luận giúp người làm hiểu tại sao đáp án đúng.
+                            </div>
+                        </div>
+
+                        <h6 class="mb-3">Các phương án trả lời <span class="text-danger">*</span></h6>
+                        <p class="helper-text mb-2">
+                            Chọn <strong>1 đáp án đúng</strong>, các phương án còn lại nên hợp lý để tăng chất lượng
+                            luyện tập.
+                        </p>
+                        <div class="option-item mb-2">
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="radio" name="correctOption" value="A"
+                                    id="correctA" required>
+                                <label class="form-check-label option-label-strong"
+                                    for="correctA"><strong>A.</strong></label>
+                            </div>
+                            <input type="text" class="form-control" id="optionA" required placeholder="Phương án A"
+                                maxlength="1000">
+                        </div>
+                        <div class="option-item mb-2">
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="radio" name="correctOption" value="B"
+                                    id="correctB">
+                                <label class="form-check-label option-label-strong"
+                                    for="correctB"><strong>B.</strong></label>
+                            </div>
+                            <input type="text" class="form-control" id="optionB" required placeholder="Phương án B"
+                                maxlength="1000">
+                        </div>
+                        <div class="option-item mb-2">
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="radio" name="correctOption" value="C"
+                                    id="correctC">
+                                <label class="form-check-label option-label-strong"
+                                    for="correctC"><strong>C.</strong></label>
+                            </div>
+                            <input type="text" class="form-control" id="optionC" required placeholder="Phương án C"
+                                maxlength="1000">
+                        </div>
+                        <div class="option-item mb-2">
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="radio" name="correctOption" value="D"
+                                    id="correctD">
+                                <label class="form-check-label option-label-strong"
+                                    for="correctD"><strong>D.</strong></label>
+                            </div>
+                            <input type="text" class="form-control" id="optionD" required placeholder="Phương án D"
+                                maxlength="1000">
+                        </div>
+
+                        <div class="mt-3 d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-secondary btn-rounded" id="btnFinishSet">
+                                <i class="bi bi-check2-circle me-1"></i>Hoàn tất Bộ đề
+                            </button>
+                            <button type="submit" class="btn btn-primary btn-rounded px-4">
+                                <i class="bi bi-plus-circle me-1"></i>Lưu &amp; Thêm câu khác
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/scripts/auth-guard.js"></script>
-<script src="/scripts/toast-notification.js"></script>
-<script src="/scripts/error-handler.js"></script>
-<script src="/scripts/api-client.js"></script>
-<script src="/scripts/script.js"></script>
-<script>
-    const API_BASE = '/api/quiz-sets';
-    let currentQuizSetId = null;
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/scripts/token-manager.js"></script>
+    <script src="/scripts/auth-guard.js"></script>
+    <script src="/scripts/toast-notification.js"></script>
+    <script src="/scripts/error-handler.js"></script>
+    <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/script.js"></script>
+    <script>
+        const API_BASE = '/api/quiz-sets';
+        let currentQuizSetId = null;
 
-    document.addEventListener('DOMContentLoaded', () => {
-        if (!AUTH.isLoggedIn()) return;
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Use AUTH.guard() for proper rehydration from HttpOnly cookie
+            const isAuth = await AUTH.guard({ requireAuth: true, redirect: true });
+            if (!isAuth) return;
 
-        const params = new URLSearchParams(window.location.search);
-        const setId = params.get('setId');
-        if (!setId) {
-            window.location.href = '/html/my-quizzes.html';
-            return;
-        }
-        currentQuizSetId = setId;
-
-        document.getElementById('btnBackToManager').addEventListener('click', () => {
-            window.location.href = `/html/quiz-manager.html?setId=${encodeURIComponent(currentQuizSetId)}`;
-        });
-        document.getElementById('btnFinishSet').addEventListener('click', () => {
-            window.location.href = `/html/quiz-manager.html?setId=${encodeURIComponent(currentQuizSetId)}`;
-        });
-
-        loadQuizSetTitle(setId);
-        initAddQuestionForm();
-    });
-
-    function showAlert(message, type = 'danger') {
-        // Use toast notification instead of alert area
-        const toastType = type === 'danger' ? 'error' : type;
-        Toast.show(message, toastType, 2000);
-    }
-
-    async function loadQuizSetTitle(setId) {
-        ERROR_HANDLER.showLoading(true);
-        try {
-            // Sử dụng API_CLIENT với auto token refresh
-            const data = await API_CLIENT.get(`${API_BASE}/${setId}`);
-            
-            const titleEl = document.getElementById('setTitleText');
-            titleEl.textContent = `Bộ đề: ${data.title}`;
-        } catch (err) {
-            console.error(err);
-            showAlert(err.message || 'Không thể tải thông tin bộ đề');
-        } finally {
-            ERROR_HANDLER.showLoading(false);
-        }
-    }
-
-    function initAddQuestionForm() {
-        const form = document.getElementById('addQuestionForm');
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!currentQuizSetId) {
-                showAlert('Không xác định được bộ đề.', 'danger');
+            const params = new URLSearchParams(window.location.search);
+            const setId = params.get('setId');
+            if (!setId) {
+                window.location.href = '/html/my-quizzes.html';
                 return;
             }
+            currentQuizSetId = setId;
 
+            document.getElementById('btnBackToManager').addEventListener('click', () => {
+                window.location.href = `/html/quiz-manager.html?setId=${encodeURIComponent(currentQuizSetId)}`;
+            });
+            document.getElementById('btnFinishSet').addEventListener('click', () => {
+                window.location.href = `/html/quiz-manager.html?setId=${encodeURIComponent(currentQuizSetId)}`;
+            });
+
+            loadQuizSetTitle(setId);
+            initAddQuestionForm();
+        });
+
+        function showAlert(message, type = 'danger') {
+            // Use toast notification instead of alert area
+            const toastType = type === 'danger' ? 'error' : type;
+            Toast.show(message, toastType, 2000);
+        }
+
+        async function loadQuizSetTitle(setId) {
             ERROR_HANDLER.showLoading(true);
             try {
-                const questionText = document.getElementById('questionText').value.trim();
-                const explanation = document.getElementById('explanation').value.trim();
-                const correctOption = document.querySelector('input[name="correctOption"]:checked')?.value;
-
-                if (!correctOption) {
-                    throw new Error('Vui lòng chọn đáp án đúng');
-                }
-
-                const options = [
-                    { optionKey: 'A', optionText: document.getElementById('optionA').value.trim(), isCorrect: correctOption === 'A' },
-                    { optionKey: 'B', optionText: document.getElementById('optionB').value.trim(), isCorrect: correctOption === 'B' },
-                    { optionKey: 'C', optionText: document.getElementById('optionC').value.trim(), isCorrect: correctOption === 'C' },
-                    { optionKey: 'D', optionText: document.getElementById('optionD').value.trim(), isCorrect: correctOption === 'D' }
-                ];
-
-                for (const opt of options) {
-                    if (!opt.optionText) {
-                        throw new Error(`Phương án ${opt.optionKey} không được để trống`);
-                    }
-                }
-
                 // Sử dụng API_CLIENT với auto token refresh
-                await API_CLIENT.post(`${API_BASE}/${currentQuizSetId}/questions`, {
-                    questionText,
-                    explanation: explanation || null,
-                    options
-                });
+                const data = await API_CLIENT.get(`${API_BASE}/${setId}`);
 
-                showAlert('Đã lưu câu hỏi. Bạn có thể nhập câu mới.', 'success');
-                form.reset();
-                document.getElementById('correctA').checked = true;
-
+                const titleEl = document.getElementById('setTitleText');
+                titleEl.textContent = `Bộ đề: ${data.title}`;
             } catch (err) {
                 console.error(err);
-                showAlert(err.message || 'Không thể lưu câu hỏi');
+                showAlert(err.message || 'Không thể tải thông tin bộ đề');
             } finally {
                 ERROR_HANDLER.showLoading(false);
             }
-        });
-    }
-</script>
+        }
+
+        function initAddQuestionForm() {
+            const form = document.getElementById('addQuestionForm');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!currentQuizSetId) {
+                    showAlert('Không xác định được bộ đề.', 'danger');
+                    return;
+                }
+
+                ERROR_HANDLER.showLoading(true);
+                try {
+                    const questionText = document.getElementById('questionText').value.trim();
+                    const explanation = document.getElementById('explanation').value.trim();
+                    const correctOption = document.querySelector('input[name="correctOption"]:checked')?.value;
+
+                    if (!correctOption) {
+                        throw new Error('Vui lòng chọn đáp án đúng');
+                    }
+
+                    const options = [
+                        { optionKey: 'A', optionText: document.getElementById('optionA').value.trim(), isCorrect: correctOption === 'A' },
+                        { optionKey: 'B', optionText: document.getElementById('optionB').value.trim(), isCorrect: correctOption === 'B' },
+                        { optionKey: 'C', optionText: document.getElementById('optionC').value.trim(), isCorrect: correctOption === 'C' },
+                        { optionKey: 'D', optionText: document.getElementById('optionD').value.trim(), isCorrect: correctOption === 'D' }
+                    ];
+
+                    for (const opt of options) {
+                        if (!opt.optionText) {
+                            throw new Error(`Phương án ${opt.optionKey} không được để trống`);
+                        }
+                    }
+
+                    // Sử dụng API_CLIENT với auto token refresh
+                    await API_CLIENT.post(`${API_BASE}/${currentQuizSetId}/questions`, {
+                        questionText,
+                        explanation: explanation || null,
+                        options
+                    });
+
+                    showAlert('Đã lưu câu hỏi. Bạn có thể nhập câu mới.', 'success');
+                    form.reset();
+                    document.getElementById('correctA').checked = true;
+
+                } catch (err) {
+                    console.error(err);
+                    showAlert(err.message || 'Không thể lưu câu hỏi');
+                } finally {
+                    ERROR_HANDLER.showLoading(false);
+                }
+            });
+        }
+    </script>
 </body>
+
 </html>
-
-

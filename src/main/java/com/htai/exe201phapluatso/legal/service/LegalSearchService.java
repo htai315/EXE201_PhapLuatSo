@@ -1,6 +1,8 @@
 package com.htai.exe201phapluatso.legal.service;
 
+import com.htai.exe201phapluatso.ai.service.OpenAIService;
 import com.htai.exe201phapluatso.legal.config.LegalSearchConfig;
+import com.htai.exe201phapluatso.legal.dto.ConversationContext;
 import com.htai.exe201phapluatso.legal.entity.LegalArticle;
 import com.htai.exe201phapluatso.legal.repo.LegalArticleRepo;
 import jakarta.persistence.EntityManager;
@@ -25,15 +27,18 @@ public class LegalSearchService {
     private final EntityManager entityManager;
     private final LegalArticleRepo articleRepo;
     private final VectorSearchService vectorSearchService;
+    private final OpenAIService aiService;
 
     @Autowired
     public LegalSearchService(
             EntityManager entityManager,
             LegalArticleRepo articleRepo,
-            VectorSearchService vectorSearchService) {
+            VectorSearchService vectorSearchService,
+            OpenAIService aiService) {
         this.entityManager = entityManager;
         this.articleRepo = articleRepo;
         this.vectorSearchService = vectorSearchService;
+        this.aiService = aiService;
     }
 
     /**
@@ -281,6 +286,186 @@ public class LegalSearchService {
     }
 
     /**
+     * Unified search method for chat functionality
+     * Combines query enhancement, multi-strategy search, and AI re-ranking
+     */
+    public SearchResult searchForChat(String question, int limit, ConversationContext context) {
+        // Enhance query with conversation context
+        String enhancedQuery = enhanceQueryWithContext(question, context);
+
+        // Try hybrid search first (vector + keyword)
+        List<LegalArticle> candidates = searchRelevantArticles(enhancedQuery, limit);
+
+        // Apply AI re-ranking if we have enough candidates
+        List<LegalArticle> finalResults = aiReRankArticles(question, candidates);
+
+        // Create metadata
+        SearchMetadata metadata = new SearchMetadata(
+            true, // usedVector (assuming hybrid search includes vector)
+            finalResults.size() < candidates.size(), // usedAiRerank
+            candidates.size() // originalCandidates
+        );
+
+        return new SearchResult(finalResults, metadata);
+    }
+
+    /**
+     * Build search query combining current question with conversation context
+     * This helps find more relevant articles when user asks follow-up questions
+     */
+    public String enhanceQueryWithContext(String question, ConversationContext context) {
+        if (context == null || context.isEmpty()) {
+            return question;
+        }
+
+        // Extract key topics from recent conversation to enhance search
+        StringBuilder queryBuilder = new StringBuilder(question);
+
+        // Add keywords from last assistant response if it contains legal terms
+        String lastAssistantMessage = context.getLastAssistantMessage();
+        if (lastAssistantMessage != null) {
+            // Extract "Điều X" references from previous response
+            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("Điều\\s+(\\d+)");
+            java.util.regex.Matcher matcher = pattern.matcher(lastAssistantMessage);
+            while (matcher.find()) {
+                queryBuilder.append(" Điều ").append(matcher.group(1));
+            }
+        }
+
+        return queryBuilder.toString();
+    }
+
+    /**
+     * AI-powered re-ranking: Let AI analyze and select truly relevant articles
+     * This filters out articles that match keywords but aren't actually relevant
+     */
+    public List<LegalArticle> aiReRankArticles(String question, List<LegalArticle> candidates) {
+        if (candidates.size() <= 3) {
+            // If we have 3 or fewer, assume all are relevant
+            return candidates;
+        }
+
+        log.info("AI re-ranking {} candidate articles", candidates.size());
+
+        // Build analysis prompt
+        String analysisPrompt = buildReRankingPrompt(question, candidates);
+
+        try {
+            String aiResponse = aiService.generateText(analysisPrompt);
+            List<Integer> selectedIndices = parseSelectedIndices(aiResponse, candidates.size());
+
+            List<LegalArticle> selected = selectedIndices.stream()
+                    .filter(i -> i >= 0 && i < candidates.size())
+                    .map(candidates::get)
+                    .collect(Collectors.toList());
+
+            log.info("AI selected {} out of {} articles as truly relevant", selected.size(), candidates.size());
+            return selected.isEmpty() ? candidates.subList(0, Math.min(3, candidates.size())) : selected;
+
+        } catch (Exception e) {
+            log.error("Error in AI re-ranking, falling back to top 5", e);
+            // Fallback: return top 5 if AI fails
+            return candidates.subList(0, Math.min(5, candidates.size()));
+        }
+    }
+
+    /**
+     * Build prompt for AI to analyze and select relevant articles
+     * Uses longer preview for better context understanding
+     */
+    private String buildReRankingPrompt(String question, List<LegalArticle> candidates) {
+        StringBuilder prompt = new StringBuilder();
+
+        prompt.append("""
+                Bạn là chuyên gia phân tích pháp luật với nhiệm vụ XÁC ĐỊNH điều luật nào THỰC SỰ LIÊN QUAN đến câu hỏi.
+
+                CẢNH BÁO: Nhiều điều luật có thể chứa từ khóa giống nhau nhưng KHÔNG liên quan đến câu hỏi.
+                Bạn phải phân biệt giữa:
+                - Điều luật TRỰC TIẾP trả lời câu hỏi (CHỌN)
+                - Điều luật chỉ chứa từ khóa tương tự nhưng về chủ đề khác (BỎ QUA)
+
+                """);
+        prompt.append("CÂU HỎI CỦA NGƯỜI DÙNG:\n");
+        prompt.append(question).append("\n\n");
+        prompt.append("CÁC ĐIỀU LUẬT ỨNG VIÊN:\n\n");
+
+        for (int i = 0; i < candidates.size(); i++) {
+            LegalArticle article = candidates.get(i);
+            prompt.append(String.format("[%d] Điều %d", i, article.getArticleNumber()));
+            if (article.getArticleTitle() != null && !article.getArticleTitle().isEmpty()) {
+                prompt.append(" - ").append(article.getArticleTitle());
+            }
+            prompt.append("\n");
+            prompt.append("Văn bản: ").append(article.getDocument().getDocumentName()).append("\n");
+            // Use longer preview for better context understanding
+            String preview = article.getContent().length() > LegalSearchConfig.RERANK_PREVIEW_LENGTH
+                    ? article.getContent().substring(0, LegalSearchConfig.RERANK_PREVIEW_LENGTH) + "..."
+                    : article.getContent();
+            prompt.append("Nội dung: ").append(preview).append("\n\n");
+        }
+
+        prompt.append("""
+                TIÊU CHÍ ĐÁNH GIÁ (áp dụng nghiêm ngặt):
+                ✅ CHỌN nếu điều luật:
+                   - Quy định TRỰC TIẾP về vấn đề người dùng hỏi
+                   - Chứa thông tin CỤ THỂ để trả lời câu hỏi (số liệu, điều kiện, quy trình...)
+                   - Thuộc ĐÚNG lĩnh vực pháp luật mà câu hỏi đề cập
+
+                ❌ BỎ QUA nếu điều luật:
+                   - Chỉ chứa từ khóa giống nhưng về CHỦ ĐỀ KHÁC
+                   - Là quy định chung/nguyên tắc mà không trả lời được câu hỏi cụ thể
+                   - Thuộc lĩnh vực pháp luật khác (VD: hỏi về hôn nhân nhưng điều luật về lao động)
+
+                YÊU CẦU:
+                - Tối đa 3-5 điều THỰC SỰ liên quan
+                - Ưu tiên CHÍNH XÁC hơn ĐA DẠNG
+                - Nếu không có điều nào phù hợp, trả về: NONE
+
+                TRẢ LỜI (chỉ ghi số thứ tự, cách nhau bởi dấu phẩy):
+                VD: 0,2,5 hoặc NONE
+                """);
+
+        return prompt.toString();
+    }
+
+    /**
+     * Parse AI response to extract selected article indices
+     */
+    private List<Integer> parseSelectedIndices(String aiResponse, int maxIndex) {
+        if (aiResponse == null || aiResponse.trim().isEmpty()) {
+            return List.of();
+        }
+
+        String cleaned = aiResponse.trim().toUpperCase();
+
+        // Check if AI said NONE
+        if (cleaned.contains("NONE") || cleaned.contains("KHÔNG CÓ")) {
+            return List.of();
+        }
+
+        // Extract numbers
+        List<Integer> indices = new ArrayList<>();
+        String[] parts = cleaned.split("[,\\s]+");
+
+        for (String part : parts) {
+            try {
+                // Remove any non-digit characters
+                String digits = part.replaceAll("[^0-9]", "");
+                if (!digits.isEmpty()) {
+                    int index = Integer.parseInt(digits);
+                    if (index >= 0 && index < maxIndex) {
+                        indices.add(index);
+                    }
+                }
+            } catch (NumberFormatException e) {
+                // Skip invalid numbers
+            }
+        }
+
+        return indices;
+    }
+
+    /**
      * Log top search results for debugging
      */
     private void logTopResults(List<ArticleScore> scored, int count) {
@@ -298,6 +483,16 @@ public class LegalSearchService {
                     as.article().getArticleTitle());
         }
     }
+
+    /**
+     * Result of unified search operation
+     */
+    public record SearchResult(List<LegalArticle> articles, SearchMetadata metadata) {}
+
+    /**
+     * Metadata about the search operation performed
+     */
+    public record SearchMetadata(boolean usedVector, boolean usedAiRerank, int originalCandidates) {}
 
     /**
      * Internal record to hold article with its relevance score and keyword match

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,12 +15,13 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/admin.css">
     <link rel="stylesheet" href="/css/toast-notification.css">
-    
+
     <style>
         /* Page specific styles */
         .page-header {
@@ -30,7 +32,7 @@
             flex-wrap: wrap;
             gap: 1rem;
         }
-        
+
         .page-header h2 {
             margin: 0;
             font-size: 1.5rem;
@@ -67,10 +69,21 @@
             color: white;
         }
 
-        .stat-icon.blue { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
-        .stat-icon.green { background: linear-gradient(135deg, #10b981, #059669); }
-        .stat-icon.orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
-        .stat-icon.purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        .stat-icon.blue {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        }
+
+        .stat-icon.green {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .stat-icon.orange {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .stat-icon.purple {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
 
         .stat-info {
             flex: 1;
@@ -274,10 +287,21 @@
             border-bottom: none;
         }
 
-        .log-entry.success { color: #4ade80; }
-        .log-entry.error { color: #f87171; }
-        .log-entry.info { color: #60a5fa; }
-        .log-entry.warning { color: #fbbf24; }
+        .log-entry.success {
+            color: #4ade80;
+        }
+
+        .log-entry.error {
+            color: #f87171;
+        }
+
+        .log-entry.info {
+            color: #60a5fa;
+        }
+
+        .log-entry.warning {
+            color: #fbbf24;
+        }
 
         .log-time {
             color: #64748b;
@@ -329,7 +353,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* Cost Info */
@@ -362,412 +388,438 @@
         }
 
         @media (max-width: 768px) {
-            .page-header { flex-direction: column; align-items: flex-start; }
-            .embedding-stats { grid-template-columns: 1fr 1fr; }
-            .action-buttons { flex-direction: column; }
-            .action-card { min-width: 100%; }
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .embedding-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .action-card {
+                min-width: 100%;
+            }
         }
     </style>
 </head>
+
 <body class="admin-body" data-auth-required="true" data-admin-required="true">
 
-<!-- Sidebar -->
-<aside class="admin-sidebar" id="adminSidebar">
-    <div class="admin-sidebar-header">
-        <h4><i class="bi bi-shield-lock-fill"></i> Admin Panel</h4>
-        <button class="btn-close-sidebar" id="closeSidebar"><i class="bi bi-x-lg"></i></button>
-    </div>
-    <nav class="admin-nav">
-        <div class="admin-nav-item">
-            <a href="/html/admin/dashboard.html" class="admin-nav-link">
-                <i class="bi bi-speedometer2"></i><span>Dashboard</span>
-            </a>
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-header">
+            <h4><i class="bi bi-shield-lock-fill"></i> Admin Panel</h4>
+            <button class="btn-close-sidebar" id="closeSidebar"><i class="bi bi-x-lg"></i></button>
         </div>
-        <div class="admin-nav-item">
-            <a href="/html/admin/users.html" class="admin-nav-link">
-                <i class="bi bi-people"></i><span>Quản Lý Users</span>
-            </a>
-        </div>
-        <div class="admin-nav-item">
-            <a href="/html/admin/payments.html" class="admin-nav-link">
-                <i class="bi bi-credit-card"></i><span>Quản Lý Payments</span>
-            </a>
-        </div>
-        <div class="admin-nav-item">
-            <a href="/html/admin/activity-logs.html" class="admin-nav-link">
-                <i class="bi bi-clock-history"></i><span>Activity Logs</span>
-            </a>
-        </div>
-        <div class="admin-nav-item">
-            <a href="/html/admin/legal-documents.html" class="admin-nav-link">
-                <i class="bi bi-file-earmark-text"></i><span>Văn Bản Pháp Luật</span>
-            </a>
-        </div>
-        <div class="admin-nav-item">
-            <a href="/html/admin/embeddings.html" class="admin-nav-link active">
-                <i class="bi bi-cpu"></i><span>Vector Embeddings</span>
-            </a>
-        </div>
-        <div class="admin-nav-item">
-            <a href="/index.html" class="admin-nav-link">
-                <i class="bi bi-house"></i><span>Về Trang Chủ</span>
-            </a>
-        </div>
-    </nav>
-</aside>
-
-<!-- Main Content -->
-<main class="admin-main">
-    <!-- Topbar -->
-    <div class="admin-topbar">
-        <div class="admin-topbar-left">
-            <button class="btn-toggle-sidebar" id="toggleSidebar"><i class="bi bi-list"></i></button>
-            <h1 class="admin-topbar-title"><i class="bi bi-cpu me-2"></i>Vector Embeddings</h1>
-        </div>
-        <div class="admin-topbar-right">
-            <div class="admin-user-info">
-                <div class="admin-user-avatar"><i class="bi bi-person-fill"></i></div>
-                <span class="admin-user-name" id="adminUserName">Admin</span>
+        <nav class="admin-nav">
+            <div class="admin-nav-item">
+                <a href="/html/admin/dashboard.html" class="admin-nav-link">
+                    <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+                </a>
             </div>
-            <button class="btn-logout" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Đăng Xuất</button>
-        </div>
-    </div>
+            <div class="admin-nav-item">
+                <a href="/html/admin/users.html" class="admin-nav-link">
+                    <i class="bi bi-people"></i><span>Quản Lý Users</span>
+                </a>
+            </div>
+            <div class="admin-nav-item">
+                <a href="/html/admin/payments.html" class="admin-nav-link">
+                    <i class="bi bi-credit-card"></i><span>Quản Lý Payments</span>
+                </a>
+            </div>
+            <div class="admin-nav-item">
+                <a href="/html/admin/activity-logs.html" class="admin-nav-link">
+                    <i class="bi bi-clock-history"></i><span>Activity Logs</span>
+                </a>
+            </div>
+            <div class="admin-nav-item">
+                <a href="/html/admin/legal-documents.html" class="admin-nav-link">
+                    <i class="bi bi-file-earmark-text"></i><span>Văn Bản Pháp Luật</span>
+                </a>
+            </div>
+            <div class="admin-nav-item">
+                <a href="/html/admin/embeddings.html" class="admin-nav-link active">
+                    <i class="bi bi-cpu"></i><span>Vector Embeddings</span>
+                </a>
+            </div>
+            <div class="admin-nav-item">
+                <a href="/index.html" class="admin-nav-link">
+                    <i class="bi bi-house"></i><span>Về Trang Chủ</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
 
-    <!-- Content -->
-    <div class="admin-content">
-        <!-- Page Header -->
-        <div class="page-header">
-            <h2>Quản Lý Vector Embeddings</h2>
-            <span class="status-badge incomplete" id="statusBadge">
-                <i class="bi bi-hourglass-split"></i>
-                <span id="statusText">Đang tải...</span>
-            </span>
-        </div>
-
-        <!-- Cost Info -->
-        <div class="cost-info">
-            <h6><i class="bi bi-info-circle"></i> Thông Tin Chi Phí</h6>
-            <p>
-                Model: <span class="highlight">text-embedding-3-small</span> | 
-                Chi phí: <span class="highlight">$0.02/1M tokens</span> | 
-                Ước tính: <span class="highlight">~$0.00002/article</span> (rất rẻ, chỉ tốn 1 lần)
-            </p>
-        </div>
-
-        <!-- Stats Cards -->
-        <div class="embedding-stats">
-            <div class="stat-card-mini">
-                <div class="stat-icon blue"><i class="bi bi-database"></i></div>
-                <div class="stat-info">
-                    <div class="stat-value" id="totalArticles">0</div>
-                    <div class="stat-label">Tổng Articles</div>
+    <!-- Main Content -->
+    <main class="admin-main">
+        <!-- Topbar -->
+        <div class="admin-topbar">
+            <div class="admin-topbar-left">
+                <button class="btn-toggle-sidebar" id="toggleSidebar"><i class="bi bi-list"></i></button>
+                <h1 class="admin-topbar-title"><i class="bi bi-cpu me-2"></i>Vector Embeddings</h1>
+            </div>
+            <div class="admin-topbar-right">
+                <div class="admin-user-info">
+                    <div class="admin-user-avatar"><i class="bi bi-person-fill"></i></div>
+                    <span class="admin-user-name" id="adminUserName">Admin</span>
                 </div>
-            </div>
-            <div class="stat-card-mini">
-                <div class="stat-icon green"><i class="bi bi-check-circle"></i></div>
-                <div class="stat-info">
-                    <div class="stat-value" id="withEmbeddings">0</div>
-                    <div class="stat-label">Đã có Embedding</div>
-                </div>
-            </div>
-            <div class="stat-card-mini">
-                <div class="stat-icon orange"><i class="bi bi-exclamation-circle"></i></div>
-                <div class="stat-info">
-                    <div class="stat-value" id="withoutEmbeddings">0</div>
-                    <div class="stat-label">Chưa có Embedding</div>
-                </div>
-            </div>
-            <div class="stat-card-mini">
-                <div class="stat-icon purple"><i class="bi bi-percent"></i></div>
-                <div class="stat-info">
-                    <div class="stat-value" id="coveragePercent">0%</div>
-                    <div class="stat-label">Độ Phủ</div>
-                </div>
+                <button class="btn-logout" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Đăng Xuất</button>
             </div>
         </div>
 
-        <!-- Progress Section -->
-        <div class="progress-section">
-            <div class="progress-header">
-                <h6><i class="bi bi-bar-chart-line"></i> Tiến Độ Embedding</h6>
-                <button class="btn btn-sm btn-outline-primary" onclick="loadStats()">
-                    <i class="bi bi-arrow-clockwise"></i> Refresh
-                </button>
+        <!-- Content -->
+        <div class="admin-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h2>Quản Lý Vector Embeddings</h2>
+                <span class="status-badge incomplete" id="statusBadge">
+                    <i class="bi bi-hourglass-split"></i>
+                    <span id="statusText">Đang tải...</span>
+                </span>
             </div>
-            <div class="progress-bar-container">
-                <div class="progress-bar-fill" id="progressBar" style="width: 0%">0%</div>
-            </div>
-            <div class="progress-info">
-                <span><i class="bi bi-check-circle text-success me-1"></i><span id="progressDone">0</span> hoàn thành</span>
-                <span><i class="bi bi-hourglass-split text-warning me-1"></i><span id="progressRemaining">0</span> còn lại</span>
-            </div>
-        </div>
 
-        <!-- Action Section -->
-        <div class="action-section">
-            <div class="action-header">
-                <h6><i class="bi bi-lightning-charge"></i> Thao Tác</h6>
+            <!-- Cost Info -->
+            <div class="cost-info">
+                <h6><i class="bi bi-info-circle"></i> Thông Tin Chi Phí</h6>
+                <p>
+                    Model: <span class="highlight">text-embedding-3-small</span> |
+                    Chi phí: <span class="highlight">$0.02/1M tokens</span> |
+                    Ước tính: <span class="highlight">~$0.00002/article</span> (rất rẻ, chỉ tốn 1 lần)
+                </p>
             </div>
-            <div class="action-buttons">
-                <!-- Generate All -->
-                <div class="action-card">
-                    <h6><i class="bi bi-play-circle text-success"></i> Generate Tất Cả</h6>
-                    <p>Tạo embeddings cho tất cả articles chưa có. Quá trình có thể mất vài phút.</p>
-                    <button class="btn btn-success" id="btnGenerateAll" onclick="generateAll()">
-                        <i class="bi bi-rocket-takeoff me-1"></i> Generate All
-                    </button>
-                </div>
 
-                <!-- Generate Batch -->
-                <div class="action-card">
-                    <h6><i class="bi bi-collection text-primary"></i> Generate Theo Batch</h6>
-                    <p>Tạo embeddings theo số lượng cụ thể (mặc định 20 articles/batch).</p>
-                    <div class="batch-input-group">
-                        <input type="number" id="batchSize" value="20" min="1" max="100" placeholder="Số lượng">
+            <!-- Stats Cards -->
+            <div class="embedding-stats">
+                <div class="stat-card-mini">
+                    <div class="stat-icon blue"><i class="bi bi-database"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="totalArticles">0</div>
+                        <div class="stat-label">Tổng Articles</div>
                     </div>
-                    <button class="btn btn-primary" id="btnGenerateBatch" onclick="generateBatch()">
-                        <i class="bi bi-layers me-1"></i> Generate Batch
+                </div>
+                <div class="stat-card-mini">
+                    <div class="stat-icon green"><i class="bi bi-check-circle"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="withEmbeddings">0</div>
+                        <div class="stat-label">Đã có Embedding</div>
+                    </div>
+                </div>
+                <div class="stat-card-mini">
+                    <div class="stat-icon orange"><i class="bi bi-exclamation-circle"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="withoutEmbeddings">0</div>
+                        <div class="stat-label">Chưa có Embedding</div>
+                    </div>
+                </div>
+                <div class="stat-card-mini">
+                    <div class="stat-icon purple"><i class="bi bi-percent"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="coveragePercent">0%</div>
+                        <div class="stat-label">Độ Phủ</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Section -->
+            <div class="progress-section">
+                <div class="progress-header">
+                    <h6><i class="bi bi-bar-chart-line"></i> Tiến Độ Embedding</h6>
+                    <button class="btn btn-sm btn-outline-primary" onclick="loadStats()">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
                     </button>
                 </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="progressBar" style="width: 0%">0%</div>
+                </div>
+                <div class="progress-info">
+                    <span><i class="bi bi-check-circle text-success me-1"></i><span id="progressDone">0</span> hoàn
+                        thành</span>
+                    <span><i class="bi bi-hourglass-split text-warning me-1"></i><span id="progressRemaining">0</span>
+                        còn lại</span>
+                </div>
             </div>
-        </div>
 
-        <!-- Log Section -->
-        <div class="log-section">
-            <div class="log-header">
-                <h6><i class="bi bi-terminal"></i> Activity Log</h6>
-                <button class="btn btn-sm btn-outline-secondary" onclick="clearLogs()">
-                    <i class="bi bi-trash"></i> Clear
-                </button>
+            <!-- Action Section -->
+            <div class="action-section">
+                <div class="action-header">
+                    <h6><i class="bi bi-lightning-charge"></i> Thao Tác</h6>
+                </div>
+                <div class="action-buttons">
+                    <!-- Generate All -->
+                    <div class="action-card">
+                        <h6><i class="bi bi-play-circle text-success"></i> Generate Tất Cả</h6>
+                        <p>Tạo embeddings cho tất cả articles chưa có. Quá trình có thể mất vài phút.</p>
+                        <button class="btn btn-success" id="btnGenerateAll" onclick="generateAll()">
+                            <i class="bi bi-rocket-takeoff me-1"></i> Generate All
+                        </button>
+                    </div>
+
+                    <!-- Generate Batch -->
+                    <div class="action-card">
+                        <h6><i class="bi bi-collection text-primary"></i> Generate Theo Batch</h6>
+                        <p>Tạo embeddings theo số lượng cụ thể (mặc định 20 articles/batch).</p>
+                        <div class="batch-input-group">
+                            <input type="number" id="batchSize" value="20" min="1" max="100" placeholder="Số lượng">
+                        </div>
+                        <button class="btn btn-primary" id="btnGenerateBatch" onclick="generateBatch()">
+                            <i class="bi bi-layers me-1"></i> Generate Batch
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div class="log-container" id="logContainer">
-                <div class="log-entry info">
-                    <span class="log-time">[--:--:--]</span>
-                    Sẵn sàng. Nhấn "Generate All" hoặc "Generate Batch" để bắt đầu.
+
+            <!-- Log Section -->
+            <div class="log-section">
+                <div class="log-header">
+                    <h6><i class="bi bi-terminal"></i> Activity Log</h6>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="clearLogs()">
+                        <i class="bi bi-trash"></i> Clear
+                    </button>
+                </div>
+                <div class="log-container" id="logContainer">
+                    <div class="log-entry info">
+                        <span class="log-time">[--:--:--]</span>
+                        Sẵn sàng. Nhấn "Generate All" hoặc "Generate Batch" để bắt đầu.
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</main>
+    </main>
 
-<!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/scripts/auth-guard.js"></script>
-<script src="/scripts/toast-notification.js"></script>
-<script src="/scripts/api-client.js"></script>
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/scripts/token-manager.js"></script>
+    <script src="/scripts/auth-guard.js"></script>
+    <script src="/scripts/toast-notification.js"></script>
+    <script src="/scripts/api-client.js"></script>
 </body>
+
 </html>
 
 <script>
-// State
-let isProcessing = false;
+    // State
+    let isProcessing = false;
 
-// DOM Elements
-const sidebar = document.getElementById('adminSidebar');
-const toggleBtn = document.getElementById('toggleSidebar');
-const closeBtn = document.getElementById('closeSidebar');
-const logContainer = document.getElementById('logContainer');
+    // DOM Elements
+    const sidebar = document.getElementById('adminSidebar');
+    const toggleBtn = document.getElementById('toggleSidebar');
+    const closeBtn = document.getElementById('closeSidebar');
+    const logContainer = document.getElementById('logContainer');
 
-// Initialize
-document.addEventListener('DOMContentLoaded', async () => {
-    // Check admin role - auth-guard already handles basic auth check
-    if (!AUTH.isLoggedIn()) return;
-    
-    try {
-        const user = await API_CLIENT.get('/api/auth/me');
-        if (user.role !== 'ADMIN' && user.role !== 'ROLE_ADMIN') {
-            Toast.error('Bạn không có quyền truy cập trang này');
-            setTimeout(() => window.location.href = '/index.html', 1500);
+    // Initialize
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Use AUTH.guard() for proper rehydration
+        const isAuthorized = await AUTH.guard({
+            requireAuth: true,
+            requireAdmin: true,
+            redirect: false
+        });
+
+        if (!isAuthorized) {
+            if (!AUTH.isLoggedIn()) {
+                window.location.href = '/html/login.html';
+            } else {
+                Toast.error('Bạn không có quyền truy cập trang này');
+                setTimeout(() => window.location.href = '/index.html', 1500);
+            }
             return;
         }
-        document.getElementById('adminUserName').textContent = user.fullName || 'Admin';
-    } catch (error) {
-        Toast.error('Vui lòng đăng nhập');
-        setTimeout(() => window.location.href = '/html/login.html', 1500);
-        return;
-    }
 
-    // Setup sidebar
-    setupSidebar();
-    
-    // Load initial stats
-    loadStats();
-});
+        try {
+            const user = await API_CLIENT.get('/api/auth/me');
+            document.getElementById('adminUserName').textContent = user.fullName || 'Admin';
 
-// Sidebar toggle
-function setupSidebar() {
-    toggleBtn.addEventListener('click', () => sidebar.classList.add('show'));
-    closeBtn.addEventListener('click', () => sidebar.classList.remove('show'));
-    document.addEventListener('click', (e) => {
-        if (window.innerWidth <= 992 && !sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
-            sidebar.classList.remove('show');
+            // Setup sidebar
+            setupSidebar();
+
+            // Load initial stats
+            loadStats();
+        } catch (error) {
+            console.error('Failed to load user info:', error);
+            Toast.error('Không thể tải thông tin user');
         }
     });
-}
 
-// Load stats
-async function loadStats() {
-    try {
-        const stats = await API_CLIENT.get('/api/admin/embeddings/stats');
-        
-        // Update stats
-        document.getElementById('totalArticles').textContent = stats.totalArticles || 0;
-        document.getElementById('withEmbeddings').textContent = stats.withEmbeddings || 0;
-        document.getElementById('withoutEmbeddings').textContent = stats.withoutEmbeddings || 0;
-        document.getElementById('coveragePercent').textContent = (stats.coveragePercent || 0).toFixed(1) + '%';
-        
-        // Update progress bar
-        const percent = stats.coveragePercent || 0;
-        const progressBar = document.getElementById('progressBar');
-        progressBar.style.width = percent + '%';
-        progressBar.textContent = percent.toFixed(1) + '%';
-        
-        document.getElementById('progressDone').textContent = stats.withEmbeddings || 0;
-        document.getElementById('progressRemaining').textContent = stats.withoutEmbeddings || 0;
-        
-        // Update status badge
+    // Sidebar toggle
+    function setupSidebar() {
+        toggleBtn.addEventListener('click', () => sidebar.classList.add('show'));
+        closeBtn.addEventListener('click', () => sidebar.classList.remove('show'));
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 992 && !sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+                sidebar.classList.remove('show');
+            }
+        });
+    }
+
+    // Load stats
+    async function loadStats() {
+        try {
+            const stats = await API_CLIENT.get('/api/admin/embeddings/stats');
+
+            // Update stats
+            document.getElementById('totalArticles').textContent = stats.totalArticles || 0;
+            document.getElementById('withEmbeddings').textContent = stats.withEmbeddings || 0;
+            document.getElementById('withoutEmbeddings').textContent = stats.withoutEmbeddings || 0;
+            document.getElementById('coveragePercent').textContent = (stats.coveragePercent || 0).toFixed(1) + '%';
+
+            // Update progress bar
+            const percent = stats.coveragePercent || 0;
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = percent + '%';
+            progressBar.textContent = percent.toFixed(1) + '%';
+
+            document.getElementById('progressDone').textContent = stats.withEmbeddings || 0;
+            document.getElementById('progressRemaining').textContent = stats.withoutEmbeddings || 0;
+
+            // Update status badge
+            const statusBadge = document.getElementById('statusBadge');
+            const statusText = document.getElementById('statusText');
+
+            if (stats.status === 'COMPLETE') {
+                statusBadge.className = 'status-badge complete';
+                statusText.innerHTML = '<i class="bi bi-check-circle me-1"></i>Hoàn thành';
+            } else if (isProcessing) {
+                statusBadge.className = 'status-badge processing';
+                statusText.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Đang xử lý...';
+            } else {
+                statusBadge.className = 'status-badge incomplete';
+                statusText.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Chưa hoàn thành';
+            }
+
+        } catch (error) {
+            console.error('Error loading stats:', error);
+            addLog('Không thể tải thống kê: ' + (error.message || error), 'error');
+        }
+    }
+
+    // Generate all embeddings
+    async function generateAll() {
+        if (isProcessing) {
+            Toast.warning('Đang xử lý, vui lòng đợi...');
+            return;
+        }
+
+        const btn = document.getElementById('btnGenerateAll');
+
+        try {
+            isProcessing = true;
+            btn.classList.add('btn-loading');
+            btn.disabled = true;
+
+            addLog('Bắt đầu generate tất cả embeddings...', 'info');
+            updateStatus('processing');
+
+            const result = await API_CLIENT.post('/api/admin/embeddings/generate-all');
+
+            if (result.success) {
+                addLog(`Hoàn thành! Đã generate ${result.totalGenerated} embeddings, còn lại ${result.remaining}`, 'success');
+                Toast.success(`Đã generate ${result.totalGenerated} embeddings`);
+            } else {
+                addLog('Lỗi: ' + (result.error || 'Unknown error'), 'error');
+                Toast.error(result.error || 'Có lỗi xảy ra');
+            }
+
+        } catch (error) {
+            addLog('Lỗi: ' + (error.message || error), 'error');
+            Toast.error('Có lỗi xảy ra khi generate embeddings');
+        } finally {
+            isProcessing = false;
+            btn.classList.remove('btn-loading');
+            btn.disabled = false;
+            loadStats();
+        }
+    }
+
+    // Generate batch
+    async function generateBatch() {
+        if (isProcessing) {
+            Toast.warning('Đang xử lý, vui lòng đợi...');
+            return;
+        }
+
+        const batchSize = parseInt(document.getElementById('batchSize').value) || 20;
+        if (batchSize < 1 || batchSize > 100) {
+            Toast.warning('Batch size phải từ 1-100');
+            return;
+        }
+
+        const btn = document.getElementById('btnGenerateBatch');
+
+        try {
+            isProcessing = true;
+            btn.classList.add('btn-loading');
+            btn.disabled = true;
+
+            addLog(`Bắt đầu generate batch ${batchSize} articles...`, 'info');
+            updateStatus('processing');
+
+            const result = await API_CLIENT.post(`/api/admin/embeddings/generate-batch?batchSize=${batchSize}`);
+
+            if (result.success) {
+                addLog(`Hoàn thành batch! Đã generate ${result.generated} embeddings, còn lại ${result.remaining}`, 'success');
+                Toast.success(`Đã generate ${result.generated} embeddings`);
+            } else {
+                addLog('Lỗi: ' + (result.error || 'Unknown error'), 'error');
+                Toast.error(result.error || 'Có lỗi xảy ra');
+            }
+
+        } catch (error) {
+            addLog('Lỗi: ' + (error.message || error), 'error');
+            Toast.error('Có lỗi xảy ra khi generate batch');
+        } finally {
+            isProcessing = false;
+            btn.classList.remove('btn-loading');
+            btn.disabled = false;
+            loadStats();
+        }
+    }
+
+    // Update status badge
+    function updateStatus(status) {
         const statusBadge = document.getElementById('statusBadge');
         const statusText = document.getElementById('statusText');
-        
-        if (stats.status === 'COMPLETE') {
-            statusBadge.className = 'status-badge complete';
-            statusText.innerHTML = '<i class="bi bi-check-circle me-1"></i>Hoàn thành';
-        } else if (isProcessing) {
+
+        if (status === 'processing') {
             statusBadge.className = 'status-badge processing';
             statusText.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Đang xử lý...';
-        } else {
-            statusBadge.className = 'status-badge incomplete';
-            statusText.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Chưa hoàn thành';
         }
-        
-    } catch (error) {
-        console.error('Error loading stats:', error);
-        addLog('Không thể tải thống kê: ' + (error.message || error), 'error');
     }
-}
 
-// Generate all embeddings
-async function generateAll() {
-    if (isProcessing) {
-        Toast.warning('Đang xử lý, vui lòng đợi...');
-        return;
-    }
-    
-    const btn = document.getElementById('btnGenerateAll');
-    
-    try {
-        isProcessing = true;
-        btn.classList.add('btn-loading');
-        btn.disabled = true;
-        
-        addLog('Bắt đầu generate tất cả embeddings...', 'info');
-        updateStatus('processing');
-        
-        const result = await API_CLIENT.post('/api/admin/embeddings/generate-all');
-        
-        if (result.success) {
-            addLog(`Hoàn thành! Đã generate ${result.totalGenerated} embeddings, còn lại ${result.remaining}`, 'success');
-            Toast.success(`Đã generate ${result.totalGenerated} embeddings`);
-        } else {
-            addLog('Lỗi: ' + (result.error || 'Unknown error'), 'error');
-            Toast.error(result.error || 'Có lỗi xảy ra');
-        }
-        
-    } catch (error) {
-        addLog('Lỗi: ' + (error.message || error), 'error');
-        Toast.error('Có lỗi xảy ra khi generate embeddings');
-    } finally {
-        isProcessing = false;
-        btn.classList.remove('btn-loading');
-        btn.disabled = false;
-        loadStats();
-    }
-}
+    // Add log entry
+    function addLog(message, type = 'info') {
+        const now = new Date();
+        const time = now.toTimeString().split(' ')[0];
 
-// Generate batch
-async function generateBatch() {
-    if (isProcessing) {
-        Toast.warning('Đang xử lý, vui lòng đợi...');
-        return;
-    }
-    
-    const batchSize = parseInt(document.getElementById('batchSize').value) || 20;
-    if (batchSize < 1 || batchSize > 100) {
-        Toast.warning('Batch size phải từ 1-100');
-        return;
-    }
-    
-    const btn = document.getElementById('btnGenerateBatch');
-    
-    try {
-        isProcessing = true;
-        btn.classList.add('btn-loading');
-        btn.disabled = true;
-        
-        addLog(`Bắt đầu generate batch ${batchSize} articles...`, 'info');
-        updateStatus('processing');
-        
-        const result = await API_CLIENT.post(`/api/admin/embeddings/generate-batch?batchSize=${batchSize}`);
-        
-        if (result.success) {
-            addLog(`Hoàn thành batch! Đã generate ${result.generated} embeddings, còn lại ${result.remaining}`, 'success');
-            Toast.success(`Đã generate ${result.generated} embeddings`);
-        } else {
-            addLog('Lỗi: ' + (result.error || 'Unknown error'), 'error');
-            Toast.error(result.error || 'Có lỗi xảy ra');
-        }
-        
-    } catch (error) {
-        addLog('Lỗi: ' + (error.message || error), 'error');
-        Toast.error('Có lỗi xảy ra khi generate batch');
-    } finally {
-        isProcessing = false;
-        btn.classList.remove('btn-loading');
-        btn.disabled = false;
-        loadStats();
-    }
-}
+        const entry = document.createElement('div');
+        entry.className = `log-entry ${type}`;
+        entry.innerHTML = `<span class="log-time">[${time}]</span> ${message}`;
 
-// Update status badge
-function updateStatus(status) {
-    const statusBadge = document.getElementById('statusBadge');
-    const statusText = document.getElementById('statusText');
-    
-    if (status === 'processing') {
-        statusBadge.className = 'status-badge processing';
-        statusText.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Đang xử lý...';
+        logContainer.appendChild(entry);
+        logContainer.scrollTop = logContainer.scrollHeight;
     }
-}
 
-// Add log entry
-function addLog(message, type = 'info') {
-    const now = new Date();
-    const time = now.toTimeString().split(' ')[0];
-    
-    const entry = document.createElement('div');
-    entry.className = `log-entry ${type}`;
-    entry.innerHTML = `<span class="log-time">[${time}]</span> ${message}`;
-    
-    logContainer.appendChild(entry);
-    logContainer.scrollTop = logContainer.scrollHeight;
-}
-
-// Clear logs
-function clearLogs() {
-    logContainer.innerHTML = `
+    // Clear logs
+    function clearLogs() {
+        logContainer.innerHTML = `
         <div class="log-entry info">
             <span class="log-time">[${new Date().toTimeString().split(' ')[0]}]</span>
             Log đã được xóa. Sẵn sàng.
         </div>
     `;
-}
+    }
 
-// Logout
-function logout() {
-    AUTH.clearAuth();
-    window.location.href = '/html/login.html';
-}
+    // Logout
+    function logout() {
+        AUTH.clearAuth();
+        window.location.href = '/html/login.html';
+    }
 </script>
 
 </body>
+
 </html>

@@ -5,8 +5,6 @@ let currentPage = 0;
 document.addEventListener('DOMContentLoaded', () => {
     initSidebar();
     checkAuth();
-    loadPaymentStats();
-    loadPayments();
 });
 
 function initSidebar() {
@@ -36,26 +34,33 @@ function initSidebar() {
 }
 
 async function checkAuth() {
-    if (!AUTH.isLoggedIn()) {
-        window.location.href = '/html/login.html';
+    // Use AUTH.guard() which properly handles rehydration from HttpOnly cookie
+    const isAuthorized = await AUTH.guard({
+        requireAuth: true,
+        requireAdmin: true,
+        redirect: false
+    });
+
+    if (!isAuthorized) {
+        console.log('[Admin Payments] Not authorized, redirecting...');
+        if (!AUTH.isLoggedIn()) {
+            window.location.href = '/html/login.html';
+        } else {
+            alert('Bạn không có quyền truy cập trang này');
+            window.location.href = '/index.html';
+        }
         return;
     }
 
     try {
         const user = await window.apiClient.get('/api/auth/me');
-        const isAdmin = user.role === 'ADMIN' || user.role === 'ROLE_ADMIN' || 
-                       (user.roles && (user.roles.includes('ADMIN') || user.roles.includes('ROLE_ADMIN')));
-        
-        if (!isAdmin) {
-            alert('Bạn không có quyền truy cập trang này');
-            window.location.href = '/index.html';
-            return;
-        }
-        
         document.getElementById('adminUserName').textContent = user.fullName || user.email;
+
+        // Load data after auth confirmed
+        loadPaymentStats();
+        loadPayments();
     } catch (err) {
         console.error('Failed to load user info:', err);
-        window.location.href = '/html/login.html';
     }
 }
 
@@ -86,20 +91,20 @@ async function loadPaymentStats() {
 
 async function loadPayments(page = 0) {
     currentPage = page;
-    
+
     try {
         const url = `/api/admin/payments?page=${page}&size=20&sort=createdAt&direction=DESC`;
         const response = await window.apiClient.get(url);
-        
+
         renderPaymentsTable(response.payments);
         renderPagination(response);
-        
+
         document.getElementById('totalPaymentsCount').textContent = `${response.totalItems} giao dịch`;
-        
+
     } catch (error) {
         console.error('Failed to load payments:', error);
         showAdminToast('Không thể tải danh sách payments', 'error');
-        
+
         document.getElementById('paymentsTableBody').innerHTML = `
             <tr>
                 <td colspan="5" class="text-center text-danger">
@@ -112,7 +117,7 @@ async function loadPayments(page = 0) {
 
 function renderPaymentsTable(payments) {
     const tbody = document.getElementById('paymentsTableBody');
-    
+
     if (!payments || payments.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -124,7 +129,7 @@ function renderPaymentsTable(payments) {
         `;
         return;
     }
-    
+
     tbody.innerHTML = payments.map(payment => `
         <tr>
             <td>
@@ -164,14 +169,14 @@ function renderStatusBadge(status) {
 function renderPagination(response) {
     const pagination = document.getElementById('pagination');
     const { currentPage, totalPages, hasPrevious, hasNext } = response;
-    
+
     if (totalPages <= 1) {
         pagination.innerHTML = '';
         return;
     }
-    
+
     let html = '';
-    
+
     html += `
         <li class="page-item ${!hasPrevious ? 'disabled' : ''}">
             <a class="page-link" href="#" onclick="loadPayments(${currentPage - 1}); return false;">
@@ -179,10 +184,10 @@ function renderPagination(response) {
             </a>
         </li>
     `;
-    
+
     const startPage = Math.max(0, currentPage - 2);
     const endPage = Math.min(totalPages - 1, currentPage + 2);
-    
+
     for (let i = startPage; i <= endPage; i++) {
         html += `
             <li class="page-item ${i === currentPage ? 'active' : ''}">
@@ -190,7 +195,7 @@ function renderPagination(response) {
             </li>
         `;
     }
-    
+
     html += `
         <li class="page-item ${!hasNext ? 'disabled' : ''}">
             <a class="page-link" href="#" onclick="loadPayments(${currentPage + 1}); return false;">
@@ -198,7 +203,7 @@ function renderPagination(response) {
             </a>
         </li>
     `;
-    
+
     pagination.innerHTML = html;
 }
 
@@ -244,27 +249,22 @@ function showAdminToast(message, type = 'info') {
 async function exportPaymentsCsv() {
     try {
         showAdminToast('Đang tạo file CSV...', 'info');
-        
+
         const url = '/api/admin/payments/export';
-        
-        const token = AUTH.getToken();
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        
+
+        // Use central apiClient to ensure refresh/retry behavior; preserve blob handling
+        const response = await window.apiClient.fetchWithAuth(url, { method: 'GET' });
+
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.message || 'Export failed');
         }
-        
+
         const blob = await response.blob();
         const downloadUrl = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = downloadUrl;
-        
+
         // Get filename from Content-Disposition header or use default
         const contentDisposition = response.headers.get('Content-Disposition');
         let filename = 'payments_export.csv';
@@ -274,15 +274,15 @@ async function exportPaymentsCsv() {
                 filename = match[1];
             }
         }
-        
+
         a.download = filename;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(downloadUrl);
         document.body.removeChild(a);
-        
+
         showAdminToast('Export thành công!', 'success');
-        
+
     } catch (error) {
         console.error('Export failed:', error);
         showAdminToast('Export thất bại: ' + error.message, 'error');

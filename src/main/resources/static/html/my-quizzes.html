@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,306 +15,320 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap"
+        rel="stylesheet">
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/quiz-common.css">
     <link rel="stylesheet" href="/css/toast-notification.css">
 </head>
+
 <body data-auth-required="true">
-<nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
-    <div class="container">
-        <a class="navbar-brand" href="/index.html">
-            <img src="/img/Law.png" alt="Logo">
-            <span>Pháp Luật Số</span>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+        <div class="container">
+            <a class="navbar-brand" href="/index.html">
+                <img src="/img/Law.png" alt="Logo">
+                <span>Pháp Luật Số</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto align-items-lg-center">
-                <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/legal-chat.html">Chat AI</a></li>
-                <li class="nav-item"><a class="nav-link active" href="/html/my-quizzes.html">Bộ đề</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
-                <li class="nav-item ms-lg-3 guest-only">
-                    <a class="btn btn-outline-primary btn-sm px-3" href="/html/login.html">
-                        <i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập
-                    </a>
-                </li>
-                <li class="nav-item ms-lg-2 guest-only">
-                    <a class="btn btn-primary btn-sm px-3" href="/html/register.html">
-                        <i class="bi bi-person-plus me-1"></i>Đăng Ký
-                    </a>
-                </li>
-                <li class="nav-item dropdown ms-lg-3 auth-only d-none">
-                    <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img id="navUserAvatar" src="https://ui-avatars.com/api/?name=User&size=40&background=1a4b84&color=fff" 
-                             alt="Avatar" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #e2e8f0;">
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="/html/profile.html"><i class="bi bi-person me-2"></i>Hồ sơ</a></li>
-                        <li><a class="dropdown-item" href="/html/payment-history.html"><i class="bi bi-clock-history me-2"></i>Lịch sử thanh toán</a></li>
-                        <li><a class="dropdown-item" href="/html/plans.html"><i class="bi bi-credit-card me-2"></i>Nâng cấp</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
-                    </ul>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
-
-<div class="page-wrapper">
-    <div class="container">
-        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="page-title mb-1">Danh sách Bộ đề</h1>
-                <p class="section-subtitle mb-0">Quản lý và tổ chức các bộ đề luyện tập của riêng bạn.</p>
-            </div>
-            <div class="d-flex gap-2">
-                <a href="/html/quiz-history.html" class="btn btn-outline-secondary btn-rounded">
-                    <i class="bi bi-clock-history me-2"></i>Lịch sử làm bài
-                </a>
-                <button id="btnCreateQuizSet" class="btn btn-primary btn-rounded">
-                    <i class="bi bi-plus-circle me-2"></i>Tạo Bộ đề mới
-                </button>
-                <a href="/html/quiz-generate-ai.html" class="btn btn-success btn-rounded">
-                    <i class="bi bi-magic me-2"></i>Tạo Bằng AI
-                </a>
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-lg-center">
+                    <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/legal-chat.html">Chat AI</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/html/my-quizzes.html">Bộ đề</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
+                    <li class="nav-item ms-lg-3 guest-only">
+                        <a class="btn btn-outline-primary btn-sm px-3" href="/html/login.html">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập
+                        </a>
+                    </li>
+                    <li class="nav-item ms-lg-2 guest-only">
+                        <a class="btn btn-primary btn-sm px-3" href="/html/register.html">
+                            <i class="bi bi-person-plus me-1"></i>Đăng Ký
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown ms-lg-3 auth-only d-none">
+                        <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <img id="navUserAvatar"
+                                src="https://ui-avatars.com/api/?name=User&size=40&background=1a4b84&color=fff"
+                                alt="Avatar" class="rounded-circle"
+                                style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #e2e8f0;">
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="/html/profile.html"><i class="bi bi-person me-2"></i>Hồ
+                                    sơ</a></li>
+                            <li><a class="dropdown-item" href="/html/payment-history.html"><i
+                                        class="bi bi-clock-history me-2"></i>Lịch sử thanh toán</a></li>
+                            <li><a class="dropdown-item" href="/html/plans.html"><i
+                                        class="bi bi-credit-card me-2"></i>Nâng cấp</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i
+                                        class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+                        </ul>
+                    </li>
+                </ul>
             </div>
         </div>
+    </nav>
 
-        <div class="row mb-4 g-3">
-            <div class="col-md-6">
-                <div class="position-relative">
-                    <i class="bi bi-search quiz-search-icon"></i>
-                    <input id="searchInput" type="text" class="form-control quiz-search-input"
-                           placeholder="Tìm kiếm bộ đề theo tên...">
+    <div class="page-wrapper">
+        <div class="container">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="page-title mb-1">Danh sách Bộ đề</h1>
+                    <p class="section-subtitle mb-0">Quản lý và tổ chức các bộ đề luyện tập của riêng bạn.</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="/html/quiz-history.html" class="btn btn-outline-secondary btn-rounded">
+                        <i class="bi bi-clock-history me-2"></i>Lịch sử làm bài
+                    </a>
+                    <button id="btnCreateQuizSet" class="btn btn-primary btn-rounded">
+                        <i class="bi bi-plus-circle me-2"></i>Tạo Bộ đề mới
+                    </button>
+                    <a href="/html/quiz-generate-ai.html" class="btn btn-success btn-rounded">
+                        <i class="bi bi-magic me-2"></i>Tạo Bằng AI
+                    </a>
                 </div>
             </div>
+
+            <div class="row mb-4 g-3">
+                <div class="col-md-6">
+                    <div class="position-relative">
+                        <i class="bi bi-search quiz-search-icon"></i>
+                        <input id="searchInput" type="text" class="form-control quiz-search-input"
+                            placeholder="Tìm kiếm bộ đề theo tên...">
+                    </div>
+                </div>
+            </div>
+
+            <div id="alertArea"></div>
+
+            <div id="emptyState" class="quiz-empty-state d-none">
+                <h5 class="mb-2">Bạn chưa có bộ đề nào</h5>
+                <p class="mb-3">Hãy tạo bộ đề đầu tiên để bắt đầu xây dựng ngân hàng câu hỏi của riêng bạn.</p>
+                <button class="btn btn-primary btn-rounded" id="btnCreateQuizSetEmpty">
+                    <i class="bi bi-plus-circle me-2"></i>Tạo Bộ đề mới
+                </button>
+            </div>
+
+            <div id="quizSetGrid" class="row g-4"></div>
+
+            <nav id="paginationNav" class="d-none mt-4" aria-label="Quiz sets pagination">
+                <ul class="pagination justify-content-center" id="paginationControls"></ul>
+            </nav>
         </div>
-
-        <div id="alertArea"></div>
-
-        <div id="emptyState" class="quiz-empty-state d-none">
-            <h5 class="mb-2">Bạn chưa có bộ đề nào</h5>
-            <p class="mb-3">Hãy tạo bộ đề đầu tiên để bắt đầu xây dựng ngân hàng câu hỏi của riêng bạn.</p>
-            <button class="btn btn-primary btn-rounded" id="btnCreateQuizSetEmpty">
-                <i class="bi bi-plus-circle me-2"></i>Tạo Bộ đề mới
-            </button>
-        </div>
-
-        <div id="quizSetGrid" class="row g-4"></div>
-
-        <nav id="paginationNav" class="d-none mt-4" aria-label="Quiz sets pagination">
-            <ul class="pagination justify-content-center" id="paginationControls"></ul>
-        </nav>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/scripts/auth-guard.js"></script>
-<script src="/scripts/toast-notification.js"></script>
-<script src="/scripts/error-handler.js"></script>
-<script src="/scripts/api-client.js"></script>
-<script src="/scripts/script.js"></script>
-<script>
-    const API_BASE = '/api/quiz-sets';
-    const PAGE_SIZE = 6;
-    let currentPage = 0;
-    let paginationData = null;
-    let searchText = '';
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/scripts/token-manager.js"></script>
+    <script src="/scripts/auth-guard.js"></script>
+    <script src="/scripts/toast-notification.js"></script>
+    <script src="/scripts/error-handler.js"></script>
+    <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/script.js"></script>
+    <script>
+        const API_BASE = '/api/quiz-sets';
+        const PAGE_SIZE = 6;
+        let currentPage = 0;
+        let paginationData = null;
+        let searchText = '';
 
-    document.addEventListener('DOMContentLoaded', () => {
-        // Auth check is handled by auth-guard.js via data-auth-required="true"
-        if (!AUTH.isLoggedIn()) return;
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Use AUTH.guard() for proper rehydration from HttpOnly cookie
+            const isAuth = await AUTH.guard({ requireAuth: true, redirect: true });
+            if (!isAuth) return;
 
-        document.getElementById('btnCreateQuizSet').addEventListener('click', () => {
-            window.location.href = '/html/quiz-add-quizset.html';
-        });
-        document.getElementById('btnCreateQuizSetEmpty').addEventListener('click', () => {
-            window.location.href = '/html/quiz-add-quizset.html';
-        });
+            document.getElementById('btnCreateQuizSet').addEventListener('click', () => {
+                window.location.href = '/html/quiz-add-quizset.html';
+            });
+            document.getElementById('btnCreateQuizSetEmpty').addEventListener('click', () => {
+                window.location.href = '/html/quiz-add-quizset.html';
+            });
 
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            searchText = e.target.value.trim().toLowerCase();
-            currentPage = 0;
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                searchText = e.target.value.trim().toLowerCase();
+                currentPage = 0;
+                loadQuizSets();
+            });
+
             loadQuizSets();
         });
 
-        loadQuizSets();
-    });
-
-    function showAlert(message, type = 'danger') {
-        // Use toast notification instead of alert area
-        const toastType = type === 'danger' ? 'error' : type;
-        Toast.show(message, toastType, 2000);
-    }
-
-    async function loadQuizSets() {
-        ERROR_HANDLER.showLoading(true);
-        try {
-            paginationData = await API_CLIENT.get(
-                `${API_BASE}/my/paginated?page=${currentPage}&size=${PAGE_SIZE}`
-            );
-
-            renderQuizSets();
-            renderPagination();
-        } catch (e) {
-            console.error(e);
-            showAlert(e.message || 'Có lỗi xảy ra khi tải danh sách bộ đề');
-        } finally {
-            ERROR_HANDLER.showLoading(false);
-        }
-    }
-
-    function renderQuizSets() {
-        const grid = document.getElementById('quizSetGrid');
-        const empty = document.getElementById('emptyState');
-        const paginationNav = document.getElementById('paginationNav');
-
-        if (!paginationData || !paginationData.content) {
-            grid.innerHTML = '';
-            empty.classList.remove('d-none');
-            paginationNav.classList.add('d-none');
-            return;
+        function showAlert(message, type = 'danger') {
+            // Use toast notification instead of alert area
+            const toastType = type === 'danger' ? 'error' : type;
+            Toast.show(message, toastType, 2000);
         }
 
-        let items = paginationData.content;
-        
-        // Client-side filtering for search
-        if (searchText) {
-            items = items.filter(x => (x.title || '').toLowerCase().includes(searchText));
+        async function loadQuizSets() {
+            ERROR_HANDLER.showLoading(true);
+            try {
+                paginationData = await API_CLIENT.get(
+                    `${API_BASE}/my/paginated?page=${currentPage}&size=${PAGE_SIZE}`
+                );
+
+                renderQuizSets();
+                renderPagination();
+            } catch (e) {
+                console.error(e);
+                showAlert(e.message || 'Có lỗi xảy ra khi tải danh sách bộ đề');
+            } finally {
+                ERROR_HANDLER.showLoading(false);
+            }
         }
 
-        if (!items.length) {
-            grid.innerHTML = '';
-            empty.classList.remove('d-none');
-            paginationNav.classList.add('d-none');
-            return;
+        function renderQuizSets() {
+            const grid = document.getElementById('quizSetGrid');
+            const empty = document.getElementById('emptyState');
+            const paginationNav = document.getElementById('paginationNav');
+
+            if (!paginationData || !paginationData.content) {
+                grid.innerHTML = '';
+                empty.classList.remove('d-none');
+                paginationNav.classList.add('d-none');
+                return;
+            }
+
+            let items = paginationData.content;
+
+            // Client-side filtering for search
+            if (searchText) {
+                items = items.filter(x => (x.title || '').toLowerCase().includes(searchText));
+            }
+
+            if (!items.length) {
+                grid.innerHTML = '';
+                empty.classList.remove('d-none');
+                paginationNav.classList.add('d-none');
+                return;
+            }
+
+            empty.classList.add('d-none');
+            grid.innerHTML = items.map(set => createQuizCardHtml(set)).join('');
+
+            // Show pagination only if there are multiple pages
+            if (paginationData.totalPages > 1) {
+                paginationNav.classList.remove('d-none');
+            } else {
+                paginationNav.classList.add('d-none');
+            }
         }
 
-        empty.classList.add('d-none');
-        grid.innerHTML = items.map(set => createQuizCardHtml(set)).join('');
-        
-        // Show pagination only if there are multiple pages
-        if (paginationData.totalPages > 1) {
-            paginationNav.classList.remove('d-none');
-        } else {
-            paginationNav.classList.add('d-none');
-        }
-    }
+        function renderPagination() {
+            if (!paginationData || paginationData.totalPages <= 1) {
+                return;
+            }
 
-    function renderPagination() {
-        if (!paginationData || paginationData.totalPages <= 1) {
-            return;
-        }
+            const controls = document.getElementById('paginationControls');
+            controls.innerHTML = '';
 
-        const controls = document.getElementById('paginationControls');
-        controls.innerHTML = '';
-
-        // Previous button
-        const prevLi = document.createElement('li');
-        prevLi.className = `page-item ${paginationData.first ? 'disabled' : ''}`;
-        prevLi.innerHTML = `
+            // Previous button
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${paginationData.first ? 'disabled' : ''}`;
+            prevLi.innerHTML = `
             <a class="page-link" href="#" ${paginationData.first ? 'tabindex="-1"' : ''}>
                 <i class="bi bi-chevron-left"></i>
             </a>
         `;
-        if (!paginationData.first) {
-            prevLi.querySelector('a').addEventListener('click', (e) => {
-                e.preventDefault();
-                goToPage(currentPage - 1);
-            });
-        }
-        controls.appendChild(prevLi);
-
-        // Page numbers
-        const totalPages = paginationData.totalPages;
-        const maxVisible = 5;
-        let startPage = Math.max(0, currentPage - Math.floor(maxVisible / 2));
-        let endPage = Math.min(totalPages - 1, startPage + maxVisible - 1);
-        
-        if (endPage - startPage < maxVisible - 1) {
-            startPage = Math.max(0, endPage - maxVisible + 1);
-        }
-
-        // First page + ellipsis
-        if (startPage > 0) {
-            addPageButton(controls, 0);
-            if (startPage > 1) {
-                const ellipsisLi = document.createElement('li');
-                ellipsisLi.className = 'page-item disabled';
-                ellipsisLi.innerHTML = '<span class="page-link">...</span>';
-                controls.appendChild(ellipsisLi);
+            if (!paginationData.first) {
+                prevLi.querySelector('a').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    goToPage(currentPage - 1);
+                });
             }
-        }
+            controls.appendChild(prevLi);
 
-        // Page numbers
-        for (let i = startPage; i <= endPage; i++) {
-            addPageButton(controls, i);
-        }
+            // Page numbers
+            const totalPages = paginationData.totalPages;
+            const maxVisible = 5;
+            let startPage = Math.max(0, currentPage - Math.floor(maxVisible / 2));
+            let endPage = Math.min(totalPages - 1, startPage + maxVisible - 1);
 
-        // Ellipsis + last page
-        if (endPage < totalPages - 1) {
-            if (endPage < totalPages - 2) {
-                const ellipsisLi = document.createElement('li');
-                ellipsisLi.className = 'page-item disabled';
-                ellipsisLi.innerHTML = '<span class="page-link">...</span>';
-                controls.appendChild(ellipsisLi);
+            if (endPage - startPage < maxVisible - 1) {
+                startPage = Math.max(0, endPage - maxVisible + 1);
             }
-            addPageButton(controls, totalPages - 1);
-        }
 
-        // Next button
-        const nextLi = document.createElement('li');
-        nextLi.className = `page-item ${paginationData.last ? 'disabled' : ''}`;
-        nextLi.innerHTML = `
+            // First page + ellipsis
+            if (startPage > 0) {
+                addPageButton(controls, 0);
+                if (startPage > 1) {
+                    const ellipsisLi = document.createElement('li');
+                    ellipsisLi.className = 'page-item disabled';
+                    ellipsisLi.innerHTML = '<span class="page-link">...</span>';
+                    controls.appendChild(ellipsisLi);
+                }
+            }
+
+            // Page numbers
+            for (let i = startPage; i <= endPage; i++) {
+                addPageButton(controls, i);
+            }
+
+            // Ellipsis + last page
+            if (endPage < totalPages - 1) {
+                if (endPage < totalPages - 2) {
+                    const ellipsisLi = document.createElement('li');
+                    ellipsisLi.className = 'page-item disabled';
+                    ellipsisLi.innerHTML = '<span class="page-link">...</span>';
+                    controls.appendChild(ellipsisLi);
+                }
+                addPageButton(controls, totalPages - 1);
+            }
+
+            // Next button
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${paginationData.last ? 'disabled' : ''}`;
+            nextLi.innerHTML = `
             <a class="page-link" href="#" ${paginationData.last ? 'tabindex="-1"' : ''}>
                 <i class="bi bi-chevron-right"></i>
             </a>
         `;
-        if (!paginationData.last) {
-            nextLi.querySelector('a').addEventListener('click', (e) => {
-                e.preventDefault();
-                goToPage(currentPage + 1);
-            });
+            if (!paginationData.last) {
+                nextLi.querySelector('a').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    goToPage(currentPage + 1);
+                });
+            }
+            controls.appendChild(nextLi);
         }
-        controls.appendChild(nextLi);
-    }
 
-    function addPageButton(controls, pageNum) {
-        const li = document.createElement('li');
-        li.className = `page-item ${pageNum === currentPage ? 'active' : ''}`;
-        li.innerHTML = `<a class="page-link" href="#">${pageNum + 1}</a>`;
-        
-        if (pageNum !== currentPage) {
-            li.querySelector('a').addEventListener('click', (e) => {
-                e.preventDefault();
-                goToPage(pageNum);
-            });
+        function addPageButton(controls, pageNum) {
+            const li = document.createElement('li');
+            li.className = `page-item ${pageNum === currentPage ? 'active' : ''}`;
+            li.innerHTML = `<a class="page-link" href="#">${pageNum + 1}</a>`;
+
+            if (pageNum !== currentPage) {
+                li.querySelector('a').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    goToPage(pageNum);
+                });
+            }
+
+            controls.appendChild(li);
         }
-        
-        controls.appendChild(li);
-    }
 
-    function goToPage(page) {
-        currentPage = page;
-        loadQuizSets();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+        function goToPage(page) {
+            currentPage = page;
+            loadQuizSets();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
-    function createQuizCardHtml(set) {
-        const createdAt = set.createdAt ? new Date(set.createdAt).toLocaleDateString('vi-VN') : '';
-        const statusClass = set.status === 'PUBLISHED' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary';
-        const visibilityLabel = set.visibility === 'PUBLIC' ? 'Công khai' : 'Riêng tư';
+        function createQuizCardHtml(set) {
+            const createdAt = set.createdAt ? new Date(set.createdAt).toLocaleDateString('vi-VN') : '';
+            const statusClass = set.status === 'PUBLISHED' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary';
+            const visibilityLabel = set.visibility === 'PUBLIC' ? 'Công khai' : 'Riêng tư';
 
-        return `
+            return `
         <div class="col-md-6 col-xl-4">
             <div class="card quiz-set-card">
                 <div class="card-body d-flex flex-column">
@@ -342,28 +357,27 @@
                 </div>
             </div>
         </div>`;
-    }
+        }
 
-    function openManageQuestions(id) {
-        window.location.href = '/html/quiz-manager.html?setId=' + encodeURIComponent(id);
-    }
+        function openManageQuestions(id) {
+            window.location.href = '/html/quiz-manager.html?setId=' + encodeURIComponent(id);
+        }
 
-    function openTakeExam(id) {
-        window.location.href = '/html/quiz-take.html?setId=' + encodeURIComponent(id);
-    }
+        function openTakeExam(id) {
+            window.location.href = '/html/quiz-take.html?setId=' + encodeURIComponent(id);
+        }
 
-    function escapeHtml(text) {
-        const map = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#039;'
-        };
-        return text.replace(/[&<>"']/g, m => map[m]);
-    }
-</script>
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+    </script>
 </body>
+
 </html>
-
-

@@ -7,10 +7,8 @@ let creditUsageChart = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     initSidebar();
+    // call checkAuth and let it trigger data loading
     checkAuth();
-    loadDashboardStats();
-    loadCharts();
-    loadCreditAnalytics();
 });
 
 // ==================== SIDEBAR ====================
@@ -45,39 +43,43 @@ function initSidebar() {
 // ==================== AUTH ====================
 
 async function checkAuth() {
-    if (!AUTH.isLoggedIn()) {
-        window.location.href = '/html/login.html';
+    // Use AUTH.guard() which properly handles rehydration from HttpOnly cookie
+    const isAuthorized = await AUTH.guard({
+        requireAuth: true,
+        requireAdmin: true,
+        redirect: false // We handle redirect ourselves for better control
+    });
+
+    if (!isAuthorized) {
+        console.log('[Admin Dashboard] Not authorized, redirecting...');
+        if (!AUTH.isLoggedIn()) {
+            window.location.href = '/html/login.html';
+        } else {
+            // Logged in but not admin
+            showAdminToast('Bạn không có quyền truy cập trang này', 'error');
+            setTimeout(() => {
+                window.location.href = '/index.html';
+            }, 1000);
+        }
         return;
     }
 
     try {
-        // Load admin user info and check role
+        // User is authorized, load and display admin info
         const user = await window.apiClient.get('/api/auth/me');
-        
-        console.log('User info:', user); // Debug log
-        
-        // Check if user has ADMIN role (handle both 'ADMIN' and 'ROLE_ADMIN')
-        const isAdmin = user.role === 'ADMIN' || user.role === 'ROLE_ADMIN' || 
-                       (user.roles && (user.roles.includes('ADMIN') || user.roles.includes('ROLE_ADMIN')));
-        
-        if (!isAdmin) {
-            console.error('Access denied: User is not admin. Role:', user.role);
-            showAdminToast('Bạn không có quyền truy cập trang này', 'error');
-            setTimeout(() => {
-                window.location.href = '/index.html';
-            }, 2000);
-            return;
-        }
-        
-        // User is admin, show name
+        console.log('User info:', user);
+
+        // Update admin name display
         document.getElementById('adminUserName').textContent = user.fullName || user.email;
-        
+
+        // Load dashboard data AFTER auth is confirmed
+        loadDashboardStats();
+        loadCharts();
+        loadCreditAnalytics();
+
     } catch (err) {
         console.error('Failed to load user info:', err);
         showAdminToast('Không thể tải thông tin user', 'error');
-        setTimeout(() => {
-            window.location.href = '/html/login.html';
-        }, 2000);
     }
 }
 
@@ -196,7 +198,7 @@ function renderRevenueChart(data) {
                         family: 'Inter'
                     },
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             return 'Doanh thu: ' + formatCurrency(context.parsed.y);
                         }
                     }
@@ -212,7 +214,7 @@ function renderRevenueChart(data) {
                         font: {
                             family: 'Inter'
                         },
-                        callback: function(value) {
+                        callback: function (value) {
                             return formatCurrency(value);
                         }
                     }

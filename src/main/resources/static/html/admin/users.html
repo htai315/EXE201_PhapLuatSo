@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,293 +15,301 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/admin.css">
     <link rel="stylesheet" href="/css/toast-notification.css">
     <link rel="stylesheet" href="/css/confirm-modal.css">
 </head>
+
 <body class="admin-body" data-auth-required="true" data-admin-required="true">
 
-<!-- Sidebar -->
-<aside class="admin-sidebar" id="adminSidebar">
-    <div class="admin-sidebar-header">
-        <h4>
-            <i class="bi bi-shield-lock-fill"></i>
-            Admin Panel
-        </h4>
-        <button class="btn-close-sidebar" id="closeSidebar">
-            <i class="bi bi-x-lg"></i>
-        </button>
-    </div>
-    
-    <nav class="admin-nav">
-        <div class="admin-nav-item">
-            <a href="/html/admin/dashboard.html" class="admin-nav-link">
-                <i class="bi bi-speedometer2"></i>
-                <span>Dashboard</span>
-            </a>
-        </div>
-        <div class="admin-nav-item">
-            <a href="/html/admin/users.html" class="admin-nav-link active">
-                <i class="bi bi-people"></i>
-                <span>Quản Lý Users</span>
-            </a>
-        </div>
-        <div class="admin-nav-item">
-            <a href="/html/admin/payments.html" class="admin-nav-link">
-                <i class="bi bi-credit-card"></i>
-                <span>Quản Lý Payments</span>
-            </a>
-        </div>
-        <div class="admin-nav-item">
-            <a href="/html/admin/activity-logs.html" class="admin-nav-link">
-                <i class="bi bi-clock-history"></i>
-                <span>Activity Logs</span>
-            </a>
-        </div>
-        <div class="admin-nav-item">
-            <a href="/html/admin/legal-documents.html" class="admin-nav-link">
-                <i class="bi bi-file-earmark-text"></i>
-                <span>Văn Bản Pháp Luật</span>
-            </a>
-        </div>
-        <div class="admin-nav-item">
-            <a href="/html/admin/embeddings.html" class="admin-nav-link">
-                <i class="bi bi-cpu"></i>
-                <span>Vector Embeddings</span>
-            </a>
-        </div>
-        <div class="admin-nav-item">
-            <a href="/index.html" class="admin-nav-link">
-                <i class="bi bi-house"></i>
-                <span>Về Trang Chủ</span>
-            </a>
-        </div>
-    </nav>
-</aside>
-
-<!-- Main Content -->
-<main class="admin-main">
-    <!-- Topbar -->
-    <div class="admin-topbar">
-        <div class="admin-topbar-left">
-            <button class="btn-toggle-sidebar" id="toggleSidebar">
-                <i class="bi bi-list"></i>
-            </button>
-            <h1 class="admin-topbar-title">
-                <i class="bi bi-people me-2"></i>
-                Quản Lý Users
-            </h1>
-        </div>
-        <div class="admin-topbar-right">
-            <div class="admin-user-info">
-                <div class="admin-user-avatar">
-                    <i class="bi bi-person-fill"></i>
-                </div>
-                <span class="admin-user-name" id="adminUserName">Admin</span>
-            </div>
-            <button class="btn-logout" onclick="logout()">
-                <i class="bi bi-box-arrow-right"></i>
-                Đăng Xuất
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-header">
+            <h4>
+                <i class="bi bi-shield-lock-fill"></i>
+                Admin Panel
+            </h4>
+            <button class="btn-close-sidebar" id="closeSidebar">
+                <i class="bi bi-x-lg"></i>
             </button>
         </div>
-    </div>
 
-    <!-- Content -->
-    <div class="admin-content">
-        <!-- Table Container -->
-        <div class="table-container fade-in">
-            <div class="table-header">
-                <div>
-                    <h3 class="table-title">
-                        <i class="bi bi-people-fill"></i>
-                        Danh Sách Users
-                    </h3>
-                    <small class="text-muted" id="totalUsersCount">0 users</small>
-                </div>
-                <div class="table-actions">
-                    <div class="search-box">
-                        <i class="bi bi-search"></i>
-                        <input type="text" id="searchInput" placeholder="Tìm kiếm theo email, tên..." onkeypress="if(event.key==='Enter') searchUsers()">
+        <nav class="admin-nav">
+            <div class="admin-nav-item">
+                <a href="/html/admin/dashboard.html" class="admin-nav-link">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+            <div class="admin-nav-item">
+                <a href="/html/admin/users.html" class="admin-nav-link active">
+                    <i class="bi bi-people"></i>
+                    <span>Quản Lý Users</span>
+                </a>
+            </div>
+            <div class="admin-nav-item">
+                <a href="/html/admin/payments.html" class="admin-nav-link">
+                    <i class="bi bi-credit-card"></i>
+                    <span>Quản Lý Payments</span>
+                </a>
+            </div>
+            <div class="admin-nav-item">
+                <a href="/html/admin/activity-logs.html" class="admin-nav-link">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Activity Logs</span>
+                </a>
+            </div>
+            <div class="admin-nav-item">
+                <a href="/html/admin/legal-documents.html" class="admin-nav-link">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span>Văn Bản Pháp Luật</span>
+                </a>
+            </div>
+            <div class="admin-nav-item">
+                <a href="/html/admin/embeddings.html" class="admin-nav-link">
+                    <i class="bi bi-cpu"></i>
+                    <span>Vector Embeddings</span>
+                </a>
+            </div>
+            <div class="admin-nav-item">
+                <a href="/index.html" class="admin-nav-link">
+                    <i class="bi bi-house"></i>
+                    <span>Về Trang Chủ</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+        <!-- Topbar -->
+        <div class="admin-topbar">
+            <div class="admin-topbar-left">
+                <button class="btn-toggle-sidebar" id="toggleSidebar">
+                    <i class="bi bi-list"></i>
+                </button>
+                <h1 class="admin-topbar-title">
+                    <i class="bi bi-people me-2"></i>
+                    Quản Lý Users
+                </h1>
+            </div>
+            <div class="admin-topbar-right">
+                <div class="admin-user-info">
+                    <div class="admin-user-avatar">
+                        <i class="bi bi-person-fill"></i>
                     </div>
-                    <select class="filter-select" id="statusFilter" onchange="searchUsers()">
-                        <option value="">Tất cả trạng thái</option>
-                        <option value="active">Active</option>
-                        <option value="banned">Banned</option>
-                    </select>
-                    <button class="btn btn-primary" onclick="searchUsers()">
-                        <i class="bi bi-search"></i>
-                        Tìm Kiếm
-                    </button>
-                    <button class="btn btn-success" onclick="exportUsersCsv()">
-                        <i class="bi bi-download"></i>
-                        Export CSV
-                    </button>
+                    <span class="admin-user-name" id="adminUserName">Admin</span>
                 </div>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-compact">
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Provider</th>
-                            <th>Credits</th>
-                            <th>Trạng Thái</th>
-                            <th>Ngày Tạo</th>
-                            <th>Thao Tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="usersTableBody">
-                        <tr>
-                            <td colspan="6" class="text-center py-5">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                                <p class="mt-2 text-muted">Đang tải dữ liệu...</p>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Pagination -->
-            <nav aria-label="Page navigation">
-                <ul class="pagination" id="pagination"></ul>
-            </nav>
-        </div>
-    </div>
-</main>
-
-<!-- User Detail Modal -->
-<div class="modal fade" id="userDetailModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-person-badge me-2"></i>
-                    Chi Tiết User
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="userDetailContent">
-                <!-- Content loaded dynamically -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Credit Management Modal -->
-<div class="modal fade" id="creditManageModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">
-                    <i class="bi bi-coin me-2"></i>
-                    <span id="creditModalTitle">Quản Lý Credits</span>
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label">User</label>
-                    <input type="text" class="form-control" id="creditUserEmail" readonly>
-                </div>
-                <div class="row g-3">
-                    <div class="col-6">
-                        <label class="form-label">Chat Credits</label>
-                        <input type="number" class="form-control" id="creditChatAmount" min="0" value="0">
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label">Quiz Gen Credits</label>
-                        <input type="number" class="form-control" id="creditQuizGenAmount" min="0" value="0">
-                    </div>
-                </div>
-                <div class="mt-3">
-                    <label class="form-label">Lý do <span class="text-danger">*</span></label>
-                    <textarea class="form-control" id="creditReason" rows="3" placeholder="Nhập lý do thêm/trừ credits..."></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-primary" id="creditSubmitBtn" onclick="submitCreditAdjust()">
-                    <i class="bi bi-check-lg me-1"></i>
-                    Xác Nhận
+                <button class="btn-logout" onclick="logout()">
+                    <i class="bi bi-box-arrow-right"></i>
+                    Đăng Xuất
                 </button>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Ban User Modal -->
-<div class="modal fade" id="banUserModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content ban-modal-content">
-            <div class="modal-header ban-modal-header">
-                <div class="ban-modal-icon">
-                    <i class="bi bi-shield-exclamation"></i>
-                </div>
-                <h5 class="modal-title">Khóa Tài Khoản</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="ban-user-info">
-                    <div class="ban-user-avatar" id="banUserAvatar">U</div>
-                    <div class="ban-user-details">
-                        <span class="ban-user-label">Bạn đang khóa tài khoản:</span>
-                        <span class="ban-user-email" id="banUserEmail">user@example.com</span>
-                    </div>
-                </div>
-                
-                <div class="ban-warning-box">
-                    <i class="bi bi-exclamation-triangle-fill"></i>
+        <!-- Content -->
+        <div class="admin-content">
+            <!-- Table Container -->
+            <div class="table-container fade-in">
+                <div class="table-header">
                     <div>
-                        <strong>Lưu ý:</strong> User sẽ không thể đăng nhập sau khi bị khóa. Bạn có thể mở khóa bất cứ lúc nào.
+                        <h3 class="table-title">
+                            <i class="bi bi-people-fill"></i>
+                            Danh Sách Users
+                        </h3>
+                        <small class="text-muted" id="totalUsersCount">0 users</small>
+                    </div>
+                    <div class="table-actions">
+                        <div class="search-box">
+                            <i class="bi bi-search"></i>
+                            <input type="text" id="searchInput" placeholder="Tìm kiếm theo email, tên..."
+                                onkeypress="if(event.key==='Enter') searchUsers()">
+                        </div>
+                        <select class="filter-select" id="statusFilter" onchange="searchUsers()">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="active">Active</option>
+                            <option value="banned">Banned</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="searchUsers()">
+                            <i class="bi bi-search"></i>
+                            Tìm Kiếm
+                        </button>
+                        <button class="btn btn-success" onclick="exportUsersCsv()">
+                            <i class="bi bi-download"></i>
+                            Export CSV
+                        </button>
                     </div>
                 </div>
-                
-                <div class="ban-form-group">
-                    <label for="banReason" class="ban-form-label">
-                        <i class="bi bi-chat-left-text"></i>
-                        Lý do khóa tài khoản <span class="text-danger">*</span>
-                    </label>
-                    <textarea class="form-control ban-textarea" id="banReason" rows="4" placeholder="Nhập lý do khóa tài khoản (ví dụ: Vi phạm điều khoản sử dụng, spam, hành vi không phù hợp...)"></textarea>
-                    <div class="ban-form-hint">Lý do này sẽ được hiển thị cho user khi họ cố gắng đăng nhập.</div>
+
+                <div class="table-responsive">
+                    <table class="table table-compact">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Provider</th>
+                                <th>Credits</th>
+                                <th>Trạng Thái</th>
+                                <th>Ngày Tạo</th>
+                                <th>Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-2 text-muted">Đang tải dữ liệu...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
+
+                <!-- Pagination -->
+                <nav aria-label="Page navigation">
+                    <ul class="pagination" id="pagination"></ul>
+                </nav>
             </div>
-            <div class="modal-footer ban-modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                    <i class="bi bi-x-lg me-1"></i>
-                    Hủy bỏ
-                </button>
-                <button type="button" class="btn btn-danger btn-ban-confirm" onclick="confirmBanUser()">
-                    <i class="bi bi-shield-lock me-1"></i>
-                    Xác Nhận Khóa
-                </button>
+        </div>
+    </main>
+
+    <!-- User Detail Modal -->
+    <div class="modal fade" id="userDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-person-badge me-2"></i>
+                        Chi Tiết User
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="userDetailContent">
+                    <!-- Content loaded dynamically -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Toast Notification Container -->
-<div id="toast-container"></div>
+    <!-- Credit Management Modal -->
+    <div class="modal fade" id="creditManageModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-coin me-2"></i>
+                        <span id="creditModalTitle">Quản Lý Credits</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">User</label>
+                        <input type="text" class="form-control" id="creditUserEmail" readonly>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label">Chat Credits</label>
+                            <input type="number" class="form-control" id="creditChatAmount" min="0" value="0">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Quiz Gen Credits</label>
+                            <input type="number" class="form-control" id="creditQuizGenAmount" min="0" value="0">
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label">Lý do <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="creditReason" rows="3"
+                            placeholder="Nhập lý do thêm/trừ credits..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" id="creditSubmitBtn" onclick="submitCreditAdjust()">
+                        <i class="bi bi-check-lg me-1"></i>
+                        Xác Nhận
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Ban User Modal -->
+    <div class="modal fade" id="banUserModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content ban-modal-content">
+                <div class="modal-header ban-modal-header">
+                    <div class="ban-modal-icon">
+                        <i class="bi bi-shield-exclamation"></i>
+                    </div>
+                    <h5 class="modal-title">Khóa Tài Khoản</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="ban-user-info">
+                        <div class="ban-user-avatar" id="banUserAvatar">U</div>
+                        <div class="ban-user-details">
+                            <span class="ban-user-label">Bạn đang khóa tài khoản:</span>
+                            <span class="ban-user-email" id="banUserEmail">user@example.com</span>
+                        </div>
+                    </div>
 
-<!-- Auth Guard -->
-<script src="/scripts/auth-guard.js"></script>
+                    <div class="ban-warning-box">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <div>
+                            <strong>Lưu ý:</strong> User sẽ không thể đăng nhập sau khi bị khóa. Bạn có thể mở khóa bất
+                            cứ lúc nào.
+                        </div>
+                    </div>
 
-<!-- Custom Scripts -->
-<script src="/scripts/toast-notification.js"></script>
-<script src="/scripts/confirm-modal.js"></script>
-<script src="/scripts/api-client.js"></script>
-<script src="/scripts/admin-users.js"></script>
+                    <div class="ban-form-group">
+                        <label for="banReason" class="ban-form-label">
+                            <i class="bi bi-chat-left-text"></i>
+                            Lý do khóa tài khoản <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control ban-textarea" id="banReason" rows="4"
+                            placeholder="Nhập lý do khóa tài khoản (ví dụ: Vi phạm điều khoản sử dụng, spam, hành vi không phù hợp...)"></textarea>
+                        <div class="ban-form-hint">Lý do này sẽ được hiển thị cho user khi họ cố gắng đăng nhập.</div>
+                    </div>
+                </div>
+                <div class="modal-footer ban-modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg me-1"></i>
+                        Hủy bỏ
+                    </button>
+                    <button type="button" class="btn btn-danger btn-ban-confirm" onclick="confirmBanUser()">
+                        <i class="bi bi-shield-lock me-1"></i>
+                        Xác Nhận Khóa
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Auth Guard -->
+    <script src="/scripts/token-manager.js"></script>
+    <script src="/scripts/auth-guard.js"></script>
+
+    <!-- Custom Scripts -->
+    <script src="/scripts/toast-notification.js"></script>
+    <script src="/scripts/confirm-modal.js"></script>
+    <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/admin-users.js"></script>
 
 </body>
+
 </html>

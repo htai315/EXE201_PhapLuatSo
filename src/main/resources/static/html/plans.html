@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +9,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="icon" type="image/png" href="/img/Law.png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/animations.css">
@@ -16,533 +18,520 @@
     <link rel="stylesheet" href="/css/toast-notification.css">
     <link rel="stylesheet" href="/css/confirm-modal.css">
 </head>
+
 <body>
-<nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
-    <div class="container">
-        <a class="navbar-brand" href="/index.html">
-            <img src="/img/Law.png" alt="Logo">
-            <span>Pháp Luật Số</span>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto align-items-lg-center">
-                <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/legal-chat.html">Chat AI</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/my-quizzes.html">Bộ đề</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
-                <li class="nav-item ms-lg-3 guest-only"><a class="btn btn-outline-primary btn-sm px-3" href="/html/login.html"><i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập</a></li>
-                <li class="nav-item ms-lg-2 guest-only"><a class="btn btn-primary btn-sm px-3" href="/html/register.html"><i class="bi bi-person-plus me-1"></i>Đăng Ký</a></li>
-                <li class="nav-item dropdown ms-lg-3 auth-only d-none">
-                    <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                        <img id="navUserAvatar" src="" alt="Avatar" class="rounded-circle" 
-                             style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #1a4b84;">
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="/html/profile.html"><i class="bi bi-person me-2"></i>Hồ sơ</a></li>
-                        <li><a class="dropdown-item" href="/html/payment-history.html"><i class="bi bi-clock-history me-2"></i>Lịch sử thanh toán</a></li>
-                        <li><a class="dropdown-item" href="/html/plans.html"><i class="bi bi-credit-card me-2"></i>Nâng cấp</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
-                    </ul>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
-
-<!-- Hero Section -->
-<section class="plans-hero">
-    <div class="container">
-        <div class="text-center">
-            <h1 class="hero-title">Chọn Gói Phù Hợp <span class="text-gradient">Với Bạn</span></h1>
-            <p class="hero-subtitle">Linh hoạt, minh bạch và phù hợp với mọi nhu cầu</p>
-        </div>
-    </div>
-</section>
-
-<!-- Pricing Section -->
-<section class="pricing-section">
-    <div class="container">
-        <div class="row g-4">
-            <!-- Free Plan -->
-            <div class="col-lg-4 col-md-6">
-                <div class="pricing-card">
-                    <div class="pricing-header">
-                        <h3 class="pricing-name">Miễn Phí</h3>
-                        <div class="pricing-price">
-                            <span class="price-currency">₫</span>
-                            <span class="price-amount">0</span>
-                        </div>
-                    </div>
-                    <ul class="pricing-features">
-                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>10 câu hỏi</li>
-                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Truy cập cơ bản</li>
-                        <li class="text-muted"><i class="bi bi-x-circle me-2"></i>Quiz AI</li>
-                        <li class="text-muted"><i class="bi bi-x-circle me-2"></i>Tư vấn chuyên sâu</li>
-                    </ul>
-                    <button class="btn btn-outline-primary w-100" onclick="selectPlan('FREE')">
-                        <i class="bi bi-gift me-2"></i>Đã kích hoạt
-                    </button>
-                </div>
-            </div>
-
-            <!-- Regular Plan -->
-            <div class="col-lg-4 col-md-6">
-                <div class="pricing-card">
-                    <div class="pricing-header">
-                        <h3 class="pricing-name">Gói người dân</h3>
-                        <div class="pricing-price">
-                            <span class="price-currency">₫</span>
-                            <span class="price-amount">59,000</span>
-                        </div>
-                    </div>
-                    <ul class="pricing-features">
-                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>100 câu hỏi</li>
-                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Truy cập đầy đủ</li>
-                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Hỗ trợ ưu tiên</li>
-                        <li class="text-muted"><i class="bi bi-x-circle me-2"></i>Tư vấn chuyên sâu</li>
-                    </ul>
-                    <button class="btn btn-primary w-100" onclick="selectPlan('REGULAR')">
-                        <i class="bi bi-cart-plus me-2"></i>Chọn Gói Này
-                    </button>
-                </div>
-            </div>
-
-            <!-- Student Plan -->
-            <div class="col-lg-4 col-md-6">
-                <div class="pricing-card">
-                    <div class="pricing-header">
-                        <h3 class="pricing-name">Gói tra cứu và học tập</h3>
-                        <div class="pricing-price">
-                            <span class="price-currency">₫</span>
-                            <span class="price-amount">99,000</span>
-                        </div>
-                    </div>
-                    <ul class="pricing-features">
-                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>100 câu hỏi</li>
-                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Truy cập cao cấp</li>
-                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Tư vấn chuyên sâu</li>
-                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Quiz AI - 20 đề (50 câu/đề)</li>
-                    </ul>
-                    <button class="btn btn-primary w-100" onclick="selectPlan('STUDENT')">
-                        <i class="bi bi-cart-plus me-2"></i>Chọn Gói Này
-                    </button>
-                </div>
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+        <div class="container">
+            <a class="navbar-brand" href="/index.html">
+                <img src="/img/Law.png" alt="Logo">
+                <span>Pháp Luật Số</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-lg-center">
+                    <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/legal-chat.html">Chat AI</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/my-quizzes.html">Bộ đề</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
+                    <li class="nav-item ms-lg-3 guest-only"><a class="btn btn-outline-primary btn-sm px-3"
+                            href="/html/login.html"><i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập</a></li>
+                    <li class="nav-item ms-lg-2 guest-only"><a class="btn btn-primary btn-sm px-3"
+                            href="/html/register.html"><i class="bi bi-person-plus me-1"></i>Đăng Ký</a></li>
+                    <li class="nav-item dropdown ms-lg-3 auth-only d-none">
+                        <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button"
+                            data-bs-toggle="dropdown">
+                            <img id="navUserAvatar" src="" alt="Avatar" class="rounded-circle"
+                                style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #1a4b84;">
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/html/profile.html"><i class="bi bi-person me-2"></i>Hồ
+                                    sơ</a></li>
+                            <li><a class="dropdown-item" href="/html/payment-history.html"><i
+                                        class="bi bi-clock-history me-2"></i>Lịch sử thanh toán</a></li>
+                            <li><a class="dropdown-item" href="/html/plans.html"><i
+                                        class="bi bi-credit-card me-2"></i>Nâng cấp</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i
+                                        class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+                        </ul>
+                    </li>
+                </ul>
             </div>
         </div>
-    </div>
-</section>
+    </nav>
 
-<!-- QR Code Modal -->
-<div class="modal fade" id="qrModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="bi bi-qr-code me-2"></i>Quét mã QR để thanh toán</h5>
-                <button type="button" class="btn-close btn-close-white" id="qrModalCloseBtn"></button>
+    <!-- Hero Section -->
+    <section class="plans-hero">
+        <div class="container">
+            <div class="text-center">
+                <h1 class="hero-title">Chọn Gói Phù Hợp <span class="text-gradient">Với Bạn</span></h1>
+                <p class="hero-subtitle">Linh hoạt, minh bạch và phù hợp với mọi nhu cầu</p>
             </div>
-            <div class="modal-body text-center py-4">
-                <div id="qrCodeContainer" class="mb-3">
-                    <div id="qrLoading" class="py-4">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing-section">
+        <div class="container">
+            <div class="row g-4">
+                <!-- Free Plan -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="pricing-card">
+                        <div class="pricing-header">
+                            <h3 class="pricing-name">Miễn Phí</h3>
+                            <div class="pricing-price">
+                                <span class="price-currency">₫</span>
+                                <span class="price-amount">0</span>
+                            </div>
                         </div>
-                        <p class="mt-2 text-muted">Đang tạo mã QR...</p>
+                        <ul class="pricing-features">
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>10 câu hỏi</li>
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Truy cập cơ bản</li>
+                            <li class="text-muted"><i class="bi bi-x-circle me-2"></i>Quiz AI</li>
+                            <li class="text-muted"><i class="bi bi-x-circle me-2"></i>Tư vấn chuyên sâu</li>
+                        </ul>
+                        <button class="btn btn-outline-primary w-100" onclick="selectPlan('FREE')">
+                            <i class="bi bi-gift me-2"></i>Đã kích hoạt
+                        </button>
                     </div>
-                    <img id="qrCodeImage" src="" alt="QR Code" style="max-width: 280px; display: none;" 
-                         onload="document.getElementById('qrLoading').style.display='none'; this.style.display='block';">
                 </div>
-                <div class="alert alert-info py-2 mb-3">
-                    <i class="bi bi-info-circle me-2"></i>
-                    Sử dụng app ngân hàng để quét mã QR
+
+                <!-- Regular Plan -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="pricing-card">
+                        <div class="pricing-header">
+                            <h3 class="pricing-name">Gói người dân</h3>
+                            <div class="pricing-price">
+                                <span class="price-currency">₫</span>
+                                <span class="price-amount">59,000</span>
+                            </div>
+                        </div>
+                        <ul class="pricing-features">
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>100 câu hỏi</li>
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Truy cập đầy đủ</li>
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Hỗ trợ ưu tiên</li>
+                            <li class="text-muted"><i class="bi bi-x-circle me-2"></i>Tư vấn chuyên sâu</li>
+                        </ul>
+                        <button class="btn btn-primary w-100" onclick="selectPlan('REGULAR')">
+                            <i class="bi bi-cart-plus me-2"></i>Chọn Gói Này
+                        </button>
+                    </div>
                 </div>
-                <p class="fw-bold fs-5 text-primary mb-3" id="paymentAmount"></p>
-                <div class="d-grid gap-2">
-                    <a id="checkoutLink" href="#" target="_blank" class="btn btn-primary btn-lg">
-                        <i class="bi bi-box-arrow-up-right me-2"></i>Mở trang thanh toán PayOS
-                    </a>
-                </div>
-                <div class="mt-3 pt-3 border-top">
-                    <small class="text-muted">Mã đơn hàng: <strong id="orderCodeDisplay"></strong></small>
-                </div>
-                <div id="paymentStatusCheck" class="mt-3" style="display: none;">
-                    <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
-                    <small class="text-success">Đang chờ thanh toán...</small>
-                </div>
-                
-                <!-- Cancel Order Button -->
-                <div class="mt-3 pt-3 border-top">
-                    <button type="button" class="btn btn-outline-danger btn-sm" id="cancelOrderBtn">
-                        <i class="bi bi-x-circle me-2"></i>Hủy đơn hàng
-                    </button>
-                    <p class="text-muted small mt-2 mb-0">
-                        <i class="bi bi-info-circle me-1"></i>
-                        Đơn hàng sẽ được giữ trong 10 phút nếu bạn đóng cửa sổ này
-                    </p>
+
+                <!-- Student Plan -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="pricing-card">
+                        <div class="pricing-header">
+                            <h3 class="pricing-name">Gói tra cứu và học tập</h3>
+                            <div class="pricing-price">
+                                <span class="price-currency">₫</span>
+                                <span class="price-amount">99,000</span>
+                            </div>
+                        </div>
+                        <ul class="pricing-features">
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>100 câu hỏi</li>
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Truy cập cao cấp</li>
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Tư vấn chuyên sâu</li>
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Quiz AI - 20 đề (50 câu/đề)
+                            </li>
+                        </ul>
+                        <button class="btn btn-primary w-100" onclick="selectPlan('STUDENT')">
+                            <i class="bi bi-cart-plus me-2"></i>Chọn Gói Này
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
+    </section>
+
+    <!-- QR Code Modal -->
+    <div class="modal fade" id="qrModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-qr-code me-2"></i>Quét mã QR để thanh toán</h5>
+                    <button type="button" class="btn-close btn-close-white" id="qrModalCloseBtn"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <div id="qrCodeContainer" class="mb-3">
+                        <div id="qrLoading" class="py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Đang tạo mã QR...</p>
+                        </div>
+                        <img id="qrCodeImage" src="" alt="QR Code" style="max-width: 280px; display: none;"
+                            onload="document.getElementById('qrLoading').style.display='none'; this.style.display='block';">
+                    </div>
+                    <div class="alert alert-info py-2 mb-3">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Sử dụng app ngân hàng để quét mã QR
+                    </div>
+                    <p class="fw-bold fs-5 text-primary mb-3" id="paymentAmount"></p>
+                    <div class="d-grid gap-2">
+                        <a id="checkoutLink" href="#" target="_blank" class="btn btn-primary btn-lg">
+                            <i class="bi bi-box-arrow-up-right me-2"></i>Mở trang thanh toán PayOS
+                        </a>
+                    </div>
+                    <div class="mt-3 pt-3 border-top">
+                        <small class="text-muted">Mã đơn hàng: <strong id="orderCodeDisplay"></strong></small>
+                    </div>
+                    <div id="paymentStatusCheck" class="mt-3" style="display: none;">
+                        <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
+                        <small class="text-success">Đang chờ thanh toán...</small>
+                    </div>
+
+                    <!-- Cancel Order Button -->
+                    <div class="mt-3 pt-3 border-top">
+                        <button type="button" class="btn btn-outline-danger btn-sm" id="cancelOrderBtn">
+                            <i class="bi bi-x-circle me-2"></i>Hủy đơn hàng
+                        </button>
+                        <p class="text-muted small mt-2 mb-0">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Đơn hàng sẽ được giữ trong 10 phút nếu bạn đóng cửa sổ này
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/scripts/auth-guard.js"></script>
-<script src="/scripts/toast-notification.js"></script>
-<script src="/scripts/api-client.js"></script>
-<script src="/scripts/confirm-modal.js"></script>
-<script src="/scripts/script.js"></script>
-<script>
-// Check for plan parameter in URL and auto-select after login
-document.addEventListener('DOMContentLoaded', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const planFromUrl = urlParams.get('plan');
-    
-    if (planFromUrl && ['REGULAR', 'STUDENT'].includes(planFromUrl)) {
-        if (AUTH.isLoggedIn()) {
-            Toast.info('Đang xử lý gói bạn đã chọn...');
-            setTimeout(() => {
-                selectPlan(planFromUrl);
-            }, 500);
-        }
-    }
-});
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/scripts/token-manager.js"></script>
+    <script src="/scripts/auth-guard.js"></script>
+    <script src="/scripts/toast-notification.js"></script>
+    <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/confirm-modal.js"></script>
+    <script src="/scripts/script.js"></script>
+    <script>
+        // Check for plan parameter in URL and auto-select after login
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const planFromUrl = urlParams.get('plan');
 
-async function selectPlan(planName) {
-    if (planName === 'FREE') {
-        Toast.info('Bạn đã có gói FREE miễn phí khi đăng ký!');
-        return;
-    }
-    
-    if (!AUTH.isLoggedIn()) {
-        Toast.info('Vui lòng đăng nhập để mua gói!');
-        setTimeout(() => {
-            window.location.href = '/html/login.html?returnUrl=' + encodeURIComponent('/html/plans.html?plan=' + planName);
-        }, 1000);
-        return;
-    }
-    
-    const token = AUTH.getToken();
-    
-    let button = event?.target;
-    if (!button || button.tagName !== 'BUTTON') {
-        const buttons = document.querySelectorAll('button[onclick*="' + planName + '"]');
-        button = buttons.length > 0 ? buttons[0] : null;
-    }
-    
-    let originalText = '';
-    if (button) {
-        originalText = button.innerHTML;
-        button.disabled = true;
-        button.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Đang xử lý...';
-    }
-    
-    try {
-        const response = await fetch('/api/payment/create', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ planCode: planName })
+            if (planFromUrl && ['REGULAR', 'STUDENT'].includes(planFromUrl)) {
+                if (AUTH.isLoggedIn()) {
+                    Toast.info('Đang xử lý gói bạn đã chọn...');
+                    setTimeout(() => {
+                        selectPlan(planFromUrl);
+                    }, 500);
+                }
+            }
         });
-        
-        if (!response.ok) {
-            if (response.status === 401) {
-                Toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
-                AUTH.clearAuth();
+
+        async function selectPlan(planName) {
+            if (planName === 'FREE') {
+                Toast.info('Bạn đã có gói FREE miễn phí khi đăng ký!');
+                return;
+            }
+
+            if (!AUTH.isLoggedIn()) {
+                Toast.info('Vui lòng đăng nhập để mua gói!');
                 setTimeout(() => {
                     window.location.href = '/html/login.html?returnUrl=' + encodeURIComponent('/html/plans.html?plan=' + planName);
                 }, 1000);
                 return;
             }
-            
-            let errorMessage = 'Không thể tạo thanh toán';
-            try {
-                const errorData = await response.json();
-                errorMessage = errorData.error || errorData.message || errorMessage;
-            } catch (parseError) {
-                errorMessage = response.statusText || errorMessage;
+
+            let button = event?.target;
+            if (!button || button.tagName !== 'BUTTON') {
+                const buttons = document.querySelectorAll('button[onclick*="' + planName + '"]');
+                button = buttons.length > 0 ? buttons[0] : null;
             }
-            throw new Error(errorMessage);
+
+            let originalText = '';
+            if (button) {
+                originalText = button.innerHTML;
+                button.disabled = true;
+                button.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Đang xử lý...';
+            }
+
+            try {
+                // Use central apiClient to handle token refresh and retry
+                const data = await window.apiClient.post('/api/payment/create', { planCode: planName });
+
+                // Show QR Code modal
+                if (data.qrCode) {
+                    showQRModal(data);
+                } else {
+                    // Fallback: redirect to checkout URL
+                    window.location.href = data.paymentUrl;
+                }
+
+            } catch (error) {
+                console.error('Payment error:', error);
+                // Handle 401-like structured error thrown by apiClient
+                if (error && (error.status === 401 || error.status === '401')) {
+                    Toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
+                    AUTH.clearAuth();
+                    setTimeout(() => {
+                        window.location.href = '/html/login.html?returnUrl=' + encodeURIComponent('/html/plans.html?plan=' + planName);
+                    }, 1000);
+                    return;
+                }
+                Toast.error(error.error || error.message || 'Không thể tạo thanh toán');
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.innerHTML = originalText;
+                }
+            }
         }
-        
-        const data = await response.json();
-        
-        // Show QR Code modal
-        if (data.qrCode) {
-            showQRModal(data);
-        } else {
-            // Fallback: redirect to checkout URL
-            window.location.href = data.paymentUrl;
+
+        function showQRModal(data) {
+            const qrImage = document.getElementById('qrCodeImage');
+            const qrLoading = document.getElementById('qrLoading');
+            const checkoutLink = document.getElementById('checkoutLink');
+            const orderCodeDisplay = document.getElementById('orderCodeDisplay');
+            const paymentAmount = document.getElementById('paymentAmount');
+            const paymentStatusCheck = document.getElementById('paymentStatusCheck');
+
+            // Reset state
+            qrImage.style.display = 'none';
+            qrLoading.style.display = 'block';
+            paymentStatusCheck.style.display = 'none';
+
+            // Set QR code image
+            if (data.qrCode) {
+                if (data.qrCode.startsWith('data:image')) {
+                    // Base64 image from our QRCodeService
+                    // Add timestamp to force reload and prevent caching
+                    qrImage.src = data.qrCode;
+                    console.log('QR Code loaded (base64):', data.qrCode.substring(0, 50) + '...');
+                } else if (data.qrCode.startsWith('http')) {
+                    // Direct image URL from PayOS
+                    qrImage.src = data.qrCode;
+                    console.log('QR Code loaded (URL):', data.qrCode);
+                } else {
+                    // VietQR string - generate QR image using external API
+                    qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(data.qrCode)}`;
+                    console.log('QR Code loaded (VietQR):', data.qrCode);
+                }
+            } else {
+                // No QR code available, redirect to checkout
+                Toast.info('Đang chuyển đến trang thanh toán...');
+                window.location.href = data.paymentUrl;
+                return;
+            }
+
+            checkoutLink.href = data.paymentUrl;
+            orderCodeDisplay.textContent = data.orderCode;
+
+            // Display amount and plan name
+            if (data.amount) {
+                const formattedAmount = new Intl.NumberFormat('vi-VN').format(data.amount);
+                paymentAmount.textContent = `${formattedAmount} VNĐ` + (data.planName ? ` - ${data.planName}` : '');
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('qrModal'));
+            modal.show();
+
+            // Show status check indicator after 2 seconds
+            setTimeout(() => {
+                paymentStatusCheck.style.display = 'block';
+            }, 2000);
+
+            // Start polling for payment status
+            startPaymentPolling(data.orderCode);
         }
-        
-    } catch (error) {
-        console.error('Payment error:', error);
-        Toast.error(error.message || 'Không thể tạo thanh toán');
-    } finally {
-        if (button) {
-            button.disabled = false;
-            button.innerHTML = originalText;
+
+        let pollingInterval = null;
+        let pollingAttempts = 0;
+        let currentOrderCode = null; // Track current order code for cancel
+        const MAX_POLLING_ATTEMPTS = 100; // 5 minutes max (100 * 3 seconds)
+
+        // Cleanup function to stop all polling and intervals
+        function cleanupPolling() {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+            pollingAttempts = 0;
         }
-    }
-}
 
-function showQRModal(data) {
-    const qrImage = document.getElementById('qrCodeImage');
-    const qrLoading = document.getElementById('qrLoading');
-    const checkoutLink = document.getElementById('checkoutLink');
-    const orderCodeDisplay = document.getElementById('orderCodeDisplay');
-    const paymentAmount = document.getElementById('paymentAmount');
-    const paymentStatusCheck = document.getElementById('paymentStatusCheck');
-    
-    // Reset state
-    qrImage.style.display = 'none';
-    qrLoading.style.display = 'block';
-    paymentStatusCheck.style.display = 'none';
-    
-    // Set QR code image
-    if (data.qrCode) {
-        if (data.qrCode.startsWith('data:image')) {
-            // Base64 image from our QRCodeService
-            // Add timestamp to force reload and prevent caching
-            qrImage.src = data.qrCode;
-            console.log('QR Code loaded (base64):', data.qrCode.substring(0, 50) + '...');
-        } else if (data.qrCode.startsWith('http')) {
-            // Direct image URL from PayOS
-            qrImage.src = data.qrCode;
-            console.log('QR Code loaded (URL):', data.qrCode);
-        } else {
-            // VietQR string - generate QR image using external API
-            qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(data.qrCode)}`;
-            console.log('QR Code loaded (VietQR):', data.qrCode);
-        }
-    } else {
-        // No QR code available, redirect to checkout
-        Toast.info('Đang chuyển đến trang thanh toán...');
-        window.location.href = data.paymentUrl;
-        return;
-    }
-    
-    checkoutLink.href = data.paymentUrl;
-    orderCodeDisplay.textContent = data.orderCode;
-    
-    // Display amount and plan name
-    if (data.amount) {
-        const formattedAmount = new Intl.NumberFormat('vi-VN').format(data.amount);
-        paymentAmount.textContent = `${formattedAmount} VNĐ` + (data.planName ? ` - ${data.planName}` : '');
-    }
-    
-    const modal = new bootstrap.Modal(document.getElementById('qrModal'));
-    modal.show();
-    
-    // Show status check indicator after 2 seconds
-    setTimeout(() => {
-        paymentStatusCheck.style.display = 'block';
-    }, 2000);
-    
-    // Start polling for payment status
-    startPaymentPolling(data.orderCode);
-}
+        // Cleanup on page unload to prevent memory leaks
+        window.addEventListener('beforeunload', cleanupPolling);
+        window.addEventListener('pagehide', cleanupPolling);
 
-let pollingInterval = null;
-let pollingAttempts = 0;
-let currentOrderCode = null; // Track current order code for cancel
-const MAX_POLLING_ATTEMPTS = 100; // 5 minutes max (100 * 3 seconds)
-
-// Cleanup function to stop all polling and intervals
-function cleanupPolling() {
-    if (pollingInterval) {
-        clearInterval(pollingInterval);
-        pollingInterval = null;
-    }
-    pollingAttempts = 0;
-}
-
-// Cleanup on page unload to prevent memory leaks
-window.addEventListener('beforeunload', cleanupPolling);
-window.addEventListener('pagehide', cleanupPolling);
-
-// Also cleanup when page becomes hidden (tab switch)
-document.addEventListener('visibilitychange', () => {
-    if (document.hidden && pollingInterval) {
-        console.log('Page hidden, pausing polling');
-    }
-});
-
-// Handle close button click with confirmation
-document.getElementById('qrModalCloseBtn')?.addEventListener('click', async () => {
-    const confirmed = await window.ConfirmModal.show({
-        title: 'Đóng cửa sổ thanh toán?',
-        message: 'Đơn hàng sẽ được giữ trong 10 phút. Bạn có thể quay lại thanh toán sau.',
-        type: 'warning',
-        confirmText: 'Đóng',
-        cancelText: 'Tiếp tục thanh toán'
-    });
-    
-    if (confirmed) {
-        cleanupPolling();
-        currentOrderCode = null;
-        const modal = bootstrap.Modal.getInstance(document.getElementById('qrModal'));
-        if (modal) {
-            modal.hide();
-        }
-    }
-});
-
-// Handle cancel order button
-document.getElementById('cancelOrderBtn')?.addEventListener('click', async () => {
-    if (!currentOrderCode) {
-        Toast.error('Không tìm thấy mã đơn hàng');
-        return;
-    }
-    
-    const confirmed = await window.ConfirmModal.show({
-        title: 'Hủy đơn hàng?',
-        message: 'Bạn có chắc chắn muốn hủy đơn hàng này? Hành động này không thể hoàn tác.',
-        type: 'danger',
-        confirmText: 'Hủy đơn hàng',
-        cancelText: 'Giữ đơn hàng'
-    });
-    
-    if (confirmed) {
-        await cancelOrder(currentOrderCode);
-    }
-});
-
-// Cancel order API call
-async function cancelOrder(orderCode) {
-    const token = AUTH.getToken();
-    if (!token) {
-        Toast.error('Vui lòng đăng nhập lại');
-        return;
-    }
-    
-    const cancelBtn = document.getElementById('cancelOrderBtn');
-    const originalText = cancelBtn.innerHTML;
-    cancelBtn.disabled = true;
-    cancelBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Đang hủy...';
-    
-    try {
-        const response = await fetch(`/api/payment/cancel/${orderCode}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`
+        // Also cleanup when page becomes hidden (tab switch)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && pollingInterval) {
+                console.log('Page hidden, pausing polling');
             }
         });
-        
-        const data = await response.json();
-        
-        if (data.status === 'success') {
-            Toast.success('Đã hủy đơn hàng thành công');
-            cleanupPolling();
-            currentOrderCode = null;
-            
-            const modal = bootstrap.Modal.getInstance(document.getElementById('qrModal'));
-            if (modal) {
-                modal.hide();
-            }
-        } else {
-            Toast.error(data.message || 'Không thể hủy đơn hàng');
-        }
-    } catch (error) {
-        console.error('Cancel order error:', error);
-        Toast.error('Không thể hủy đơn hàng. Vui lòng thử lại.');
-    } finally {
-        cancelBtn.disabled = false;
-        cancelBtn.innerHTML = originalText;
-    }
-}
 
-function startPaymentPolling(orderCode) {
-    // Clear any existing polling first
-    cleanupPolling();
-    currentOrderCode = orderCode; // Store for cancel functionality
-    
-    console.log('Starting payment polling for orderCode:', orderCode);
-    
-    pollingInterval = setInterval(async () => {
-        // Skip polling if page is hidden
-        if (document.hidden) {
-            console.log('Page hidden, skipping poll');
-            return;
-        }
-        
-        pollingAttempts++;
-        console.log(`Polling attempt ${pollingAttempts} for orderCode: ${orderCode}`);
-        
-        if (pollingAttempts > MAX_POLLING_ATTEMPTS) {
-            cleanupPolling();
-            console.log('Max polling attempts reached');
-            Toast.warning('Hết thời gian chờ. Vui lòng kiểm tra lịch sử thanh toán.');
-            return;
-        }
-        
-        try {
-            const response = await fetch(`/api/payment/status/${orderCode}`);
-            
-            if (!response.ok) {
-                console.error('Status check failed:', response.status);
-                return;
-            }
-            
-            const data = await response.json();
-            console.log('Payment status response:', data);
-            
-            // Check for SUCCESS status
-            if (data.status === 'SUCCESS') {
+        // Handle close button click with confirmation
+        document.getElementById('qrModalCloseBtn')?.addEventListener('click', async () => {
+            const confirmed = await window.ConfirmModal.show({
+                title: 'Đóng cửa sổ thanh toán?',
+                message: 'Đơn hàng sẽ được giữ trong 10 phút. Bạn có thể quay lại thanh toán sau.',
+                type: 'warning',
+                confirmText: 'Đóng',
+                cancelText: 'Tiếp tục thanh toán'
+            });
+
+            if (confirmed) {
                 cleanupPolling();
                 currentOrderCode = null;
-                console.log('Payment SUCCESS detected!');
-                
-                Toast.success('Thanh toán thành công! Đang chuyển hướng...');
-                
-                // Close modal
                 const modal = bootstrap.Modal.getInstance(document.getElementById('qrModal'));
                 if (modal) {
                     modal.hide();
                 }
-                
-                // Redirect after short delay
-                setTimeout(() => {
-                    window.location.href = '/html/payment-result.html?orderCode=' + orderCode + '&status=success';
-                }, 1500);
-                return;
             }
-            
-            // Check for FAILED status
-            if (data.status === 'FAILED' || data.status === 'CANCELLED' || data.status === 'EXPIRED') {
-                cleanupPolling();
-                currentOrderCode = null;
-                console.log('Payment FAILED/CANCELLED/EXPIRED detected');
-                
-                Toast.error('Thanh toán thất bại hoặc đã bị hủy!');
-                
-                const modal = bootstrap.Modal.getInstance(document.getElementById('qrModal'));
-                if (modal) {
-                    modal.hide();
-                }
-                return;
-            }
-            
-            // Still PENDING - continue polling
-            console.log('Payment still PENDING, continuing to poll...');
-            
-        } catch (error) {
-            console.error('Polling error:', error);
-            // Don't stop polling on network errors, just log and continue
-        }
-    }, 3000); // Poll every 3 seconds
-}
+        });
 
-// Stop polling when modal is closed (cleanup only, no confirm needed here)
-document.getElementById('qrModal')?.addEventListener('hidden.bs.modal', () => {
-    console.log('QR Modal closed, stopping polling');
-    cleanupPolling();
-});
-</script>
+        // Handle cancel order button
+        document.getElementById('cancelOrderBtn')?.addEventListener('click', async () => {
+            if (!currentOrderCode) {
+                Toast.error('Không tìm thấy mã đơn hàng');
+                return;
+            }
+
+            const confirmed = await window.ConfirmModal.show({
+                title: 'Hủy đơn hàng?',
+                message: 'Bạn có chắc chắn muốn hủy đơn hàng này? Hành động này không thể hoàn tác.',
+                type: 'danger',
+                confirmText: 'Hủy đơn hàng',
+                cancelText: 'Giữ đơn hàng'
+            });
+
+            if (confirmed) {
+                await cancelOrder(currentOrderCode);
+            }
+        });
+
+        // Cancel order API call
+        async function cancelOrder(orderCode) {
+            // Require logged-in user
+            if (!AUTH || !AUTH.isLoggedIn()) {
+                Toast.error('Vui lòng đăng nhập lại');
+                return;
+            }
+
+            const cancelBtn = document.getElementById('cancelOrderBtn');
+            const originalText = cancelBtn.innerHTML;
+            cancelBtn.disabled = true;
+            cancelBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Đang hủy...';
+
+            try {
+                // Use apiClient to ensure token refresh and retry behavior
+                const response = await window.apiClient.fetchWithAuth(`/api/payment/cancel/${orderCode}`, { method: 'POST' });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    Toast.success('Đã hủy đơn hàng thành công');
+                    cleanupPolling();
+                    currentOrderCode = null;
+
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('qrModal'));
+                    if (modal) {
+                        modal.hide();
+                    }
+                } else {
+                    Toast.error(data.message || 'Không thể hủy đơn hàng');
+                }
+            } catch (error) {
+                console.error('Cancel order error:', error);
+                Toast.error('Không thể hủy đơn hàng. Vui lòng thử lại.');
+            } finally {
+                cancelBtn.disabled = false;
+                cancelBtn.innerHTML = originalText;
+            }
+        }
+
+        function startPaymentPolling(orderCode) {
+            // Clear any existing polling first
+            cleanupPolling();
+            currentOrderCode = orderCode; // Store for cancel functionality
+
+            console.log('Starting payment polling for orderCode:', orderCode);
+
+            pollingInterval = setInterval(async () => {
+                // Skip polling if page is hidden
+                if (document.hidden) {
+                    console.log('Page hidden, skipping poll');
+                    return;
+                }
+
+                pollingAttempts++;
+                console.log(`Polling attempt ${pollingAttempts} for orderCode: ${orderCode}`);
+
+                if (pollingAttempts > MAX_POLLING_ATTEMPTS) {
+                    cleanupPolling();
+                    console.log('Max polling attempts reached');
+                    Toast.warning('Hết thời gian chờ. Vui lòng kiểm tra lịch sử thanh toán.');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/payment/status/${orderCode}`);
+
+                    if (!response.ok) {
+                        console.error('Status check failed:', response.status);
+                        return;
+                    }
+
+                    const data = await response.json();
+                    console.log('Payment status response:', data);
+
+                    // Check for SUCCESS status
+                    if (data.status === 'SUCCESS') {
+                        cleanupPolling();
+                        currentOrderCode = null;
+                        console.log('Payment SUCCESS detected!');
+
+                        Toast.success('Thanh toán thành công! Đang chuyển hướng...');
+
+                        // Close modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('qrModal'));
+                        if (modal) {
+                            modal.hide();
+                        }
+
+                        // Redirect after short delay
+                        setTimeout(() => {
+                            window.location.href = '/html/payment-result.html?orderCode=' + orderCode + '&status=success';
+                        }, 1500);
+                        return;
+                    }
+
+                    // Check for FAILED status
+                    if (data.status === 'FAILED' || data.status === 'CANCELLED' || data.status === 'EXPIRED') {
+                        cleanupPolling();
+                        currentOrderCode = null;
+                        console.log('Payment FAILED/CANCELLED/EXPIRED detected');
+
+                        Toast.error('Thanh toán thất bại hoặc đã bị hủy!');
+
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('qrModal'));
+                        if (modal) {
+                            modal.hide();
+                        }
+                        return;
+                    }
+
+                    // Still PENDING - continue polling
+                    console.log('Payment still PENDING, continuing to poll...');
+
+                } catch (error) {
+                    console.error('Polling error:', error);
+                    // Don't stop polling on network errors, just log and continue
+                }
+            }, 3000); // Poll every 3 seconds
+        }
+
+        // Stop polling when modal is closed (cleanup only, no confirm needed here)
+        document.getElementById('qrModal')?.addEventListener('hidden.bs.modal', () => {
+            console.log('QR Modal closed, stopping polling');
+            cleanupPolling();
+        });
+    </script>
 </body>
+
 </html>

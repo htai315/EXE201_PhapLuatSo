@@ -67,10 +67,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 // User is banned - return 403 with ban message
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 response.setContentType("application/json;charset=UTF-8");
-                String message = user.getBanReason() != null 
+                String message = user.getBanReason() != null
                     ? "Tài khoản của bạn đã bị khóa. Lý do: " + user.getBanReason()
                     : "Tài khoản của bạn đã bị khóa.";
                 response.getWriter().write("{\"error\":\"ACCOUNT_BANNED\",\"message\":\"" + message + "\"}");
+                return;
+            }
+
+            if (user.isLocked()) {
+                // User is temporarily locked due to failed login attempts - return 403
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setContentType("application/json;charset=UTF-8");
+                String message = "Tài khoản của bạn đã bị tạm khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau.";
+                response.getWriter().write("{\"error\":\"ACCOUNT_LOCKED\",\"message\":\"" + message + "\"}");
                 return;
             }
 

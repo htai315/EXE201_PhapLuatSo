@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,7 +15,9 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap"
+        rel="stylesheet">
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/style.css">
@@ -25,289 +28,307 @@
     <link rel="stylesheet" href="/css/toast-notification.css">
     <link rel="stylesheet" href="/css/confirm-modal.css">
 </head>
+
 <body data-auth-required="true">
-<nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
-    <div class="container">
-        <a class="navbar-brand" href="/index.html">
-            <img src="/img/Law.png" alt="Logo">
-            <span>Pháp Luật Số</span>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+        <div class="container">
+            <a class="navbar-brand" href="/index.html">
+                <img src="/img/Law.png" alt="Logo">
+                <span>Pháp Luật Số</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto align-items-lg-center">
-                <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/legal-chat.html">Chat AI</a></li>
-                <li class="nav-item"><a class="nav-link active" href="/html/my-quizzes.html">Bộ đề</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
-                <li class="nav-item ms-lg-3 guest-only">
-                    <a class="btn btn-outline-primary btn-sm px-3" href="/html/login.html">
-                        <i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập
-                    </a>
-                </li>
-                <li class="nav-item ms-lg-2 guest-only">
-                    <a class="btn btn-primary btn-sm px-3" href="/html/register.html">
-                        <i class="bi bi-person-plus me-1"></i>Đăng Ký
-                    </a>
-                </li>
-                <li class="nav-item dropdown ms-lg-3 auth-only d-none">
-                    <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img id="navUserAvatar" src="https://ui-avatars.com/api/?name=User&size=40&background=1a4b84&color=fff" 
-                             alt="Avatar" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #e2e8f0;">
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="/html/profile.html"><i class="bi bi-person me-2"></i>Hồ sơ</a></li>
-                        <li><a class="dropdown-item" href="/html/payment-history.html"><i class="bi bi-clock-history me-2"></i>Lịch sử thanh toán</a></li>
-                        <li><a class="dropdown-item" href="/html/plans.html"><i class="bi bi-credit-card me-2"></i>Nâng cấp</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
-                    </ul>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
-
-<div class="page-wrapper">
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-                <div class="text-muted small mb-1">Bộ đề luyện tập</div>
-                <h1 class="mb-1 h4" id="quizSetTitleHeader">Đang tải bộ đề...</h1>
-                <p class="section-subtitle mb-0" id="quizSetMeta"></p>
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-lg-center">
+                    <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/legal-chat.html">Chat AI</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/html/my-quizzes.html">Bộ đề</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
+                    <li class="nav-item ms-lg-3 guest-only">
+                        <a class="btn btn-outline-primary btn-sm px-3" href="/html/login.html">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập
+                        </a>
+                    </li>
+                    <li class="nav-item ms-lg-2 guest-only">
+                        <a class="btn btn-primary btn-sm px-3" href="/html/register.html">
+                            <i class="bi bi-person-plus me-1"></i>Đăng Ký
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown ms-lg-3 auth-only d-none">
+                        <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <img id="navUserAvatar"
+                                src="https://ui-avatars.com/api/?name=User&size=40&background=1a4b84&color=fff"
+                                alt="Avatar" class="rounded-circle"
+                                style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #e2e8f0;">
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="/html/profile.html"><i class="bi bi-person me-2"></i>Hồ
+                                    sơ</a></li>
+                            <li><a class="dropdown-item" href="/html/payment-history.html"><i
+                                        class="bi bi-clock-history me-2"></i>Lịch sử thanh toán</a></li>
+                            <li><a class="dropdown-item" href="/html/plans.html"><i
+                                        class="bi bi-credit-card me-2"></i>Nâng cấp</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i
+                                        class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+                        </ul>
+                    </li>
+                </ul>
             </div>
-            <div class="d-flex flex-wrap gap-2">
-                <button class="btn btn-outline-secondary btn-sm btn-rounded" onclick="location.href='/html/my-quizzes.html'">
-                    <i class="bi bi-arrow-left me-1"></i>Danh sách Bộ đề
-                </button>
-                <div class="dropdown">
-                    <button class="btn btn-outline-success btn-sm btn-rounded dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-file-earmark-pdf me-1"></i>Xuất PDF
+        </div>
+    </nav>
+
+    <div class="page-wrapper">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <div class="text-muted small mb-1">Bộ đề luyện tập</div>
+                    <h1 class="mb-1 h4" id="quizSetTitleHeader">Đang tải bộ đề...</h1>
+                    <p class="section-subtitle mb-0" id="quizSetMeta"></p>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-outline-secondary btn-sm btn-rounded"
+                        onclick="location.href='/html/my-quizzes.html'">
+                        <i class="bi bi-arrow-left me-1"></i>Danh sách Bộ đề
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#" onclick="exportPdf(false)"><i class="bi bi-file-text me-2"></i>Đề thi (không đáp án)</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="exportPdf(true)"><i class="bi bi-file-check me-2"></i>Đề thi + Đáp án</a></li>
-                    </ul>
-                </div>
-                <button id="btnAddQuestionPage" type="button" class="btn btn-primary btn-sm btn-rounded">
-                    <i class="bi bi-plus-circle me-1"></i>Thêm câu hỏi
-                </button>
-                <button id="btnDeleteSetTop" type="button" class="btn btn-outline-danger btn-sm btn-rounded">
-                    <i class="bi bi-trash me-1"></i>Xóa Bộ đề
-                </button>
-            </div>
-        </div>
-
-        <div id="alertArea"></div>
-
-        <!-- Layout 2 cột: Danh sách bên trái + Chi tiết bên phải -->
-        <div id="questionsLayout" class="row g-3" style="display: none;">
-            <!-- Cột trái: Danh sách câu hỏi -->
-            <div class="col-lg-4">
-                <div class="card question-list-card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Danh sách câu hỏi</h6>
-                        <span class="badge bg-primary badge-pill" id="questionCountBadge">0</span>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-success btn-sm btn-rounded dropdown-toggle" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-file-earmark-pdf me-1"></i>Xuất PDF
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" onclick="exportPdf(false)"><i
+                                        class="bi bi-file-text me-2"></i>Đề thi (không đáp án)</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportPdf(true)"><i
+                                        class="bi bi-file-check me-2"></i>Đề thi + Đáp án</a></li>
+                        </ul>
                     </div>
-                    <div class="card-body question-list-body">
-                        <div id="questionListContainer" class="question-grid-container">
-                            <!-- Danh sách câu hỏi sẽ được render ở đây -->
-                        </div>
-                    </div>
+                    <button id="btnAddQuestionPage" type="button" class="btn btn-primary btn-sm btn-rounded">
+                        <i class="bi bi-plus-circle me-1"></i>Thêm câu hỏi
+                    </button>
+                    <button id="btnDeleteSetTop" type="button" class="btn btn-outline-danger btn-sm btn-rounded">
+                        <i class="bi bi-trash me-1"></i>Xóa Bộ đề
+                    </button>
                 </div>
             </div>
 
-            <!-- Cột phải: Chi tiết câu hỏi -->
-            <div class="col-lg-8">
-                <div class="card question-detail-card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0"><i class="bi bi-file-text me-2"></i>Chi tiết câu hỏi</h6>
-                        <div class="d-flex gap-2" id="questionActions" style="display: none !important;">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnEditQuestion">
-                                <i class="bi bi-pencil-square me-1"></i>Sửa
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-danger" id="btnDeleteQuestion">
-                                <i class="bi bi-trash me-1"></i>Xóa
-                            </button>
+            <div id="alertArea"></div>
+
+            <!-- Layout 2 cột: Danh sách bên trái + Chi tiết bên phải -->
+            <div id="questionsLayout" class="row g-3" style="display: none;">
+                <!-- Cột trái: Danh sách câu hỏi -->
+                <div class="col-lg-4">
+                    <div class="card question-list-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Danh sách câu hỏi</h6>
+                            <span class="badge bg-primary badge-pill" id="questionCountBadge">0</span>
+                        </div>
+                        <div class="card-body question-list-body">
+                            <div id="questionListContainer" class="question-grid-container">
+                                <!-- Danh sách câu hỏi sẽ được render ở đây -->
+                            </div>
                         </div>
                     </div>
-                    <div class="card-body">
-                        <div id="questionDetailContainer">
-                            <div class="text-center text-muted py-5">
-                                <i class="bi bi-arrow-left-circle" style="font-size: 3rem; opacity: 0.3;"></i>
-                                <p class="mt-3 mb-0">Chọn một câu hỏi từ danh sách bên trái để xem chi tiết</p>
+                </div>
+
+                <!-- Cột phải: Chi tiết câu hỏi -->
+                <div class="col-lg-8">
+                    <div class="card question-detail-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="bi bi-file-text me-2"></i>Chi tiết câu hỏi</h6>
+                            <div class="d-flex gap-2" id="questionActions" style="display: none !important;">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="btnEditQuestion">
+                                    <i class="bi bi-pencil-square me-1"></i>Sửa
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" id="btnDeleteQuestion">
+                                    <i class="bi bi-trash me-1"></i>Xóa
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="questionDetailContainer">
+                                <div class="text-center text-muted py-5">
+                                    <i class="bi bi-arrow-left-circle" style="font-size: 3rem; opacity: 0.3;"></i>
+                                    <p class="mt-3 mb-0">Chọn một câu hỏi từ danh sách bên trái để xem chi tiết</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Empty state -->
-        <div id="emptyState" class="text-center py-5" style="display: none;">
-            <i class="bi bi-inbox" style="font-size: 4rem; color: #cbd5e1;"></i>
-            <h5 class="mt-3 mb-2">Chưa có câu hỏi nào</h5>
-            <p class="text-muted mb-3">Bộ đề này chưa có câu hỏi. Hãy thêm câu hỏi đầu tiên!</p>
-            <button class="btn btn-primary btn-rounded" onclick="document.getElementById('btnAddQuestionPage').click()">
-                <i class="bi bi-plus-circle me-2"></i>Thêm câu hỏi đầu tiên
-            </button>
+            <!-- Empty state -->
+            <div id="emptyState" class="text-center py-5" style="display: none;">
+                <i class="bi bi-inbox" style="font-size: 4rem; color: #cbd5e1;"></i>
+                <h5 class="mt-3 mb-2">Chưa có câu hỏi nào</h5>
+                <p class="text-muted mb-3">Bộ đề này chưa có câu hỏi. Hãy thêm câu hỏi đầu tiên!</p>
+                <button class="btn btn-primary btn-rounded"
+                    onclick="document.getElementById('btnAddQuestionPage').click()">
+                    <i class="bi bi-plus-circle me-2"></i>Thêm câu hỏi đầu tiên
+                </button>
+            </div>
         </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/scripts/auth-guard.js"></script>
-<script src="/scripts/toast-notification.js"></script>
-<script src="/scripts/confirm-modal.js"></script>
-<script src="/scripts/error-handler.js"></script>
-<script src="/scripts/api-client.js"></script>
-<script src="/scripts/script.js"></script>
-<script>
-    const API_BASE = '/api/quiz-sets';
-    let currentQuizSetId = null;
-    let currentQuizSetData = null;
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/scripts/token-manager.js"></script>
+    <script src="/scripts/auth-guard.js"></script>
+    <script src="/scripts/toast-notification.js"></script>
+    <script src="/scripts/confirm-modal.js"></script>
+    <script src="/scripts/error-handler.js"></script>
+    <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/script.js"></script>
+    <script>
+        const API_BASE = '/api/quiz-sets';
+        let currentQuizSetId = null;
+        let currentQuizSetData = null;
 
-    document.addEventListener('DOMContentLoaded', () => {
-        if (!AUTH.isLoggedIn()) return;
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Use AUTH.guard() for proper rehydration from HttpOnly cookie
+            const isAuth = await AUTH.guard({ requireAuth: true, redirect: true });
+            if (!isAuth) return;
 
-        const params = new URLSearchParams(window.location.search);
-        const setId = params.get('setId');
-        if (!setId) {
-            window.location.href = '/html/my-quizzes.html';
-            return;
-        }
-        currentQuizSetId = setId;
+            const params = new URLSearchParams(window.location.search);
+            const setId = params.get('setId');
+            if (!setId) {
+                window.location.href = '/html/my-quizzes.html';
+                return;
+            }
+            currentQuizSetId = setId;
 
-        const goAddQuestion = () => {
-            window.location.href = `/html/quiz-add-question.html?setId=${encodeURIComponent(currentQuizSetId)}`;
-        };
-        document.getElementById('btnAddQuestionPage').addEventListener('click', goAddQuestion);
-        document.getElementById('btnDeleteSetTop').addEventListener('click', () => deleteCurrentSet());
+            const goAddQuestion = () => {
+                window.location.href = `/html/quiz-add-question.html?setId=${encodeURIComponent(currentQuizSetId)}`;
+            };
+            document.getElementById('btnAddQuestionPage').addEventListener('click', goAddQuestion);
+            document.getElementById('btnDeleteSetTop').addEventListener('click', () => deleteCurrentSet());
 
-        loadQuizSetAndQuestions(setId);
-    });
+            loadQuizSetAndQuestions(setId);
+        });
 
-    function showAlert(message, type = 'danger') {
-        // Use toast notification instead of alert area
-        const toastType = type === 'danger' ? 'error' : type;
-        Toast.show(message, toastType, 2000);
-    }
-
-    async function loadQuizSetAndQuestions(setId) {
-        ERROR_HANDLER.showLoading(true);
-        try {
-            // API_CLIENT.get() trả về data trực tiếp (đã parse JSON)
-            // và throw error nếu response không ok
-            const [setData, questions] = await Promise.all([
-                API_CLIENT.get(`${API_BASE}/${setId}`),
-                API_CLIENT.get(`${API_BASE}/${setId}/questions`)
-            ]);
-
-            currentQuizSetData = setData;
-            renderQuizSet(setData);
-            renderQuestions(questions);
-
-        } catch (err) {
-            console.error(err);
-            showAlert(err.error || err.message || 'Có lỗi xảy ra khi tải dữ liệu');
-        } finally {
-            ERROR_HANDLER.showLoading(false);
-        }
-    }
-
-    function renderQuizSet(setData) {
-        const titleEl = document.getElementById('quizSetTitleHeader');
-        const metaEl = document.getElementById('quizSetMeta');
-
-        titleEl.textContent = setData.title || 'Bộ đề không tên';
-
-        const createdAtText = setData.createdAt
-            ? new Date(setData.createdAt).toLocaleString('vi-VN')
-            : '';
-        const statusText = setData.status || 'DRAFT';
-        const visibilityText = setData.visibility || 'PRIVATE';
-
-        metaEl.textContent = `${statusText} · ${visibilityText}${createdAtText ? ' · Tạo lúc ' + createdAtText : ''}`;
-    }
-
-    let allQuestions = [];
-    let selectedQuestionIndex = -1;
-
-    function renderQuestions(questions) {
-        allQuestions = questions || [];
-        const total = allQuestions.length;
-        
-        const countBadge = document.getElementById('questionCountBadge');
-        const layout = document.getElementById('questionsLayout');
-        const emptyState = document.getElementById('emptyState');
-        
-        countBadge.textContent = total;
-
-        if (total === 0) {
-            layout.style.display = 'none';
-            emptyState.style.display = 'block';
-            return;
+        function showAlert(message, type = 'danger') {
+            // Use toast notification instead of alert area
+            const toastType = type === 'danger' ? 'error' : type;
+            Toast.show(message, toastType, 2000);
         }
 
-        layout.style.display = 'flex';
-        emptyState.style.display = 'none';
-        
-        renderQuestionList();
-        
-        // Auto select first question
-        if (total > 0) {
-            selectQuestion(0);
-        }
-    }
+        async function loadQuizSetAndQuestions(setId) {
+            ERROR_HANDLER.showLoading(true);
+            try {
+                // API_CLIENT.get() trả về data trực tiếp (đã parse JSON)
+                // và throw error nếu response không ok
+                const [setData, questions] = await Promise.all([
+                    API_CLIENT.get(`${API_BASE}/${setId}`),
+                    API_CLIENT.get(`${API_BASE}/${setId}/questions`)
+                ]);
 
-    function renderQuestionList() {
-        const container = document.getElementById('questionListContainer');
-        
-        const html = allQuestions.map((q, index) => {
-            const isSelected = index === selectedQuestionIndex;
-            return `
+                currentQuizSetData = setData;
+                renderQuizSet(setData);
+                renderQuestions(questions);
+
+            } catch (err) {
+                console.error(err);
+                showAlert(err.error || err.message || 'Có lỗi xảy ra khi tải dữ liệu');
+            } finally {
+                ERROR_HANDLER.showLoading(false);
+            }
+        }
+
+        function renderQuizSet(setData) {
+            const titleEl = document.getElementById('quizSetTitleHeader');
+            const metaEl = document.getElementById('quizSetMeta');
+
+            titleEl.textContent = setData.title || 'Bộ đề không tên';
+
+            const createdAtText = setData.createdAt
+                ? new Date(setData.createdAt).toLocaleString('vi-VN')
+                : '';
+            const statusText = setData.status || 'DRAFT';
+            const visibilityText = setData.visibility || 'PRIVATE';
+
+            metaEl.textContent = `${statusText} · ${visibilityText}${createdAtText ? ' · Tạo lúc ' + createdAtText : ''}`;
+        }
+
+        let allQuestions = [];
+        let selectedQuestionIndex = -1;
+
+        function renderQuestions(questions) {
+            allQuestions = questions || [];
+            const total = allQuestions.length;
+
+            const countBadge = document.getElementById('questionCountBadge');
+            const layout = document.getElementById('questionsLayout');
+            const emptyState = document.getElementById('emptyState');
+
+            countBadge.textContent = total;
+
+            if (total === 0) {
+                layout.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            layout.style.display = 'flex';
+            emptyState.style.display = 'none';
+
+            renderQuestionList();
+
+            // Auto select first question
+            if (total > 0) {
+                selectQuestion(0);
+            }
+        }
+
+        function renderQuestionList() {
+            const container = document.getElementById('questionListContainer');
+
+            const html = allQuestions.map((q, index) => {
+                const isSelected = index === selectedQuestionIndex;
+                return `
                 <button type="button" class="question-grid-item ${isSelected ? 'active' : ''}" onclick="selectQuestion(${index})">
                     ${index + 1}
                 </button>
             `;
-        }).join('');
-        
-        container.innerHTML = html;
-    }
+            }).join('');
 
-    function selectQuestion(index) {
-        if (index < 0 || index >= allQuestions.length) return;
-        
-        selectedQuestionIndex = index;
-        renderQuestionList(); // Re-render list to update active state
-        renderQuestionDetail(allQuestions[index]);
-    }
+            container.innerHTML = html;
+        }
 
-    function renderQuestionDetail(question) {
-        const container = document.getElementById('questionDetailContainer');
-        const actions = document.getElementById('questionActions');
-        
-        if (!question) {
-            container.innerHTML = `
+        function selectQuestion(index) {
+            if (index < 0 || index >= allQuestions.length) return;
+
+            selectedQuestionIndex = index;
+            renderQuestionList(); // Re-render list to update active state
+            renderQuestionDetail(allQuestions[index]);
+        }
+
+        function renderQuestionDetail(question) {
+            const container = document.getElementById('questionDetailContainer');
+            const actions = document.getElementById('questionActions');
+
+            if (!question) {
+                container.innerHTML = `
                 <div class="text-center text-muted py-5">
                     <i class="bi bi-arrow-left-circle" style="font-size: 3rem; opacity: 0.3;"></i>
                     <p class="mt-3 mb-0">Chọn một câu hỏi từ danh sách bên trái để xem chi tiết</p>
                 </div>
             `;
-            actions.style.display = 'none';
-            return;
-        }
+                actions.style.display = 'none';
+                return;
+            }
 
-        actions.style.display = 'flex';
-        
-        const opts = question.options || [];
-        const correctOption = opts.find(o => o.isCorrect);
-        
-        const html = `
+            actions.style.display = 'flex';
+
+            const opts = question.options || [];
+            const correctOption = opts.find(o => o.isCorrect);
+
+            const html = `
             <div class="question-detail-content">
                 <div class="question-detail-header">
                     <span class="badge bg-primary">Câu ${selectedQuestionIndex + 1}</span>
@@ -349,146 +370,140 @@
                 ` : ''}
             </div>
         `;
-        
-        container.innerHTML = html;
-        
-        // Update action buttons
-        document.getElementById('btnEditQuestion').onclick = () => editQuestion(question.id);
-        document.getElementById('btnDeleteQuestion').onclick = () => deleteQuestion(question.id);
-    }
 
-    function escapeHtml(text) {
-        const map = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#039;'
-        };
-        return (text || '').replace(/[&<>"']/g, m => map[m]);
-    }
+            container.innerHTML = html;
 
-    async function deleteCurrentSet() {
-        if (!currentQuizSetId) return;
-        
-        // Use confirm modal instead of browser confirm
-        const confirmed = await confirmDelete('bộ đề này');
-        if (!confirmed) return;
-        
-        ERROR_HANDLER.showLoading(true);
-        try {
-            // Sử dụng API_CLIENT với auto token refresh
-            await API_CLIENT.delete(`${API_BASE}/${currentQuizSetId}`);
-            
-            Toast.success('Đã xóa bộ đề thành công');
-            setTimeout(() => {
-                window.location.href = '/html/my-quizzes.html';
-            }, 500);
-        } catch (err) {
-            console.error(err);
-            showAlert(err.message || 'Không thể xóa bộ đề');
-        } finally {
-            ERROR_HANDLER.showLoading(false);
+            // Update action buttons
+            document.getElementById('btnEditQuestion').onclick = () => editQuestion(question.id);
+            document.getElementById('btnDeleteQuestion').onclick = () => deleteQuestion(question.id);
         }
-    }
 
-    function editQuestion(questionId) {
-        if (!currentQuizSetId) {
-            console.error('currentQuizSetId is not set');
-            showAlert('Không xác định được bộ đề', 'danger');
-            return;
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return (text || '').replace(/[&<>"']/g, m => map[m]);
         }
-        if (!questionId) {
-            console.error('questionId is not provided');
-            showAlert('Không xác định được câu hỏi', 'danger');
-            return;
-        }
-        console.log('Navigating to edit question:', { setId: currentQuizSetId, questionId });
-        window.location.href = `/html/quiz-edit-question.html?setId=${encodeURIComponent(currentQuizSetId)}&questionId=${encodeURIComponent(questionId)}`;
-    }
 
-    async function deleteQuestion(questionId) {
-        if (!currentQuizSetId) return;
-        
-        // Use confirm modal instead of browser confirm
-        const confirmed = await confirmDelete('câu hỏi này');
-        if (!confirmed) return;
-        
-        ERROR_HANDLER.showLoading(true);
-        try {
-            // Sử dụng API_CLIENT với auto token refresh
-            await API_CLIENT.delete(`${API_BASE}/${currentQuizSetId}/questions/${questionId}`);
-            
-            Toast.success('Đã xóa câu hỏi thành công');
-            
-            // Reload list - API_CLIENT.get() trả về data trực tiếp
-            const questions = await API_CLIENT.get(`${API_BASE}/${currentQuizSetId}/questions`);
-            renderQuestions(questions);
-        } catch (err) {
-            console.error(err);
-            showAlert(err.error || err.message || 'Không thể xóa câu hỏi');
-        } finally {
-            ERROR_HANDLER.showLoading(false);
-        }
-    }
+        async function deleteCurrentSet() {
+            if (!currentQuizSetId) return;
 
-    async function exportPdf(withAnswers = false) {
-        if (!currentQuizSetId) return;
-        
-        if (allQuestions.length === 0) {
-            Toast.warning('Bộ đề chưa có câu hỏi nào để xuất');
-            return;
-        }
-        
-        ERROR_HANDLER.showLoading(true);
-        try {
-            const endpoint = withAnswers 
-                ? `${API_BASE}/${currentQuizSetId}/export/pdf-with-answers`
-                : `${API_BASE}/${currentQuizSetId}/export/pdf`;
-            
-            const token = AUTH.getToken();
-            const response = await fetch(endpoint, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error('Không thể xuất PDF');
+            // Use confirm modal instead of browser confirm
+            const confirmed = await confirmDelete('bộ đề này');
+            if (!confirmed) return;
+
+            ERROR_HANDLER.showLoading(true);
+            try {
+                // Sử dụng API_CLIENT với auto token refresh
+                await API_CLIENT.delete(`${API_BASE}/${currentQuizSetId}`);
+
+                Toast.success('Đã xóa bộ đề thành công');
+                setTimeout(() => {
+                    window.location.href = '/html/my-quizzes.html';
+                }, 500);
+            } catch (err) {
+                console.error(err);
+                showAlert(err.message || 'Không thể xóa bộ đề');
+            } finally {
+                ERROR_HANDLER.showLoading(false);
             }
-            
-            const blob = await response.blob();
-            const contentDisposition = response.headers.get('Content-Disposition');
-            let filename = withAnswers ? 'quiz_dap-an.pdf' : 'quiz.pdf';
-            
-            if (contentDisposition) {
-                const filenameMatch = contentDisposition.match(/filename\*?=['"]?(?:UTF-8'')?([^;\n"']+)/i);
-                if (filenameMatch && filenameMatch[1]) {
-                    filename = decodeURIComponent(filenameMatch[1]);
-                }
-            }
-            
-            // Download file
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-            
-            Toast.success('Đã xuất PDF thành công!');
-        } catch (err) {
-            console.error(err);
-            Toast.error(err.message || 'Không thể xuất PDF');
-        } finally {
-            ERROR_HANDLER.showLoading(false);
         }
-    }
-</script>
+
+        function editQuestion(questionId) {
+            if (!currentQuizSetId) {
+                console.error('currentQuizSetId is not set');
+                showAlert('Không xác định được bộ đề', 'danger');
+                return;
+            }
+            if (!questionId) {
+                console.error('questionId is not provided');
+                showAlert('Không xác định được câu hỏi', 'danger');
+                return;
+            }
+            console.log('Navigating to edit question:', { setId: currentQuizSetId, questionId });
+            window.location.href = `/html/quiz-edit-question.html?setId=${encodeURIComponent(currentQuizSetId)}&questionId=${encodeURIComponent(questionId)}`;
+        }
+
+        async function deleteQuestion(questionId) {
+            if (!currentQuizSetId) return;
+
+            // Use confirm modal instead of browser confirm
+            const confirmed = await confirmDelete('câu hỏi này');
+            if (!confirmed) return;
+
+            ERROR_HANDLER.showLoading(true);
+            try {
+                // Sử dụng API_CLIENT với auto token refresh
+                await API_CLIENT.delete(`${API_BASE}/${currentQuizSetId}/questions/${questionId}`);
+
+                Toast.success('Đã xóa câu hỏi thành công');
+
+                // Reload list - API_CLIENT.get() trả về data trực tiếp
+                const questions = await API_CLIENT.get(`${API_BASE}/${currentQuizSetId}/questions`);
+                renderQuestions(questions);
+            } catch (err) {
+                console.error(err);
+                showAlert(err.error || err.message || 'Không thể xóa câu hỏi');
+            } finally {
+                ERROR_HANDLER.showLoading(false);
+            }
+        }
+
+        async function exportPdf(withAnswers = false) {
+            if (!currentQuizSetId) return;
+
+            if (allQuestions.length === 0) {
+                Toast.warning('Bộ đề chưa có câu hỏi nào để xuất');
+                return;
+            }
+
+            ERROR_HANDLER.showLoading(true);
+            try {
+                const endpoint = withAnswers
+                    ? `${API_BASE}/${currentQuizSetId}/export/pdf-with-answers`
+                    : `${API_BASE}/${currentQuizSetId}/export/pdf`;
+
+                // Use central apiClient to ensure refresh/retry behavior
+                const response = await window.apiClient.fetchWithAuth(endpoint, { method: 'GET' });
+
+                if (!response.ok) {
+                    throw new Error('Không thể xuất PDF');
+                }
+
+                const blob = await response.blob();
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename = withAnswers ? 'quiz_dap-an.pdf' : 'quiz.pdf';
+
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename\*?=['"]?(?:UTF-8'')?([^;\n"']+)/i);
+                    if (filenameMatch && filenameMatch[1]) {
+                        filename = decodeURIComponent(filenameMatch[1]);
+                    }
+                }
+
+                // Download file
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                Toast.success('Đã xuất PDF thành công!');
+            } catch (err) {
+                console.error(err);
+                Toast.error(err.message || 'Không thể xuất PDF');
+            } finally {
+                ERROR_HANDLER.showLoading(false);
+            }
+        }
+    </script>
 </body>
+
 </html>
-
-

@@ -19,7 +19,8 @@ public class TokenService {
 
     private static final Logger log = LoggerFactory.getLogger(TokenService.class);
 
-    public record IssuedRefreshToken(String raw, LocalDateTime expiresAt) {}
+    public record IssuedRefreshToken(String raw, LocalDateTime expiresAt) {
+    }
 
     private final RefreshTokenRepo refreshRepo;
     private final SecurityAuditService securityAuditService;
@@ -50,9 +51,18 @@ public class TokenService {
     }
 
     /**
+     * Grace period in seconds - allow same token to be reused within this window.
+     * This prevents false positive security alerts during normal page navigation.
+     */
+    private static final long GRACE_PERIOD_SECONDS = 30;
+
+    /**
      * Validate refresh token, then ROTATE with reuse detection:
-     * - If token was already used (usedAt != null), this is a SECURITY BREACH
-     *   → Revoke ALL tokens for this user and throw TokenReusedException
+     * - If token was already used more than GRACE_PERIOD_SECONDS ago, this is a
+     * SECURITY BREACH
+     * → Revoke ALL tokens for this user and throw TokenReusedException
+     * - If token was used within grace period, return cached user (allow
+     * navigation)
      * - Otherwise, mark token as used and return user for new token pair
      */
     @Transactional
@@ -62,33 +72,45 @@ public class TokenService {
         RefreshToken token = refreshRepo.findByTokenHash(hash)
                 .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
 
-        // Check if token was already used (REUSE DETECTION)
+        LocalDateTime now = LocalDateTime.now();
+
+        // Check if token was already used (REUSE DETECTION with grace period)
         if (token.getUsedAt() != null) {
-            log.warn("TOKEN REUSE DETECTED for user {} - revoking all tokens", token.getUser().getId());
-            
-            // Revoke ALL tokens for this user - security breach response
-            revokeAllUserTokens(token.getUser().getId());
-            
-            // Log security event (ipAddress not available in this context, use "unknown")
-            securityAuditService.logTokenReuse(token.getUser().getId(), "unknown", hash);
-            
-            throw new TokenReusedException(token.getUser().getId(), hash);
+            long secondsSinceUse = java.time.Duration.between(token.getUsedAt(), now).getSeconds();
+
+            if (secondsSinceUse > GRACE_PERIOD_SECONDS) {
+                // Token reused after grace period - this is a security breach
+                log.warn("TOKEN REUSE DETECTED for user {} ({}s after first use) - revoking all tokens",
+                        token.getUser().getId(), secondsSinceUse);
+
+                // Revoke ALL tokens for this user - security breach response
+                revokeAllUserTokens(token.getUser().getId());
+
+                // Log security event
+                securityAuditService.logTokenReuse(token.getUser().getId(), "unknown", hash);
+
+                throw new TokenReusedException(token.getUser().getId(), hash);
+            } else {
+                // Within grace period - allow reuse (normal navigation behavior)
+                log.debug("Token reuse within grace period ({}s) for user {}", secondsSinceUse,
+                        token.getUser().getId());
+                return token.getUser();
+            }
         }
 
         if (token.getRevokedAt() != null) {
             throw new RuntimeException("Refresh token revoked");
         }
-        if (LocalDateTime.now().isAfter(token.getExpiresAt())) {
+        if (now.isAfter(token.getExpiresAt())) {
             throw new RuntimeException("Refresh token expired");
         }
 
-        // Mark token as used (for reuse detection) and revoked
-        LocalDateTime now = LocalDateTime.now();
+        // Mark token as used (for reuse detection) - but don't revoke yet
         token.setUsedAt(now);
-        token.setRevokedAt(now);
+        // Don't set revokedAt immediately - allow grace period
         refreshRepo.save(token);
 
-        // Log token rotation (ipAddress not available in this context, use "unknown")
+        // Log token rotation
         securityAuditService.logTokenRotation(token.getUser().getId(), "unknown");
 
         return token.getUser();
@@ -100,19 +122,18 @@ public class TokenService {
     @Transactional
     public IssuedRefreshToken rotateToken(User user, Long oldTokenId) {
         IssuedRefreshToken newToken = issueRefreshToken(user);
-        
+
         // Update old token with reference to new token
         if (oldTokenId != null) {
             refreshRepo.findById(oldTokenId).ifPresent(oldToken -> {
                 oldToken.setReplacedByTokenId(
-                    refreshRepo.findByTokenHash(HashUtil.sha256Base64(newToken.raw()))
-                        .map(RefreshToken::getId)
-                        .orElse(null)
-                );
+                        refreshRepo.findByTokenHash(HashUtil.sha256Base64(newToken.raw()))
+                                .map(RefreshToken::getId)
+                                .orElse(null));
                 refreshRepo.save(oldToken);
             });
         }
-        
+
         return newToken;
     }
 

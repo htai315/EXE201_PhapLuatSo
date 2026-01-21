@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,7 +15,9 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap"
+        rel="stylesheet">
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/style.css">
@@ -23,304 +26,316 @@
     <link rel="stylesheet" href="/css/quiz-take.css">
     <link rel="stylesheet" href="/css/toast-notification.css">
 </head>
+
 <body data-auth-required="true">
-<nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
-    <div class="container">
-        <a class="navbar-brand" href="/index.html">
-            <img src="/img/Law.png" alt="Logo">
-            <span>Pháp Luật Số</span>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto align-items-lg-center">
-                <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/legal-chat.html">Chat AI</a></li>
-                <li class="nav-item"><a class="nav-link active" href="/html/my-quizzes.html">Bộ đề</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
-                <li class="nav-item ms-lg-3 guest-only">
-                    <a class="btn btn-outline-primary btn-sm px-3" href="/html/login.html">
-                        <i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập
-                    </a>
-                </li>
-                <li class="nav-item ms-lg-2 guest-only">
-                    <a class="btn btn-primary btn-sm px-3" href="/html/register.html">
-                        <i class="bi bi-person-plus me-1"></i>Đăng Ký
-                    </a>
-                </li>
-                <li class="nav-item dropdown ms-lg-3 auth-only d-none">
-                    <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img id="navUserAvatar" src="https://ui-avatars.com/api/?name=User&size=40&background=1a4b84&color=fff" 
-                             alt="Avatar" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #e2e8f0;">
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="/html/profile.html"><i class="bi bi-person me-2"></i>Hồ sơ</a></li>
-                        <li><a class="dropdown-item" href="/html/payment-history.html"><i class="bi bi-clock-history me-2"></i>Lịch sử thanh toán</a></li>
-                        <li><a class="dropdown-item" href="/html/plans.html"><i class="bi bi-credit-card me-2"></i>Nâng cấp</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
-                    </ul>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
-
-<div class="exam-page">
-    <!-- Header Section -->
-    <div class="exam-header-section">
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
         <div class="container">
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="exam-info">
-                    <div class="exam-badge">
-                        <i class="bi bi-mortarboard-fill me-2"></i>
-                        <span>Thi Thử Trực Tuyến</span>
-                    </div>
-                    <h1 class="exam-title" id="quizTitle">Đang tải bộ đề...</h1>
-                    <p class="exam-meta" id="quizMeta">
-                        <i class="bi bi-file-text me-1"></i>
-                        <span>0 câu hỏi</span>
-                    </p>
-                </div>
-                <button class="btn-back" id="btnBackToMyQuizzes" disabled title="Nộp bài để quay lại">
-                    <i class="bi bi-arrow-left"></i>
-                    <span>Quay lại</span>
-                </button>
+            <a class="navbar-brand" href="/index.html">
+                <img src="/img/Law.png" alt="Logo">
+                <span>Pháp Luật Số</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-lg-center">
+                    <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/legal-chat.html">Chat AI</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/html/my-quizzes.html">Bộ đề</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
+                    <li class="nav-item ms-lg-3 guest-only">
+                        <a class="btn btn-outline-primary btn-sm px-3" href="/html/login.html">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập
+                        </a>
+                    </li>
+                    <li class="nav-item ms-lg-2 guest-only">
+                        <a class="btn btn-primary btn-sm px-3" href="/html/register.html">
+                            <i class="bi bi-person-plus me-1"></i>Đăng Ký
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown ms-lg-3 auth-only d-none">
+                        <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <img id="navUserAvatar"
+                                src="https://ui-avatars.com/api/?name=User&size=40&background=1a4b84&color=fff"
+                                alt="Avatar" class="rounded-circle"
+                                style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #e2e8f0;">
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="/html/profile.html"><i class="bi bi-person me-2"></i>Hồ
+                                    sơ</a></li>
+                            <li><a class="dropdown-item" href="/html/payment-history.html"><i
+                                        class="bi bi-clock-history me-2"></i>Lịch sử thanh toán</a></li>
+                            <li><a class="dropdown-item" href="/html/plans.html"><i
+                                        class="bi bi-credit-card me-2"></i>Nâng cấp</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i
+                                        class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+                        </ul>
+                    </li>
+                </ul>
             </div>
         </div>
-    </div>
+    </nav>
 
-    <div id="alertArea" class="container mt-3"></div>
-
-    <!-- Main Content -->
-    <div class="container exam-container">
-        <div class="row g-4">
-            <!-- Question Area -->
-            <div class="col-lg-8">
-                <div class="question-section">
-                    <!-- Progress Bar -->
-                    <div class="progress-section">
-                        <div class="progress-info">
-                            <span class="progress-label">Tiến độ làm bài</span>
-                            <span class="progress-stats">
-                                <span id="answeredText" class="answered-count">0</span> / 
-                                <span id="totalText" class="total-count">0</span> câu
-                            </span>
+    <div class="exam-page">
+        <!-- Header Section -->
+        <div class="exam-header-section">
+            <div class="container">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="exam-info">
+                        <div class="exam-badge">
+                            <i class="bi bi-mortarboard-fill me-2"></i>
+                            <span>Thi Thử Trực Tuyến</span>
                         </div>
-                        <div class="progress-bar-wrapper">
-                            <div id="progressBar" class="progress-bar-fill" style="width: 0%"></div>
-                        </div>
+                        <h1 class="exam-title" id="quizTitle">Đang tải bộ đề...</h1>
+                        <p class="exam-meta" id="quizMeta">
+                            <i class="bi bi-file-text me-1"></i>
+                            <span>0 câu hỏi</span>
+                        </p>
                     </div>
-
-                    <!-- Question Content -->
-                    <div id="examContent" class="question-content">
-                        <!-- Nội dung câu hỏi sẽ được render bằng JS -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sidebar -->
-            <div class="col-lg-4">
-                <div class="sidebar-sticky">
-                    <!-- Timer Card -->
-                    <div class="timer-card">
-                        <div class="timer-header">
-                            <i class="bi bi-clock-history"></i>
-                            <span>Thời gian còn lại</span>
-                        </div>
-                        <div class="timer-display" id="timerDisplay">
-                            <div class="timer-unit">
-                                <span class="timer-value" id="timerHours">00</span>
-                                <span class="timer-label">Giờ</span>
-                            </div>
-                            <span class="timer-separator">:</span>
-                            <div class="timer-unit">
-                                <span class="timer-value" id="timerMinutes">00</span>
-                                <span class="timer-label">Phút</span>
-                            </div>
-                            <span class="timer-separator">:</span>
-                            <div class="timer-unit">
-                                <span class="timer-value" id="timerSeconds">00</span>
-                                <span class="timer-label">Giây</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Question Grid -->
-                    <div class="question-grid-card">
-                        <div class="grid-header">
-                            <i class="bi bi-grid-3x3-gap-fill"></i>
-                            <span>Danh sách câu hỏi</span>
-                        </div>
-                        <div id="questionGrid" class="question-grid">
-                            <!-- Grid sẽ được render bằng JS -->
-                        </div>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <button id="btnSubmitExam" class="btn-submit-exam">
-                        <i class="bi bi-send-fill"></i>
-                        <span>Nộp bài thi</span>
+                    <button class="btn-back" id="btnBackToMyQuizzes" disabled title="Nộp bài để quay lại">
+                        <i class="bi bi-arrow-left"></i>
+                        <span>Quay lại</span>
                     </button>
                 </div>
             </div>
         </div>
+
+        <div id="alertArea" class="container mt-3"></div>
+
+        <!-- Main Content -->
+        <div class="container exam-container">
+            <div class="row g-4">
+                <!-- Question Area -->
+                <div class="col-lg-8">
+                    <div class="question-section">
+                        <!-- Progress Bar -->
+                        <div class="progress-section">
+                            <div class="progress-info">
+                                <span class="progress-label">Tiến độ làm bài</span>
+                                <span class="progress-stats">
+                                    <span id="answeredText" class="answered-count">0</span> /
+                                    <span id="totalText" class="total-count">0</span> câu
+                                </span>
+                            </div>
+                            <div class="progress-bar-wrapper">
+                                <div id="progressBar" class="progress-bar-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Question Content -->
+                        <div id="examContent" class="question-content">
+                            <!-- Nội dung câu hỏi sẽ được render bằng JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <div class="sidebar-sticky">
+                        <!-- Timer Card -->
+                        <div class="timer-card">
+                            <div class="timer-header">
+                                <i class="bi bi-clock-history"></i>
+                                <span>Thời gian còn lại</span>
+                            </div>
+                            <div class="timer-display" id="timerDisplay">
+                                <div class="timer-unit">
+                                    <span class="timer-value" id="timerHours">00</span>
+                                    <span class="timer-label">Giờ</span>
+                                </div>
+                                <span class="timer-separator">:</span>
+                                <div class="timer-unit">
+                                    <span class="timer-value" id="timerMinutes">00</span>
+                                    <span class="timer-label">Phút</span>
+                                </div>
+                                <span class="timer-separator">:</span>
+                                <div class="timer-unit">
+                                    <span class="timer-value" id="timerSeconds">00</span>
+                                    <span class="timer-label">Giây</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Question Grid -->
+                        <div class="question-grid-card">
+                            <div class="grid-header">
+                                <i class="bi bi-grid-3x3-gap-fill"></i>
+                                <span>Danh sách câu hỏi</span>
+                            </div>
+                            <div id="questionGrid" class="question-grid">
+                                <!-- Grid sẽ được render bằng JS -->
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button id="btnSubmitExam" class="btn-submit-exam">
+                            <i class="bi bi-send-fill"></i>
+                            <span>Nộp bài thi</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/scripts/auth-guard.js"></script>
-<script src="/scripts/toast-notification.js"></script>
-<script src="/scripts/error-handler.js"></script>
-<script src="/scripts/api-client.js"></script>
-<script src="/scripts/script.js"></script>
-<script>
-    const API_BASE = '/api/quiz-sets';
-    let quizSetId = null;
-    let examQuestions = [];
-    let currentIndex = 0;
-    let examTimerInterval = null;
-    let remainingSeconds = 0;
-    let examStarted = false; // Track trạng thái đang làm bài
-    // answers: { questionId: selectedOptionKey }
-    const answers = {};
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/scripts/token-manager.js"></script>
+    <script src="/scripts/auth-guard.js"></script>
+    <script src="/scripts/toast-notification.js"></script>
+    <script src="/scripts/error-handler.js"></script>
+    <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/script.js"></script>
+    <script>
+        const API_BASE = '/api/quiz-sets';
+        let quizSetId = null;
+        let examQuestions = [];
+        let currentIndex = 0;
+        let examTimerInterval = null;
+        let remainingSeconds = 0;
+        let examStarted = false; // Track trạng thái đang làm bài
+        // answers: { questionId: selectedOptionKey }
+        const answers = {};
 
-    document.addEventListener('DOMContentLoaded', () => {
-        // Auth check is handled by auth-guard.js via data-auth-required="true"
-        if (!AUTH.isLoggedIn()) return;
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Use AUTH.guard() for proper rehydration from HttpOnly cookie
+            const isAuth = await AUTH.guard({ requireAuth: true, redirect: true });
+            if (!isAuth) return;
 
-        const params = new URLSearchParams(window.location.search);
-        const setId = params.get('setId');
-        if (!setId) {
-            window.location.href = '/html/my-quizzes.html';
-            return;
-        }
-        quizSetId = setId;
-
-        // Nút quay lại - chỉ hoạt động khi đã nộp bài
-        document.getElementById('btnBackToMyQuizzes').addEventListener('click', () => {
-            if (examStarted) {
-                Toast.warning('Vui lòng nộp bài trước khi quay lại');
+            const params = new URLSearchParams(window.location.search);
+            const setId = params.get('setId');
+            if (!setId) {
+                window.location.href = '/html/my-quizzes.html';
                 return;
             }
-            window.location.href = '/html/my-quizzes.html';
+            quizSetId = setId;
+
+            // Nút quay lại - chỉ hoạt động khi đã nộp bài
+            document.getElementById('btnBackToMyQuizzes').addEventListener('click', () => {
+                if (examStarted) {
+                    Toast.warning('Vui lòng nộp bài trước khi quay lại');
+                    return;
+                }
+                window.location.href = '/html/my-quizzes.html';
+            });
+
+            // Chặn browser back button khi đang làm bài
+            window.history.pushState(null, '', window.location.href);
+            window.addEventListener('popstate', (e) => {
+                if (examStarted) {
+                    window.history.pushState(null, '', window.location.href);
+                    Toast.warning('Vui lòng nộp bài trước khi rời trang');
+                }
+            });
+
+            // Chặn đóng tab/refresh khi đang làm bài
+            window.addEventListener('beforeunload', (e) => {
+                if (examStarted) {
+                    e.preventDefault();
+                    e.returnValue = 'Bạn đang làm bài thi. Bạn có chắc muốn rời trang?';
+                    return e.returnValue;
+                }
+            });
+
+            document.getElementById('btnSubmitExam').addEventListener('click', submitExam);
+
+            loadExam(setId);
         });
 
-        // Chặn browser back button khi đang làm bài
-        window.history.pushState(null, '', window.location.href);
-        window.addEventListener('popstate', (e) => {
-            if (examStarted) {
-                window.history.pushState(null, '', window.location.href);
-                Toast.warning('Vui lòng nộp bài trước khi rời trang');
-            }
-        });
+        function showAlert(message, type = 'danger') {
+            // Use toast notification instead of alert area
+            const toastType = type === 'danger' ? 'error' : type;
+            Toast.show(message, toastType, 2000);
+        }
 
-        // Chặn đóng tab/refresh khi đang làm bài
-        window.addEventListener('beforeunload', (e) => {
-            if (examStarted) {
-                e.preventDefault();
-                e.returnValue = 'Bạn đang làm bài thi. Bạn có chắc muốn rời trang?';
-                return e.returnValue;
-            }
-        });
+        async function loadExam(setId) {
+            ERROR_HANDLER.showLoading(true);
+            try {
+                // Sử dụng API_CLIENT với auto token refresh
+                const data = await API_CLIENT.get(`${API_BASE}/${setId}/exam`);
 
-        document.getElementById('btnSubmitExam').addEventListener('click', submitExam);
+                examQuestions = data.questions || [];
 
-        loadExam(token, setId);
-    });
+                // Sử dụng durationMinutes từ server
+                remainingSeconds = (data.durationMinutes || 45) * 60;
 
-    function showAlert(message, type = 'danger') {
-        // Use toast notification instead of alert area
-        const toastType = type === 'danger' ? 'error' : type;
-        Toast.show(message, toastType, 2000);
-    }
-
-    async function loadExam(token, setId) {
-        ERROR_HANDLER.showLoading(true);
-        try {
-            // Sử dụng API_CLIENT với auto token refresh
-            const data = await API_CLIENT.get(`${API_BASE}/${setId}/exam`);
-            
-            examQuestions = data.questions || [];
-
-            // Sử dụng durationMinutes từ server
-            remainingSeconds = (data.durationMinutes || 45) * 60;
-
-            document.getElementById('quizTitle').textContent = data.quizSetTitle || 'Bộ đề';
-            const metaEl = document.getElementById('quizMeta');
-            if (metaEl) {
-                metaEl.innerHTML = `
+                document.getElementById('quizTitle').textContent = data.quizSetTitle || 'Bộ đề';
+                const metaEl = document.getElementById('quizMeta');
+                if (metaEl) {
+                    metaEl.innerHTML = `
                     <i class="bi bi-file-text me-1"></i>
                     <span>${data.totalQuestions || 0} câu hỏi</span>
                     <span class="mx-2">·</span>
                     <i class="bi bi-clock me-1"></i>
                     <span>${data.durationMinutes || 45} phút</span>
                 `;
-            }
+                }
 
-            if (!examQuestions.length) {
-                document.getElementById('examContent').innerHTML =
-                    '<p class="text-muted mb-0">Bộ đề hiện chưa có câu hỏi nào.</p>';
-                // Cho phép quay lại nếu không có câu hỏi
+                if (!examQuestions.length) {
+                    document.getElementById('examContent').innerHTML =
+                        '<p class="text-muted mb-0">Bộ đề hiện chưa có câu hỏi nào.</p>';
+                    // Cho phép quay lại nếu không có câu hỏi
+                    enableBackButton();
+                    return;
+                }
+
+                // Đánh dấu đang làm bài
+                examStarted = true;
+
+                currentIndex = 0;
+                renderCurrentQuestion();
+                updateProgress();
+                startTimer(remainingSeconds);
+            } catch (err) {
+                console.error(err);
+                showAlert(err.message || 'Có lỗi xảy ra khi tải đề thi');
+                // Cho phép quay lại nếu có lỗi
                 enableBackButton();
+            } finally {
+                ERROR_HANDLER.showLoading(false);
+            }
+        }
+
+        function enableBackButton() {
+            examStarted = false;
+            const backBtn = document.getElementById('btnBackToMyQuizzes');
+            if (backBtn) {
+                backBtn.removeAttribute('disabled');
+                backBtn.title = 'Quay lại danh sách bộ đề';
+            }
+        }
+
+        // history removed per design; function intentionally deleted
+
+        function renderCurrentQuestion() {
+            const container = document.getElementById('examContent');
+            if (!examQuestions.length) {
+                container.innerHTML = '<p class="text-muted">Bộ đề hiện chưa có câu hỏi nào.</p>';
                 return;
             }
-            
-            // Đánh dấu đang làm bài
-            examStarted = true;
-            
-            currentIndex = 0;
-            renderCurrentQuestion();
-            updateProgress();
-            startTimer(remainingSeconds);
-        } catch (err) {
-            console.error(err);
-            showAlert(err.message || 'Có lỗi xảy ra khi tải đề thi');
-            // Cho phép quay lại nếu có lỗi
-            enableBackButton();
-        } finally {
-            ERROR_HANDLER.showLoading(false);
-        }
-    }
+            const q = examQuestions[currentIndex];
+            const total = examQuestions.length;
+            const selectedKey = answers[q.id] || null;
+            const flagged = q._flagged === true;
 
-    function enableBackButton() {
-        examStarted = false;
-        const backBtn = document.getElementById('btnBackToMyQuizzes');
-        if (backBtn) {
-            backBtn.removeAttribute('disabled');
-            backBtn.title = 'Quay lại danh sách bộ đề';
-        }
-    }
-
-    // history removed per design; function intentionally deleted
-
-    function renderCurrentQuestion() {
-        const container = document.getElementById('examContent');
-        if (!examQuestions.length) {
-            container.innerHTML = '<p class="text-muted">Bộ đề hiện chưa có câu hỏi nào.</p>';
-            return;
-        }
-        const q = examQuestions[currentIndex];
-        const total = examQuestions.length;
-        const selectedKey = answers[q.id] || null;
-        const flagged = q._flagged === true;
-
-        const optionsHtml = (q.options || []).map(opt => {
-            const selected = selectedKey === opt.optionKey ? 'selected' : '';
-            return `
+            const optionsHtml = (q.options || []).map(opt => {
+                const selected = selectedKey === opt.optionKey ? 'selected' : '';
+                return `
                 <div class="option-item ${selected}" data-option-key="${opt.optionKey}">
                     <div class="option-key">${opt.optionKey}</div>
                     <div class="option-text">${opt.optionText}</div>
                     <i class="bi bi-check-circle-fill option-check"></i>
                 </div>
             `;
-        }).join('');
+            }).join('');
 
-        container.innerHTML = `
+            container.innerHTML = `
             <div class="question-header">
                 <div class="question-number">
                     <i class="bi bi-question-circle-fill"></i>
@@ -346,193 +361,193 @@
             </div>
         `;
 
-        // Gắn sự kiện chọn đáp án
-        container.querySelectorAll('.option-item').forEach(el => {
-            el.addEventListener('click', () => {
-                const key = el.getAttribute('data-option-key');
-                answers[q.id] = key;
-                renderCurrentQuestion();
-                updateProgress();
+            // Gắn sự kiện chọn đáp án
+            container.querySelectorAll('.option-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    const key = el.getAttribute('data-option-key');
+                    answers[q.id] = key;
+                    renderCurrentQuestion();
+                    updateProgress();
+                });
             });
-        });
 
-        // Flag button
-        const flagBtn = document.getElementById('btnFlag');
-        if (flagBtn) {
-            flagBtn.addEventListener('click', () => {
-                q._flagged = !q._flagged;
-                renderCurrentQuestion();
-                updateProgress();
-                renderQuestionGrid();
-            });
-        }
-
-        document.getElementById('btnPrev').addEventListener('click', () => {
-            if (currentIndex > 0) {
-                currentIndex--;
-                renderCurrentQuestion();
-                updateProgress();
+            // Flag button
+            const flagBtn = document.getElementById('btnFlag');
+            if (flagBtn) {
+                flagBtn.addEventListener('click', () => {
+                    q._flagged = !q._flagged;
+                    renderCurrentQuestion();
+                    updateProgress();
+                    renderQuestionGrid();
+                });
             }
-        });
-        document.getElementById('btnNext').addEventListener('click', () => {
-            if (currentIndex < total - 1) {
-                currentIndex++;
-                renderCurrentQuestion();
-                updateProgress();
-            }
-        });
 
-        // ensure grid highlights current
-        renderQuestionGrid();
-    }
-
-    function updateProgress() {
-        const total = examQuestions.length;
-        const answeredCount = Object.keys(answers).length;
-        const answeredTextEl = document.getElementById('answeredText');
-        const totalTextEl = document.getElementById('totalText');
-        if (answeredTextEl) answeredTextEl.textContent = answeredCount;
-        if (totalTextEl) totalTextEl.textContent = total;
-        const percent = total > 0 ? Math.round((answeredCount * 100) / total) : 0;
-        const bar = document.getElementById('progressBar');
-        if (bar) {
-            bar.style.width = percent + '%';
-        }
-        renderQuestionGrid();
-    }
-
-    function renderQuestionGrid() {
-        const grid = document.getElementById('questionGrid');
-        if (!grid || !examQuestions.length) return;
-        grid.innerHTML = examQuestions.map((qq, idx) => {
-            const answered = answers[qq.id] ? 'answered' : '';
-            const flagged = qq._flagged ? 'flagged' : '';
-            const current = idx === currentIndex ? 'current' : '';
-            return `
-                <button type="button" class="grid-item ${current} ${answered} ${flagged}" data-index="${idx}">
-                    ${idx + 1}
-                </button>`;
-        }).join('');
-
-        // attach click handler
-        grid.querySelectorAll('.grid-item').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const idx = parseInt(btn.getAttribute('data-index'));
-                if (!isNaN(idx)) {
-                    currentIndex = idx;
+            document.getElementById('btnPrev').addEventListener('click', () => {
+                if (currentIndex > 0) {
+                    currentIndex--;
                     renderCurrentQuestion();
                     updateProgress();
                 }
             });
-        });
-    }
+            document.getElementById('btnNext').addEventListener('click', () => {
+                if (currentIndex < total - 1) {
+                    currentIndex++;
+                    renderCurrentQuestion();
+                    updateProgress();
+                }
+            });
 
-    async function submitExam(force = false) {
-        if (!quizSetId || !examQuestions.length) return;
-        if (!force && !confirm('Bạn chắc chắn muốn nộp bài và xem kết quả?')) return;
-        // stop timer when user confirms submit
-        stopTimer();
-        // disable submit to avoid double submits
-        const submitBtn = document.getElementById('btnSubmitExam');
-        if (submitBtn) {
-            submitBtn.setAttribute('disabled', 'disabled');
-            submitBtn.classList.add('opacity-75');
+            // ensure grid highlights current
+            renderQuestionGrid();
         }
 
-        ERROR_HANDLER.showLoading(true);
-        try {
-            const payload = {
-                answers: examQuestions.map(q => ({
-                    questionId: q.id,
-                    selectedOptionKey: answers[q.id] || null
-                    // SECURED: Server tự validate từ session, không gửi correctOptionKey
-                }))
-            };
-
-            // Sử dụng API_CLIENT với auto token refresh
-            const data = await API_CLIENT.post(`${API_BASE}/${quizSetId}/exam/submit`, payload);
-
-            showResult(data);
-            
-            // Cho phép quay lại sau khi nộp bài
-            enableBackButton();
-        } catch (err) {
-            console.error(err);
-            const errorMsg = err.message || 'Không thể nộp bài';
-            
-            // Xử lý session expired - redirect về trang quiz
-            if (errorMsg.includes('hết hạn') || errorMsg.includes('không tồn tại')) {
-                Toast.error(errorMsg);
-                setTimeout(() => {
-                    window.location.href = '/html/my-quizzes.html';
-                }, 2000);
-                return;
+        function updateProgress() {
+            const total = examQuestions.length;
+            const answeredCount = Object.keys(answers).length;
+            const answeredTextEl = document.getElementById('answeredText');
+            const totalTextEl = document.getElementById('totalText');
+            if (answeredTextEl) answeredTextEl.textContent = answeredCount;
+            if (totalTextEl) totalTextEl.textContent = total;
+            const percent = total > 0 ? Math.round((answeredCount * 100) / total) : 0;
+            const bar = document.getElementById('progressBar');
+            if (bar) {
+                bar.style.width = percent + '%';
             }
-            
-            showAlert(errorMsg);
-            // re-enable submit button so user can try again
+            renderQuestionGrid();
+        }
+
+        function renderQuestionGrid() {
+            const grid = document.getElementById('questionGrid');
+            if (!grid || !examQuestions.length) return;
+            grid.innerHTML = examQuestions.map((qq, idx) => {
+                const answered = answers[qq.id] ? 'answered' : '';
+                const flagged = qq._flagged ? 'flagged' : '';
+                const current = idx === currentIndex ? 'current' : '';
+                return `
+                <button type="button" class="grid-item ${current} ${answered} ${flagged}" data-index="${idx}">
+                    ${idx + 1}
+                </button>`;
+            }).join('');
+
+            // attach click handler
+            grid.querySelectorAll('.grid-item').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const idx = parseInt(btn.getAttribute('data-index'));
+                    if (!isNaN(idx)) {
+                        currentIndex = idx;
+                        renderCurrentQuestion();
+                        updateProgress();
+                    }
+                });
+            });
+        }
+
+        async function submitExam(force = false) {
+            if (!quizSetId || !examQuestions.length) return;
+            if (!force && !confirm('Bạn chắc chắn muốn nộp bài và xem kết quả?')) return;
+            // stop timer when user confirms submit
+            stopTimer();
+            // disable submit to avoid double submits
             const submitBtn = document.getElementById('btnSubmitExam');
             if (submitBtn) {
-                submitBtn.removeAttribute('disabled');
-                submitBtn.classList.remove('opacity-75');
+                submitBtn.setAttribute('disabled', 'disabled');
+                submitBtn.classList.add('opacity-75');
             }
-        } finally {
-            ERROR_HANDLER.showLoading(false);
-        }
-    }
 
-    function startTimer(seconds) {
-        stopTimer();
-        remainingSeconds = Number(seconds) || 0;
-        updateTimerDisplay();
-        examTimerInterval = setInterval(() => {
-            remainingSeconds -= 1;
-            if (remainingSeconds <= 0) {
-                stopTimer();
-                showAlert('Thời gian làm bài đã kết thúc. Bài thi sẽ được nộp tự động.', 'info');
-                // auto-submit without confirmation
-                submitExam(true);
-                return;
+            ERROR_HANDLER.showLoading(true);
+            try {
+                const payload = {
+                    answers: examQuestions.map(q => ({
+                        questionId: q.id,
+                        selectedOptionKey: answers[q.id] || null
+                        // SECURED: Server tự validate từ session, không gửi correctOptionKey
+                    }))
+                };
+
+                // Sử dụng API_CLIENT với auto token refresh
+                const data = await API_CLIENT.post(`${API_BASE}/${quizSetId}/exam/submit`, payload);
+
+                showResult(data);
+
+                // Cho phép quay lại sau khi nộp bài
+                enableBackButton();
+            } catch (err) {
+                console.error(err);
+                const errorMsg = err.message || 'Không thể nộp bài';
+
+                // Xử lý session expired - redirect về trang quiz
+                if (errorMsg.includes('hết hạn') || errorMsg.includes('không tồn tại')) {
+                    Toast.error(errorMsg);
+                    setTimeout(() => {
+                        window.location.href = '/html/my-quizzes.html';
+                    }, 2000);
+                    return;
+                }
+
+                showAlert(errorMsg);
+                // re-enable submit button so user can try again
+                const submitBtn = document.getElementById('btnSubmitExam');
+                if (submitBtn) {
+                    submitBtn.removeAttribute('disabled');
+                    submitBtn.classList.remove('opacity-75');
+                }
+            } finally {
+                ERROR_HANDLER.showLoading(false);
             }
+        }
+
+        function startTimer(seconds) {
+            stopTimer();
+            remainingSeconds = Number(seconds) || 0;
             updateTimerDisplay();
-        }, 1000);
-    }
-
-    function stopTimer() {
-        if (examTimerInterval) {
-            clearInterval(examTimerInterval);
-            examTimerInterval = null;
-        }
-    }
-
-    function updateTimerDisplay() {
-        const h = Math.floor(remainingSeconds / 3600);
-        const m = Math.floor((remainingSeconds % 3600) / 60);
-        const s = remainingSeconds % 60;
-        const pad = (n) => n.toString().padStart(2, '0');
-        const elH = document.getElementById('timerHours');
-        const elM = document.getElementById('timerMinutes');
-        const elS = document.getElementById('timerSeconds');
-        if (elH) elH.textContent = pad(h);
-        if (elM) elM.textContent = pad(m);
-        if (elS) elS.textContent = pad(s);
-    }
-
-    function showResult(result) {
-        // ensure timer stopped and UI locked
-        stopTimer();
-        const submitBtn = document.getElementById('btnSubmitExam');
-        if (submitBtn) {
-            submitBtn.setAttribute('disabled', 'disabled');
-            submitBtn.style.opacity = '0.5';
+            examTimerInterval = setInterval(() => {
+                remainingSeconds -= 1;
+                if (remainingSeconds <= 0) {
+                    stopTimer();
+                    showAlert('Thời gian làm bài đã kết thúc. Bài thi sẽ được nộp tự động.', 'info');
+                    // auto-submit without confirmation
+                    submitExam(true);
+                    return;
+                }
+                updateTimerDisplay();
+            }, 1000);
         }
 
-        const container = document.getElementById('examContent');
-        const wrongs = result.wrongQuestions || [];
-        const isPerfect = wrongs.length === 0;
-        const scoreOutOf10 = result.scoreOutOf10 || (result.correctCount / result.totalQuestions * 10).toFixed(1);
-        
-        container.innerHTML = `
+        function stopTimer() {
+            if (examTimerInterval) {
+                clearInterval(examTimerInterval);
+                examTimerInterval = null;
+            }
+        }
+
+        function updateTimerDisplay() {
+            const h = Math.floor(remainingSeconds / 3600);
+            const m = Math.floor((remainingSeconds % 3600) / 60);
+            const s = remainingSeconds % 60;
+            const pad = (n) => n.toString().padStart(2, '0');
+            const elH = document.getElementById('timerHours');
+            const elM = document.getElementById('timerMinutes');
+            const elS = document.getElementById('timerSeconds');
+            if (elH) elH.textContent = pad(h);
+            if (elM) elM.textContent = pad(m);
+            if (elS) elS.textContent = pad(s);
+        }
+
+        function showResult(result) {
+            // ensure timer stopped and UI locked
+            stopTimer();
+            const submitBtn = document.getElementById('btnSubmitExam');
+            if (submitBtn) {
+                submitBtn.setAttribute('disabled', 'disabled');
+                submitBtn.style.opacity = '0.5';
+            }
+
+            const container = document.getElementById('examContent');
+            const wrongs = result.wrongQuestions || [];
+            const isPerfect = wrongs.length === 0;
+            const scoreOutOf10 = result.scoreOutOf10 || (result.correctCount / result.totalQuestions * 10).toFixed(1);
+
+            container.innerHTML = `
             <div class="result-section">
                 <div class="result-header">
                     <div class="result-score">${scoreOutOf10}<span style="font-size: 2rem; opacity: 0.8;">/10</span></div>
@@ -569,15 +584,15 @@
                             Các câu trả lời sai
                         </h5>
                         ${wrongs.map((w, index) => {
-                            // Sử dụng options từ response nếu có
-                            const options = w.options || [];
-                            const optionsHtml = options.map(opt => {
-                                const isCorrect = opt.optionKey === w.correctOptionKey;
-                                const isSelected = opt.optionKey === w.selectedOptionKey;
-                                let classes = 'option-item';
-                                if (isCorrect) classes += ' correct';
-                                if (isSelected && !isCorrect) classes += ' incorrect';
-                                return `
+                // Sử dụng options từ response nếu có
+                const options = w.options || [];
+                const optionsHtml = options.map(opt => {
+                    const isCorrect = opt.optionKey === w.correctOptionKey;
+                    const isSelected = opt.optionKey === w.selectedOptionKey;
+                    let classes = 'option-item';
+                    if (isCorrect) classes += ' correct';
+                    if (isSelected && !isCorrect) classes += ' incorrect';
+                    return `
                                     <div class="${classes}">
                                         <div class="option-key">${opt.optionKey}</div>
                                         <div class="option-text">${opt.optionText}</div>
@@ -585,10 +600,10 @@
                                         ${isSelected && !isCorrect ? '<i class="bi bi-x-circle-fill" style="color: var(--exam-danger); font-size: 1.5rem;"></i>' : ''}
                                     </div>
                                 `;
-                            }).join('');
-                            
-                            // Hiển thị explanation nếu có
-                            const explanationHtml = w.explanation ? `
+                }).join('');
+
+                // Hiển thị explanation nếu có
+                const explanationHtml = w.explanation ? `
                                 <div class="explanation-box mt-3">
                                     <div class="d-flex align-items-start gap-2">
                                         <i class="bi bi-lightbulb-fill text-warning" style="font-size: 1.2rem;"></i>
@@ -599,8 +614,8 @@
                                     </div>
                                 </div>
                             ` : '';
-                            
-                            return `
+
+                return `
                                 <div class="wrong-question-item">
                                     <div class="d-flex align-items-start gap-2 mb-2">
                                         <span class="badge bg-danger">${index + 1}</span>
@@ -629,14 +644,13 @@
                                     ${explanationHtml}
                                 </div>
                             `;
-                        }).join('')}
+            }).join('')}
                     </div>
                 `}
             </div>
         `;
-    }
-</script>
+        }
+    </script>
 </body>
+
 </html>
-
-

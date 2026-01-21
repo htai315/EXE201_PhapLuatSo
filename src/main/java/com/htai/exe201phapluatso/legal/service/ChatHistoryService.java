@@ -35,19 +35,21 @@ public class ChatHistoryService {
     private final UserRepo userRepo;
     private final LegalChatService chatService;
     private final EntityManager entityManager;
+    private final MemoryService memoryService;
 
     public ChatHistoryService(
             ChatSessionRepo sessionRepo,
             ChatMessageRepo messageRepo,
             UserRepo userRepo,
             LegalChatService chatService,
-            EntityManager entityManager
-    ) {
+            EntityManager entityManager,
+            MemoryService memoryService) {
         this.sessionRepo = sessionRepo;
         this.messageRepo = messageRepo;
         this.userRepo = userRepo;
         this.chatService = chatService;
         this.entityManager = entityManager;
+        this.memoryService = memoryService;
     }
 
     /**
@@ -61,10 +63,10 @@ public class ChatHistoryService {
         // Default pagination values
         int pageNum = (page != null && page >= 0) ? page : 0;
         int pageSize = (size != null && size > 0 && size <= 100) ? size : 20;
-        
+
         Pageable pageable = PageRequest.of(pageNum, pageSize);
         Page<ChatSession> sessionPage;
-        
+
         // Search or get all
         if (search != null && !search.trim().isEmpty()) {
             sessionPage = sessionRepo.searchByUserIdAndTitle(user.getId(), search.trim(), pageable);
@@ -76,7 +78,7 @@ public class ChatHistoryService {
         if (sessions.isEmpty()) {
             return List.of();
         }
-        
+
         // Batch query for message counts - FIX N+1
         List<Long> sessionIds = sessions.stream().map(ChatSession::getId).collect(Collectors.toList());
         Map<Long, Long> messageCounts = getMessageCountsMap(sessionIds);
@@ -87,11 +89,10 @@ public class ChatHistoryService {
                         session.getTitle(),
                         session.getCreatedAt(),
                         session.getUpdatedAt(),
-                        messageCounts.getOrDefault(session.getId(), 0L)
-                ))
+                        messageCounts.getOrDefault(session.getId(), 0L)))
                 .collect(Collectors.toList());
     }
-    
+
     /**
      * Get message counts for multiple sessions in one query
      */
@@ -108,7 +109,7 @@ public class ChatHistoryService {
         }
         return map;
     }
-    
+
     /**
      * Get total count of sessions for a user (for pagination)
      */
@@ -116,7 +117,7 @@ public class ChatHistoryService {
     public long getUserSessionsCount(String userEmail, String search) {
         User user = userRepo.findByEmail(userEmail)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
-        
+
         if (search != null && !search.trim().isEmpty()) {
             Pageable pageable = PageRequest.of(0, 1);
             return sessionRepo.searchByUserIdAndTitle(user.getId(), search.trim(), pageable).getTotalElements();
@@ -149,16 +150,17 @@ public class ChatHistoryService {
 
         ChatSession session;
         ConversationContext conversationContext = null;
-        
+
         if (sessionId == null) {
             // Create new session
             session = createNewSession(user, question);
         } else {
             // Use existing session
             session = getSessionAndCheckOwnership(userEmail, sessionId);
-            
-            // Build conversation context from previous messages
-            conversationContext = buildConversationContext(sessionId);
+
+            // Delegate context building to MemoryService (extracted for separation of
+            // concerns)
+            conversationContext = memoryService.buildConversationContext(sessionId);
         }
 
         // Save user message
@@ -176,47 +178,29 @@ public class ChatHistoryService {
         assistantMessage.setSession(session);
         assistantMessage.setRole("ASSISTANT");
         assistantMessage.setContent(chatResponse.answer());
-        
-        // Add citations to message (use EntityManager.getReference to avoid loading full entities)
+
+        // Add citations to message (use EntityManager.getReference to avoid loading
+        // full entities)
         if (chatResponse.citations() != null && !chatResponse.citations().isEmpty()) {
             List<LegalArticle> articles = chatResponse.citations().stream()
                     .map(citation -> entityManager.getReference(LegalArticle.class, citation.articleId()))
                     .collect(Collectors.toList());
             assistantMessage.setCitations(articles);
         }
-        
+
         assistantMessage = messageRepo.save(assistantMessage);
 
         // Update session timestamp
         session.setUpdatedAt(LocalDateTime.now());
         sessionRepo.save(session);
 
-        log.info("Message sent in session {} by user {} (with context: {})", 
+        log.info("Message sent in session {} by user {} (with context: {})",
                 session.getId(), userEmail, conversationContext != null && !conversationContext.isEmpty());
 
         return new SendMessageResponse(
                 session.getId(),
                 toMessageDTO(userMessage),
-                toMessageDTOFromResponse(assistantMessage, chatResponse.citations())
-        );
-    }
-    
-    /**
-     * Build conversation context from previous messages in session
-     */
-    private ConversationContext buildConversationContext(Long sessionId) {
-        List<ChatMessage> messages = messageRepo.findBySessionIdWithCitations(sessionId);
-        
-        if (messages.isEmpty()) {
-            return null;
-        }
-        
-        // Convert to ConversationContext.Message format
-        List<ConversationContext.Message> contextMessages = messages.stream()
-                .map(msg -> new ConversationContext.Message(msg.getRole(), msg.getContent()))
-                .collect(Collectors.toList());
-        
-        return new ConversationContext(contextMessages);
+                toMessageDTOFromResponse(assistantMessage, chatResponse.citations()));
     }
 
     /**
@@ -265,8 +249,7 @@ public class ChatHistoryService {
                         article.getDocument().getDocumentName(),
                         article.getArticleNumber(),
                         article.getArticleTitle(),
-                        truncate(article.getContent(), 200)
-                ))
+                        truncate(article.getContent(), 200)))
                 .collect(Collectors.toList());
 
         return new ChatMessageDTO(
@@ -274,8 +257,7 @@ public class ChatHistoryService {
                 message.getRole(),
                 message.getContent(),
                 citations,
-                message.getCreatedAt()
-        );
+                message.getCreatedAt());
     }
 
     private ChatMessageDTO toMessageDTOFromResponse(ChatMessage message, List<CitationDTO> citations) {
@@ -284,8 +266,7 @@ public class ChatHistoryService {
                 message.getRole(),
                 message.getContent(),
                 citations,
-                message.getCreatedAt()
-        );
+                message.getCreatedAt());
     }
 
     private String truncate(String text, int maxLength) {

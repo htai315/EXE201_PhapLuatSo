@@ -12,43 +12,43 @@
     const out = document.getElementById("out");
     const show = x => out.textContent = typeof x === "string" ? x : JSON.stringify(x,null,2);
 
-    // google redirect -> tokens in URL fragment
+    // google redirect -> tokens in URL fragment (dev-only)
     if (location.hash.includes("access=")) {
         const p = new URLSearchParams(location.hash.substring(1));
-        localStorage.setItem("accessToken", p.get("access"));
-        localStorage.setItem("refreshToken", p.get("refresh"));
+        const access = p.get("access");
+        const expires = p.get("expires") || 900;
+        if (window.TokenManager && typeof window.TokenManager.setAccessToken === 'function') {
+            window.TokenManager.setAccessToken(access, parseInt(expires));
+        }
         history.replaceState({}, "", "/app.html");
     }
 
     async function me(){
-        const token = localStorage.getItem("accessToken");
-        const res = await fetch("/api/auth/me", { headers: { "Authorization": "Bearer " + token }});
-        show({status: res.status, text: await res.text()});
+        try {
+            const data = await window.apiClient.get('/api/auth/me');
+            show({status: 200, body: data});
+        } catch (err) {
+            show({status: err.status || 500, body: err});
+        }
     }
 
     async function refresh(){
-        const refreshToken = localStorage.getItem("refreshToken");
-        const res = await fetch("/api/auth/refresh", {
-            method:"POST",
-            headers:{ "Content-Type":"application/json" },
-            body: JSON.stringify({ refreshToken })
-        });
-        const data = await res.json();
-        localStorage.setItem("accessToken", data.accessToken);
-        localStorage.setItem("refreshToken", data.refreshToken);
-        show(data);
+        try {
+            const ok = await window.TokenManager?.refreshAccessToken();
+            const token = window.TokenManager?.getAccessToken();
+            show({ refreshed: ok, accessToken: token || null });
+        } catch (err) {
+            show({ error: err });
+        }
     }
 
     async function logout(){
-        const refreshToken = localStorage.getItem("refreshToken");
-        const res = await fetch("/api/auth/logout", {
-            method:"POST",
-            headers:{ "Content-Type":"application/json" },
-            body: JSON.stringify({ refreshToken })
-        });
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        show({status: res.status, text: await res.text()});
+        try {
+            await window.TokenManager?.logout();
+            show({ status: 'ok' });
+        } catch (err) {
+            show({ error: err });
+        }
     }
 </script>
 </body>

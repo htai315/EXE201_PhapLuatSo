@@ -3,30 +3,33 @@
  * Automatically adds "Admin Panel" link to navbar for users with ADMIN role
  */
 
-(function() {
+(function () {
     'use strict';
 
     // Check if user is admin and add admin link to navbar
     async function addAdminLinkToNavbar() {
         try {
-            const token = localStorage.getItem('accessToken');
-            if (!token) return;
+            // Wait for TokenManager to be available
+            if (!window.TokenManager) {
+                console.log('[AdminNav] TokenManager not available');
+                return;
+            }
 
-            // Get user info to check role
-            const response = await fetch('/api/auth/me', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            // Only check if already authenticated - DO NOT call refresh here
+            // script.js already handles rehydration, calling refresh again causes token reuse
+            if (!window.TokenManager.isAuthenticated()) {
+                console.log('[AdminNav] Not authenticated');
+                return;
+            }
 
-            if (!response.ok) return;
+            // Get user info to check role using API_CLIENT
+            const user = await window.API_CLIENT?.get('/api/auth/me');
+            if (!user) return;
 
-            const user = await response.json();
-            
             // Check if user has ADMIN role (handle both 'ADMIN' and 'ROLE_ADMIN')
-            const isAdmin = user.role === 'ADMIN' || user.role === 'ROLE_ADMIN' || 
-                           (user.roles && (user.roles.includes('ADMIN') || user.roles.includes('ROLE_ADMIN')));
-            
+            const isAdmin = user.role === 'ADMIN' || user.role === 'ROLE_ADMIN' ||
+                (user.roles && (user.roles.includes('ADMIN') || user.roles.includes('ROLE_ADMIN')));
+
             if (isAdmin) {
                 insertAdminLink();
             }
@@ -55,7 +58,7 @@
         adminLink.href = '/html/admin/dashboard.html';
         adminLink.id = 'adminNavLink';
         adminLink.innerHTML = '<i class="bi bi-shield-lock me-2"></i>Admin Panel';
-        
+
         adminLinkItem.appendChild(adminLink);
 
         // Find the divider's parent <li> and insert before it
@@ -77,10 +80,13 @@
 
     // Run when DOM is ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', addAdminLinkToNavbar);
+        document.addEventListener('DOMContentLoaded', () => {
+            // Delay to ensure TokenManager and API_CLIENT are ready
+            setTimeout(addAdminLinkToNavbar, 500);
+        });
     } else {
-        // Small delay to ensure navbar is fully rendered
-        setTimeout(addAdminLinkToNavbar, 100);
+        // Delay to ensure TokenManager and API_CLIENT are ready
+        setTimeout(addAdminLinkToNavbar, 500);
     }
 
     // Also run when auth state changes (after login)

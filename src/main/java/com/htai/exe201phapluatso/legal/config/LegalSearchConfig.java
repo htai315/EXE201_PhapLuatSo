@@ -26,7 +26,7 @@ public final class LegalSearchConfig {
     public static final int MIN_RELEVANCE_SCORE = 3; // Minimum score threshold to be considered relevant
 
     // AI prompt parameters
-    public static final int MAX_ANSWER_WORDS = 300;
+    public static final int MAX_ANSWER_WORDS = 500;
     public static final int CITATION_PREVIEW_LENGTH = 200;
     public static final int RERANK_PREVIEW_LENGTH = 700; // Longer preview for AI re-ranking
 

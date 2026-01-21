@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,365 +9,394 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap"
+        rel="stylesheet">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/animations.css">
     <link rel="stylesheet" href="/css/about.css">
 </head>
+
 <body>
-<nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
-    <div class="container">
-        <a class="navbar-brand" href="../index.html">
-            <img src="../img/Law.png" alt="Logo">
-            <span>Pháp Luật Số</span>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto align-items-lg-center">
-                <li class="nav-item"><a class="nav-link" href="../index.html">Trang chủ</a></li>
-                <li class="nav-item"><a class="nav-link active" href="about.html">Về chúng tôi</a></li>
-                <li class="nav-item"><a class="nav-link" href="legal-chat.html">Chat AI</a></li>
-                <li class="nav-item"><a class="nav-link" href="my-quizzes.html">Bộ đề</a></li>
-                <li class="nav-item"><a class="nav-link" href="guide.html">Hướng dẫn</a></li>
-                <li class="nav-item"><a class="nav-link" href="contact.html">Liên hệ</a></li>
-                <li class="nav-item ms-lg-3 guest-only">
-                    <a class="btn btn-outline-primary btn-sm px-3" href="login.html">
-                        <i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập
-                    </a>
-                </li>
-                <li class="nav-item ms-lg-2 guest-only">
-                    <a class="btn btn-primary btn-sm px-3" href="register.html">
-                        <i class="bi bi-person-plus me-1"></i>Đăng Ký
-                    </a>
-                </li>
-                <li class="nav-item dropdown ms-lg-3 auth-only d-none">
-                    <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img id="navUserAvatar" src="https://ui-avatars.com/api/?name=User&size=40&background=1a4b84&color=fff" 
-                             alt="Avatar" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #e2e8f0;">
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="profile.html"><i class="bi bi-person me-2"></i>Hồ sơ</a></li>
-                        <li><a class="dropdown-item" href="payment-history.html"><i class="bi bi-clock-history me-2"></i>Lịch sử thanh toán</a></li>
-                        <li><a class="dropdown-item" href="plans.html"><i class="bi bi-credit-card me-2"></i>Nâng cấp</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
-                    </ul>
-                </li>
-            </ul>
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">
+                <img src="../img/Law.png" alt="Logo">
+                <span>Pháp Luật Số</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-lg-center">
+                    <li class="nav-item"><a class="nav-link" href="../index.html">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="about.html">Về chúng tôi</a></li>
+                    <li class="nav-item"><a class="nav-link" href="legal-chat.html">Chat AI</a></li>
+                    <li class="nav-item"><a class="nav-link" href="my-quizzes.html">Bộ đề</a></li>
+                    <li class="nav-item"><a class="nav-link" href="guide.html">Hướng dẫn</a></li>
+                    <li class="nav-item"><a class="nav-link" href="contact.html">Liên hệ</a></li>
+                    <li class="nav-item ms-lg-3 guest-only">
+                        <a class="btn btn-outline-primary btn-sm px-3" href="login.html">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập
+                        </a>
+                    </li>
+                    <li class="nav-item ms-lg-2 guest-only">
+                        <a class="btn btn-primary btn-sm px-3" href="register.html">
+                            <i class="bi bi-person-plus me-1"></i>Đăng Ký
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown ms-lg-3 auth-only d-none">
+                        <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <img id="navUserAvatar"
+                                src="https://ui-avatars.com/api/?name=User&size=40&background=1a4b84&color=fff"
+                                alt="Avatar" class="rounded-circle"
+                                style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #e2e8f0;">
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="profile.html"><i class="bi bi-person me-2"></i>Hồ sơ</a>
+                            </li>
+                            <li><a class="dropdown-item" href="payment-history.html"><i
+                                        class="bi bi-clock-history me-2"></i>Lịch sử thanh toán</a></li>
+                            <li><a class="dropdown-item" href="plans.html"><i class="bi bi-credit-card me-2"></i>Nâng
+                                    cấp</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i
+                                        class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
-<!-- HERO -->
-<section class="about-hero">
-    <div class="container">
-        <div class="row align-items-center min-vh-100 py-5">
-            <div class="col-lg-6 fade-in">
-                <div class="hero-badge mb-4">
-                    <i class="bi bi-building me-2"></i>
-                    Về Chúng Tôi
-                </div>
-                <h1 class="hero-title mb-4">
-                    Chào mừng đến với <span class="text-gradient">Pháp Luật Số</span>
-                </h1>
-                <p class="hero-subtitle mb-5">
-                    Nền tảng pháp lý thông minh, nơi công nghệ và tri thức pháp luật hòa làm một. Chúng tôi mang đến trải nghiệm tiếp cận pháp luật mới: nhanh hơn, dễ hiểu hơn và gần gũi hơn.
-                </p>
-                <div class="d-flex flex-wrap gap-3">
-                    <a href="#team" class="btn btn-primary btn-lg px-5">
-                        <i class="bi bi-people me-2"></i>
-                        Đội Ngũ
-                    </a>
-                    <a href="contact.html" class="btn btn-outline-light btn-lg px-5">
-                        <i class="bi bi-envelope me-2"></i>
-                        Liên Hệ
-                    </a>
+    <!-- HERO -->
+    <section class="about-hero">
+        <div class="container">
+            <div class="row align-items-center min-vh-100 py-5">
+                <div class="col-lg-6 fade-in">
+                    <div class="hero-badge mb-4">
+                        <i class="bi bi-building me-2"></i>
+                        Về Chúng Tôi
+                    </div>
+                    <h1 class="hero-title mb-4">
+                        Chào mừng đến với <span class="text-gradient">Pháp Luật Số</span>
+                    </h1>
+                    <p class="hero-subtitle mb-5">
+                        Nền tảng pháp lý thông minh, nơi công nghệ và tri thức pháp luật hòa làm một. Chúng tôi mang đến
+                        trải nghiệm tiếp cận pháp luật mới: nhanh hơn, dễ hiểu hơn và gần gũi hơn.
+                    </p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="#team" class="btn btn-primary btn-lg px-5">
+                            <i class="bi bi-people me-2"></i>
+                            Đội Ngũ
+                        </a>
+                        <a href="contact.html" class="btn btn-outline-light btn-lg px-5">
+                            <i class="bi bi-envelope me-2"></i>
+                            Liên Hệ
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- INTRO & VISION -->
-<section class="section-padding">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6 mb-5 mb-lg-0 fade-in">
-                <img src="../img/about-law.png" class="img-fluid rounded-4 shadow-lg" alt="Pháp Luật Số">
+    <!-- INTRO & VISION -->
+    <section class="section-padding">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-5 mb-lg-0 fade-in">
+                    <img src="../img/about-law.png" class="img-fluid rounded-4 shadow-lg" alt="Pháp Luật Số">
+                </div>
+                <div class="col-lg-6 fade-in-delay">
+                    <div class="section-badge mb-3">
+                        <i class="bi bi-eye me-2"></i>
+                        Tầm Nhìn & Sứ Mệnh
+                    </div>
+                    <h2 class="section-title mb-4">Tầm Nhìn <span class="text-gradient">(Vision)</span></h2>
+                    <p class="mb-4">Trở thành nền tảng công nghệ pháp lý hàng đầu Việt Nam, nơi mọi người dân đều có thể
+                        tiếp cận, hiểu và áp dụng pháp luật một cách dễ dàng, bình đẳng và minh bạch.</p>
+
+                    <h2 class="section-title mb-4">Sứ Mệnh <span class="text-gradient">(Mission)</span></h2>
+                    <div class="mission-list">
+                        <div class="mission-item">
+                            <div class="mission-icon">
+                                <i class="bi bi-check-circle-fill"></i>
+                            </div>
+                            <p>Giúp người dân hiểu rõ quyền lợi và nghĩa vụ của mình</p>
+                        </div>
+                        <div class="mission-item">
+                            <div class="mission-icon">
+                                <i class="bi bi-check-circle-fill"></i>
+                            </div>
+                            <p>Hỗ trợ sinh viên học tập, ôn luyện và áp dụng kiến thức pháp lý hiệu quả</p>
+                        </div>
+                        <div class="mission-item">
+                            <div class="mission-icon">
+                                <i class="bi bi-check-circle-fill"></i>
+                            </div>
+                            <p>Góp phần nâng cao dân trí pháp luật và xây dựng xã hội minh bạch, công bằng</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="col-lg-6 fade-in-delay">
+        </div>
+    </section>
+
+    <!-- CORE VALUES -->
+    <section class="section-padding bg-light">
+        <div class="container">
+            <div class="text-center mb-5 fade-in">
                 <div class="section-badge mb-3">
-                    <i class="bi bi-eye me-2"></i>
-                    Tầm Nhìn & Sứ Mệnh
+                    <i class="bi bi-gem me-2"></i>
+                    Giá Trị Cốt Lõi
                 </div>
-                <h2 class="section-title mb-4">Tầm Nhìn <span class="text-gradient">(Vision)</span></h2>
-                <p class="mb-4">Trở thành nền tảng công nghệ pháp lý hàng đầu Việt Nam, nơi mọi người dân đều có thể tiếp cận, hiểu và áp dụng pháp luật một cách dễ dàng, bình đẳng và minh bạch.</p>
-                
-                <h2 class="section-title mb-4">Sứ Mệnh <span class="text-gradient">(Mission)</span></h2>
-                <div class="mission-list">
-                    <div class="mission-item">
-                        <div class="mission-icon">
-                            <i class="bi bi-check-circle-fill"></i>
+                <h2 class="section-title">Giá Trị <span class="text-gradient">Cốt Lõi</span></h2>
+                <p class="section-subtitle">Những nguyên tắc định hướng mọi hoạt động của chúng tôi</p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4 fade-in">
+                    <div class="value-card">
+                        <div class="value-icon bg-primary">
+                            <i class="bi bi-shield-check"></i>
                         </div>
-                        <p>Giúp người dân hiểu rõ quyền lợi và nghĩa vụ của mình</p>
+                        <h3 class="value-title">Minh Bạch</h3>
+                        <p class="value-description">Cung cấp thông tin pháp luật chính thống, đảm bảo tính chính xác và
+                            tin cậy</p>
                     </div>
-                    <div class="mission-item">
-                        <div class="mission-icon">
-                            <i class="bi bi-check-circle-fill"></i>
+                </div>
+
+                <div class="col-md-6 col-lg-4 fade-in-delay-1">
+                    <div class="value-card">
+                        <div class="value-icon bg-success">
+                            <i class="bi bi-people"></i>
                         </div>
-                        <p>Hỗ trợ sinh viên học tập, ôn luyện và áp dụng kiến thức pháp lý hiệu quả</p>
+                        <h3 class="value-title">Bình Đẳng</h3>
+                        <p class="value-description">Mọi người dân đều có quyền tiếp cận tri thức pháp luật như nhau</p>
                     </div>
-                    <div class="mission-item">
-                        <div class="mission-icon">
-                            <i class="bi bi-check-circle-fill"></i>
+                </div>
+
+                <div class="col-md-6 col-lg-4 fade-in-delay-2">
+                    <div class="value-card">
+                        <div class="value-icon bg-warning">
+                            <i class="bi bi-lightning-charge"></i>
                         </div>
-                        <p>Góp phần nâng cao dân trí pháp luật và xây dựng xã hội minh bạch, công bằng</p>
+                        <h3 class="value-title">Hiệu Quả</h3>
+                        <p class="value-description">Tiết kiệm thời gian, tăng năng suất học tập và tra cứu nhờ công
+                            nghệ AI</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4 fade-in">
+                    <div class="value-card">
+                        <div class="value-icon bg-danger">
+                            <i class="bi bi-award"></i>
+                        </div>
+                        <h3 class="value-title">Trao Quyền</h3>
+                        <p class="value-description">Giúp người dân và sinh viên tự tin hành động dựa trên hiểu biết
+                            pháp luật</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4 fade-in-delay-1">
+                    <div class="value-card">
+                        <div class="value-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);">
+                            <i class="bi bi-brightness-high"></i>
+                        </div>
+                        <h3 class="value-title">Đổi Mới</h3>
+                        <p class="value-description">Không ngừng cải tiến công nghệ, cập nhật luật mới và tối ưu trải
+                            nghiệm người dùng</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4 fade-in-delay-2">
+                    <div class="value-card">
+                        <div class="value-icon" style="background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);">
+                            <i class="bi bi-heart"></i>
+                        </div>
+                        <h3 class="value-title">Trách Nhiệm Xã Hội</h3>
+                        <p class="value-description">Chung tay xây dựng xã hội hiểu luật – tuân luật – sống văn minh</p>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- CORE VALUES -->
-<section class="section-padding bg-light">
-    <div class="container">
-        <div class="text-center mb-5 fade-in">
-            <div class="section-badge mb-3">
-                <i class="bi bi-gem me-2"></i>
-                Giá Trị Cốt Lõi
+
+    <!-- TEAM -->
+    <section id="team" class="section-padding">
+        <div class="container">
+            <div class="text-center mb-5 fade-in">
+                <div class="section-badge mb-3">
+                    <i class="bi bi-people-fill me-2"></i>
+                    Đội Ngũ
+                </div>
+                <h2 class="section-title">Đội Ngũ <span class="text-gradient">Pháp Luật Số</span></h2>
+                <p class="section-subtitle">Đội ngũ kết hợp giữa chuyên gia pháp lý, công nghệ và giáo dục, cùng sứ mệnh
+                    đưa pháp luật đến gần hơn với cộng đồng</p>
             </div>
-            <h2 class="section-title">Giá Trị <span class="text-gradient">Cốt Lõi</span></h2>
-            <p class="section-subtitle">Những nguyên tắc định hướng mọi hoạt động của chúng tôi</p>
-        </div>
-        
-        <div class="row g-4">
-            <div class="col-md-6 col-lg-4 fade-in">
-                <div class="value-card">
-                    <div class="value-icon bg-primary">
-                        <i class="bi bi-shield-check"></i>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-6 col-lg-4 fade-in">
+                    <div class="team-card">
+                        <div class="team-avatar">
+                            <img src="../img/team/founder.png" alt="Founder">
+                        </div>
+                        <h3 class="team-name">Nguyễn Văn A</h3>
+                        <p class="team-role">Founder & Vision Lead</p>
+                        <p class="team-description">Định hướng chiến lược và phát triển nền tảng pháp lý số thông minh,
+                            đảm bảo các giá trị minh bạch, bình đẳng và hiệu quả cho mọi người</p>
                     </div>
-                    <h3 class="value-title">Minh Bạch</h3>
-                    <p class="value-description">Cung cấp thông tin pháp luật chính thống, đảm bảo tính chính xác và tin cậy</p>
+                </div>
+
+                <div class="col-md-6 col-lg-4 fade-in-delay-1">
+                    <div class="team-card">
+                        <div class="team-avatar">
+                            <img src="../img/team/legal.png" alt="Legal">
+                        </div>
+                        <h3 class="team-name">Nguyễn Văn B</h3>
+                        <p class="team-role">Head of Legal Content</p>
+                        <p class="team-description">Phụ trách xây dựng và kiểm duyệt kho dữ liệu pháp luật chính thống,
+                            giúp thông tin luôn chính xác, dễ hiểu và cập nhật</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4 fade-in-delay-2">
+                    <div class="team-card">
+                        <div class="team-avatar">
+                            <img src="../img/team/ai.png" alt="AI Lead">
+                        </div>
+                        <h3 class="team-name">Nguyễn Văn C</h3>
+                        <p class="team-role">AI & Data Lead</p>
+                        <p class="team-description">Thiết kế hệ thống AI tra cứu pháp luật, tối ưu tốc độ, độ chính xác
+                            và đảm bảo bảo mật dữ liệu ở mức cao nhất</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="col-md-6 col-lg-4 fade-in-delay-1">
-                <div class="value-card">
-                    <div class="value-icon bg-success">
-                        <i class="bi bi-people"></i>
+            <div class="row g-4 justify-content-center">
+                <div class="col-md-6 col-lg-4 fade-in">
+                    <div class="team-card">
+                        <div class="team-avatar">
+                            <img src="../img/team/education.png" alt="Education">
+                        </div>
+                        <h3 class="team-name">Nguyễn Văn D</h3>
+                        <p class="team-role">Learning & Community Lead</p>
+                        <p class="team-description">Phát triển công cụ học tập và quiz cho sinh viên luật, mang pháp
+                            luật đến gần hơn thông qua công nghệ và giáo dục số</p>
                     </div>
-                    <h3 class="value-title">Bình Đẳng</h3>
-                    <p class="value-description">Mọi người dân đều có quyền tiếp cận tri thức pháp luật như nhau</p>
                 </div>
-            </div>
 
-            <div class="col-md-6 col-lg-4 fade-in-delay-2">
-                <div class="value-card">
-                    <div class="value-icon bg-warning">
-                        <i class="bi bi-lightning-charge"></i>
+                <div class="col-md-6 col-lg-4 fade-in-delay-1">
+                    <div class="team-card">
+                        <div class="team-avatar">
+                            <img src="../img/team/security.png" alt="Security">
+                        </div>
+                        <h3 class="team-name">Nguyễn Văn E</h3>
+                        <p class="team-role">Operations & Compliance Lead</p>
+                        <p class="team-description">Đảm bảo vận hành hệ thống ổn định 24/7, bảo mật dữ liệu người dùng
+                            và tuân thủ các chuẩn mực pháp lý</p>
                     </div>
-                    <h3 class="value-title">Hiệu Quả</h3>
-                    <p class="value-description">Tiết kiệm thời gian, tăng năng suất học tập và tra cứu nhờ công nghệ AI</p>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-4 fade-in">
-                <div class="value-card">
-                    <div class="value-icon bg-danger">
-                        <i class="bi bi-award"></i>
-                    </div>
-                    <h3 class="value-title">Trao Quyền</h3>
-                    <p class="value-description">Giúp người dân và sinh viên tự tin hành động dựa trên hiểu biết pháp luật</p>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-4 fade-in-delay-1">
-                <div class="value-card">
-                    <div class="value-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);">
-                        <i class="bi bi-brightness-high"></i>
-                    </div>
-                    <h3 class="value-title">Đổi Mới</h3>
-                    <p class="value-description">Không ngừng cải tiến công nghệ, cập nhật luật mới và tối ưu trải nghiệm người dùng</p>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-4 fade-in-delay-2">
-                <div class="value-card">
-                    <div class="value-icon" style="background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);">
-                        <i class="bi bi-heart"></i>
-                    </div>
-                    <h3 class="value-title">Trách Nhiệm Xã Hội</h3>
-                    <p class="value-description">Chung tay xây dựng xã hội hiểu luật – tuân luật – sống văn minh</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-
-<!-- TEAM -->
-<section id="team" class="section-padding">
-    <div class="container">
-        <div class="text-center mb-5 fade-in">
-            <div class="section-badge mb-3">
-                <i class="bi bi-people-fill me-2"></i>
-                Đội Ngũ
-            </div>
-            <h2 class="section-title">Đội Ngũ <span class="text-gradient">Pháp Luật Số</span></h2>
-            <p class="section-subtitle">Đội ngũ kết hợp giữa chuyên gia pháp lý, công nghệ và giáo dục, cùng sứ mệnh đưa pháp luật đến gần hơn với cộng đồng</p>
-        </div>
-
-        <div class="row g-4 mb-4">
-            <div class="col-md-6 col-lg-4 fade-in">
-                <div class="team-card">
-                    <div class="team-avatar">
-                        <img src="../img/team/founder.png" alt="Founder">
-                    </div>
-                    <h3 class="team-name">Nguyễn Văn A</h3>
-                    <p class="team-role">Founder & Vision Lead</p>
-                    <p class="team-description">Định hướng chiến lược và phát triển nền tảng pháp lý số thông minh, đảm bảo các giá trị minh bạch, bình đẳng và hiệu quả cho mọi người</p>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-4 fade-in-delay-1">
-                <div class="team-card">
-                    <div class="team-avatar">
-                        <img src="../img/team/legal.png" alt="Legal">
-                    </div>
-                    <h3 class="team-name">Nguyễn Văn B</h3>
-                    <p class="team-role">Head of Legal Content</p>
-                    <p class="team-description">Phụ trách xây dựng và kiểm duyệt kho dữ liệu pháp luật chính thống, giúp thông tin luôn chính xác, dễ hiểu và cập nhật</p>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-4 fade-in-delay-2">
-                <div class="team-card">
-                    <div class="team-avatar">
-                        <img src="../img/team/ai.png" alt="AI Lead">
-                    </div>
-                    <h3 class="team-name">Nguyễn Văn C</h3>
-                    <p class="team-role">AI & Data Lead</p>
-                    <p class="team-description">Thiết kế hệ thống AI tra cứu pháp luật, tối ưu tốc độ, độ chính xác và đảm bảo bảo mật dữ liệu ở mức cao nhất</p>
                 </div>
             </div>
         </div>
+    </section>
 
-        <div class="row g-4 justify-content-center">
-            <div class="col-md-6 col-lg-4 fade-in">
-                <div class="team-card">
-                    <div class="team-avatar">
-                        <img src="../img/team/education.png" alt="Education">
+    <!-- CTA -->
+    <section class="section-padding bg-gradient-primary text-white">
+        <div class="container text-center">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 fade-in">
+                    <h2 class="display-4 fw-bold mb-4">Pháp Luật Số – Hiểu Luật, Sống Văn Minh</h2>
+                    <p class="lead mb-5">Cùng chúng tôi kiến tạo xã hội minh bạch và công bằng hơn với sức mạnh công
+                        nghệ</p>
+                    <div class="d-flex flex-wrap gap-3 justify-content-center">
+                        <a href="contact.html" class="btn btn-light btn-lg px-5">
+                            <i class="bi bi-envelope me-2"></i>
+                            Liên Hệ Ngay
+                        </a>
+                        <a href="../index.html#pricing" class="btn btn-outline-light btn-lg px-5">
+                            <i class="bi bi-rocket-takeoff me-2"></i>
+                            Bắt Đầu Ngay
+                        </a>
                     </div>
-                    <h3 class="team-name">Nguyễn Văn D</h3>
-                    <p class="team-role">Learning & Community Lead</p>
-                    <p class="team-description">Phát triển công cụ học tập và quiz cho sinh viên luật, mang pháp luật đến gần hơn thông qua công nghệ và giáo dục số</p>
                 </div>
             </div>
+        </div>
+    </section>
 
-            <div class="col-md-6 col-lg-4 fade-in-delay-1">
-                <div class="team-card">
-                    <div class="team-avatar">
-                        <img src="../img/team/security.png" alt="Security">
+    <footer class="footer">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    <div class="footer-brand mb-3">
+                        <i class="bi bi-shield-check me-2 fs-4"></i>
+                        <span class="fw-bold fs-4">Pháp Luật Số</span>
                     </div>
-                    <h3 class="team-name">Nguyễn Văn E</h3>
-                    <p class="team-role">Operations & Compliance Lead</p>
-                    <p class="team-description">Đảm bảo vận hành hệ thống ổn định 24/7, bảo mật dữ liệu người dùng và tuân thủ các chuẩn mực pháp lý</p>
+                    <p class="footer-description">Trợ lý luật thông minh được hỗ trợ bởi AI, giúp bạn giải quyết mọi vấn
+                        đề pháp lý nhanh chóng và chính xác.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="social-link"><i class="bi bi-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="bi bi-linkedin"></i></a>
+                        <a href="#" class="social-link"><i class="bi bi-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <h5 class="footer-title">Sản Phẩm</h5>
+                    <ul class="footer-links">
+                        <li><a href="../index.html#features">Tính Năng</a></li>
+                        <li><a href="../index.html#pricing">Bảng Giá</a></li>
+                        <li><a href="../index.html#quiz">Quiz AI</a></li>
+                        <li><a href="../index.html#video">Demo</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <h5 class="footer-title">Công Ty</h5>
+                    <ul class="footer-links">
+                        <li><a href="about.html">Về Chúng Tôi</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Tuyển Dụng</a></li>
+                        <li><a href="contact.html">Liên Hệ</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <h5 class="footer-title">Hỗ Trợ</h5>
+                    <ul class="footer-links">
+                        <li><a href="../index.html#faq">FAQ</a></li>
+                        <li><a href="guide.html">Hướng Dẫn</a></li>
+                        <li><a href="#">API Docs</a></li>
+                        <li><a href="#">Trạng Thái</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <h5 class="footer-title">Pháp Lý</h5>
+                    <ul class="footer-links">
+                        <li><a href="#">Điều Khoản</a></li>
+                        <li><a href="#">Bảo Mật</a></li>
+                        <li><a href="#">Cookie</a></li>
+                        <li><a href="#">Giấy Phép</a></li>
+                    </ul>
                 </div>
             </div>
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p class="mb-0">&copy; 2025 Pháp Luật Số. Tất cả quyền được bảo lưu.</p>
+                <p class="mb-0">Được phát triển với <i class="bi bi-heart-fill text-danger"></i> tại Việt Nam</p>
+            </div>
         </div>
-    </div>
-</section>
+    </footer>
 
-<!-- CTA -->
-<section class="section-padding bg-gradient-primary text-white">
-    <div class="container text-center">
-        <div class="row justify-content-center">
-            <div class="col-lg-8 fade-in">
-                <h2 class="display-4 fw-bold mb-4">Pháp Luật Số – Hiểu Luật, Sống Văn Minh</h2>
-                <p class="lead mb-5">Cùng chúng tôi kiến tạo xã hội minh bạch và công bằng hơn với sức mạnh công nghệ</p>
-                <div class="d-flex flex-wrap gap-3 justify-content-center">
-                    <a href="contact.html" class="btn btn-light btn-lg px-5">
-                        <i class="bi bi-envelope me-2"></i>
-                        Liên Hệ Ngay
-                    </a>
-                    <a href="../index.html#pricing" class="btn btn-outline-light btn-lg px-5">
-                        <i class="bi bi-rocket-takeoff me-2"></i>
-                        Bắt Đầu Ngay
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<footer class="footer">
-    <div class="container">
-        <div class="row g-4">
-            <div class="col-lg-4 col-md-6">
-                <div class="footer-brand mb-3">
-                    <i class="bi bi-shield-check me-2 fs-4"></i>
-                    <span class="fw-bold fs-4">Pháp Luật Số</span>
-                </div>
-                <p class="footer-description">Trợ lý luật thông minh được hỗ trợ bởi AI, giúp bạn giải quyết mọi vấn đề pháp lý nhanh chóng và chính xác.</p>
-                <div class="social-links">
-                    <a href="#" class="social-link"><i class="bi bi-facebook"></i></a>
-                    <a href="#" class="social-link"><i class="bi bi-twitter"></i></a>
-                    <a href="#" class="social-link"><i class="bi bi-linkedin"></i></a>
-                    <a href="#" class="social-link"><i class="bi bi-youtube"></i></a>
-                </div>
-            </div>
-            <div class="col-lg-2 col-md-6">
-                <h5 class="footer-title">Sản Phẩm</h5>
-                <ul class="footer-links">
-                    <li><a href="../index.html#features">Tính Năng</a></li>
-                    <li><a href="../index.html#pricing">Bảng Giá</a></li>
-                    <li><a href="../index.html#quiz">Quiz AI</a></li>
-                    <li><a href="../index.html#video">Demo</a></li>
-                </ul>
-            </div>
-            <div class="col-lg-2 col-md-6">
-                <h5 class="footer-title">Công Ty</h5>
-                <ul class="footer-links">
-                    <li><a href="about.html">Về Chúng Tôi</a></li>
-                    <li><a href="#">Blog</a></li>
-                    <li><a href="#">Tuyển Dụng</a></li>
-                    <li><a href="contact.html">Liên Hệ</a></li>
-                </ul>
-            </div>
-            <div class="col-lg-2 col-md-6">
-                <h5 class="footer-title">Hỗ Trợ</h5>
-                <ul class="footer-links">
-                    <li><a href="../index.html#faq">FAQ</a></li>
-                    <li><a href="guide.html">Hướng Dẫn</a></li>
-                    <li><a href="#">API Docs</a></li>
-                    <li><a href="#">Trạng Thái</a></li>
-                </ul>
-            </div>
-            <div class="col-lg-2 col-md-6">
-                <h5 class="footer-title">Pháp Lý</h5>
-                <ul class="footer-links">
-                    <li><a href="#">Điều Khoản</a></li>
-                    <li><a href="#">Bảo Mật</a></li>
-                    <li><a href="#">Cookie</a></li>
-                    <li><a href="#">Giấy Phép</a></li>
-                </ul>
-            </div>
-        </div>
-        <hr class="footer-divider">
-        <div class="footer-bottom">
-            <p class="mb-0">&copy; 2025 Pháp Luật Số. Tất cả quyền được bảo lưu.</p>
-            <p class="mb-0">Được phát triển với <i class="bi bi-heart-fill text-danger"></i> tại Việt Nam</p>
-        </div>
-    </div>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/scripts/api-client.js"></script>
-<script src="../scripts/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/scripts/token-manager.js"></script>
+    <script src="/scripts/api-client.js"></script>
+    <script src="../scripts/script.js"></script>
 </body>
+
 </html>

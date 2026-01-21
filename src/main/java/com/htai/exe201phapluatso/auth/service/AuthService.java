@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
@@ -45,8 +46,7 @@ public class AuthService {
             TokenService tokenService,
             @Lazy EmailVerificationService emailVerificationService,
             AccountLockoutService accountLockoutService,
-            SecurityAuditService securityAuditService
-    ) {
+            SecurityAuditService securityAuditService) {
         this.userRepo = userRepo;
         this.roleRepo = roleRepo;
         this.planRepo = planRepo;
@@ -105,10 +105,9 @@ public class AuthService {
             LockoutInfo lockoutInfo = accountLockoutService.getLockoutInfo(u);
             securityAuditService.logLoginAttempt(u.getId(), email, ipAddress, userAgent, false);
             throw new AccountLockedException(
-                    "Tài khoản đã bị khóa tạm thời do đăng nhập sai nhiều lần. Vui lòng thử lại sau " 
-                    + lockoutInfo.getRemainingTimeFormatted() + ".",
-                    lockoutInfo
-            );
+                    "Tài khoản đã bị khóa tạm thời do đăng nhập sai nhiều lần. Vui lòng thử lại sau "
+                            + lockoutInfo.getRemainingTimeFormatted() + ".",
+                    lockoutInfo);
         }
 
         if (!u.isEnabled()) {
@@ -118,32 +117,30 @@ public class AuthService {
         if (u.getPasswordHash() == null) {
             throw new BadRequestException("Tài khoản này đăng nhập bằng Google");
         }
-        
+
         long bcryptStart = System.currentTimeMillis();
         boolean passwordMatch = passwordEncoder.matches(req.password(), u.getPasswordHash());
         log.debug("LOGIN: BCrypt verify took {}ms", System.currentTimeMillis() - bcryptStart);
-        
+
         if (!passwordMatch) {
             // Record failed attempt and check if account should be locked
             boolean nowLocked = accountLockoutService.recordFailedAttempt(u, ipAddress);
             securityAuditService.logLoginAttempt(u.getId(), email, ipAddress, userAgent, false);
-            
+
             if (nowLocked) {
                 LockoutInfo lockoutInfo = accountLockoutService.getLockoutInfo(u);
                 throw new AccountLockedException(
-                        "Tài khoản đã bị khóa tạm thời do đăng nhập sai nhiều lần. Vui lòng thử lại sau " 
-                        + lockoutInfo.getRemainingTimeFormatted() + ".",
-                        lockoutInfo
-                );
+                        "Tài khoản đã bị khóa tạm thời do đăng nhập sai nhiều lần. Vui lòng thử lại sau "
+                                + lockoutInfo.getRemainingTimeFormatted() + ".",
+                        lockoutInfo);
             }
             throw new UnauthorizedException("Email hoặc mật khẩu không đúng");
         }
-        
+
         // Kiểm tra email đã xác thực chưa (chỉ với LOCAL provider)
         if ("LOCAL".equals(u.getProvider()) && !u.isEmailVerified()) {
             throw new UnauthorizedException(
-                "Vui lòng xác thực email trước khi đăng nhập. Kiểm tra hộp thư của bạn."
-            );
+                    "Vui lòng xác thực email trước khi đăng nhập. Kiểm tra hộp thư của bạn.");
         }
 
         // Reset failed attempts on successful login
@@ -152,10 +149,10 @@ public class AuthService {
         long tokenStart = System.currentTimeMillis();
         TokenResponse response = issueTokens(u);
         log.debug("LOGIN: Token generation took {}ms", System.currentTimeMillis() - tokenStart);
-        
+
         // Log successful login
         securityAuditService.logLoginAttempt(u.getId(), email, ipAddress, userAgent, true);
-        
+
         log.info("LOGIN: Total time {}ms for user {}", System.currentTimeMillis() - startTime, email);
         return response;
     }
@@ -166,8 +163,10 @@ public class AuthService {
     }
 
     // -------- REFRESH (ROTATE) --------
+    @Transactional
     public TokenResponse refresh(RefreshRequest req) {
-        // TokenService.validateAndRotate will throw TokenReusedException if reuse detected
+        // TokenService.validateAndRotate will throw TokenReusedException if reuse
+        // detected
         // GlobalExceptionHandler will catch it and return 401 with proper message
         User u = tokenService.validateAndRotate(req.refreshToken());
         return issueTokens(u);

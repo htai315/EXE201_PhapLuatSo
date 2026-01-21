@@ -13,17 +13,17 @@ window.addEventListener("scroll", () => {
 document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
     anchor.addEventListener("click", function (e) {
         const href = this.getAttribute("href")
-        
+
         // Bỏ qua nếu href chỉ là "#" (dropdown, modal, etc.)
         if (!href || href === "#") {
             return
         }
-        
+
         // Bỏ qua nếu href là URL đầy đủ (http/https) - link đã được thay đổi động
         if (href.startsWith("http://") || href.startsWith("https://")) {
             return
         }
-        
+
         e.preventDefault()
         const target = document.querySelector(href)
         if (target) {
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 link.classList.add('active')
             }
             // special case: link to index without filename (e.g., './' or '/')
-            if ((href === '' || href === './' || href === '/' ) && page === 'index.html') {
+            if ((href === '' || href === './' || href === '/') && page === 'index.html') {
                 link.classList.add('active')
             }
         })
@@ -147,12 +147,9 @@ document.addEventListener("DOMContentLoaded", () => {
     })
 })
 
-// Simple auth-aware navbar on index.html
+// Auth-aware navbar with rehydration from HttpOnly cookie
 document.addEventListener("DOMContentLoaded", async () => {
     try {
-        const accessToken = localStorage.getItem("accessToken")
-        const refreshToken = localStorage.getItem("refreshToken")
-
         const guestItems = document.querySelectorAll(".guest-only")
         const authItems = document.querySelectorAll(".auth-only")
         const avatarImg = document.getElementById("navUserAvatar")
@@ -170,45 +167,43 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         }
 
-        // Nếu không có token thì để chế độ guest
-        if (!accessToken || !refreshToken) {
+        // Check if we have token in memory
+        let hasToken = window.TokenManager?.isAuthenticated()
+
+        // If no token in memory, try to rehydrate from HttpOnly cookie
+        if (!hasToken && window.TokenManager) {
+            console.log("[Navbar] Attempting rehydration from cookie...")
+            hasToken = await window.TokenManager.refreshAccessToken()
+        }
+
+        if (!hasToken) {
             showGuest()
             return
         }
 
-        // Thử gọi /api/auth/me để lấy thông tin user (dùng apiClient để auto-refresh)
-        const data = await window.apiClient.get("/api/auth/me").catch(() => null)
-        
+        // Fetch user info using apiClient (which uses TokenManager)
+        const data = await window.apiClient?.get("/api/auth/me").catch(() => null)
+
         if (!data) {
-            // Token không hợp lệ / hết hạn
             showGuest()
             return
         }
-        const avatarUrl = data && data.avatarUrl ? data.avatarUrl : 
-                         `https://ui-avatars.com/api/?name=${encodeURIComponent(data?.fullName || 'User')}&size=80&background=1a4b84&color=fff`
+
+        const avatarUrl = data && data.avatarUrl ? data.avatarUrl :
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(data?.fullName || 'User')}&size=80&background=1a4b84&color=fff`
 
         showAuth(avatarUrl)
 
-        // Xử lý logout: gọi API logout + xoá token + reload
+        // Logout handler - uses TokenManager
         if (logoutBtn) {
             logoutBtn.addEventListener("click", async (e) => {
                 e.preventDefault()
                 try {
-                    const token = localStorage.getItem("refreshToken")
-                    if (token) {
-                        await fetch("/api/auth/logout", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ refreshToken: token })
-                        })
-                    }
+                    await window.TokenManager?.logout()
                 } catch (err) {
                     console.warn("Logout error", err)
-                } finally {
-                    localStorage.removeItem("accessToken")
-                    localStorage.removeItem("refreshToken")
-                    window.location.href = "/index.html"
                 }
+                window.location.href = "/index.html"
             })
         }
     } catch (err) {
@@ -217,4 +212,5 @@ document.addEventListener("DOMContentLoaded", async () => {
 })
 
 // Console log for debugging
-console.log("[v0] AI Luật website loaded successfully")
+console.log("[v1] AI Luật website loaded - HttpOnly cookie auth")
+

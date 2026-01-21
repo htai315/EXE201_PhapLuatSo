@@ -1,41 +1,30 @@
 /**
  * Auth Guard - Centralized authentication check for protected pages
  * 
- * Usage:
- * 1. Include this script in your HTML: <script src="/scripts/auth-guard.js"></script>
- * 2. Add data-auth-required="true" to <body> for pages that require login
- * 3. Add data-auth-redirect="false" to <body> to skip redirect (just check)
- * 4. Add data-admin-required="true" to <body> for admin-only pages
+ * Uses TokenManager for in-memory access token storage.
+ * Refresh token is stored as HttpOnly cookie (invisible to JS).
  * 
- * The script will:
- * - Check if user has valid access token
- * - Redirect to login page if not authenticated
- * - Optionally verify token with server
- * - Provide global AUTH object for other scripts to use
+ * Usage:
+ * 1. Include token-manager.js BEFORE this script
+ * 2. Add data-auth-required="true" to <body> for pages that require login
+ * 3. Add data-admin-required="true" to <body> for admin-only pages
  */
 
 const AUTH = {
-    // Storage keys
+    // Storage keys (only for userName/userRole, NOT tokens)
     KEYS: {
-        ACCESS_TOKEN: 'accessToken',
-        REFRESH_TOKEN: 'refreshToken',
         USER_NAME: 'userName',
         USER_ROLE: 'userRole'
     },
 
-    // Get access token
+    // Get access token from memory
     getToken() {
-        return localStorage.getItem(this.KEYS.ACCESS_TOKEN);
+        return window.TokenManager?.getAccessToken();
     },
 
-    // Get refresh token
-    getRefreshToken() {
-        return localStorage.getItem(this.KEYS.REFRESH_TOKEN);
-    },
-
-    // Check if user is logged in (has token)
+    // Check if user is logged in (has token in memory)
     isLoggedIn() {
-        return !!this.getToken();
+        return window.TokenManager?.isAuthenticated() || false;
     },
 
     // Get user name
@@ -54,12 +43,8 @@ const AUTH = {
         return role === 'ROLE_ADMIN' || role === 'ADMIN';
     },
 
-    // Save auth data after login
-    saveAuth(accessToken, refreshToken, userName, role) {
-        localStorage.setItem(this.KEYS.ACCESS_TOKEN, accessToken);
-        if (refreshToken) {
-            localStorage.setItem(this.KEYS.REFRESH_TOKEN, refreshToken);
-        }
+    // Save auth data after login (only userName/role, NOT tokens)
+    saveUserInfo(userName, role) {
         if (userName) {
             localStorage.setItem(this.KEYS.USER_NAME, userName);
         }
@@ -70,23 +55,24 @@ const AUTH = {
 
     // Clear all auth data (logout)
     clearAuth() {
-        localStorage.removeItem(this.KEYS.ACCESS_TOKEN);
-        localStorage.removeItem(this.KEYS.REFRESH_TOKEN);
+        window.TokenManager?.clearAccessToken();
         localStorage.removeItem(this.KEYS.USER_NAME);
         localStorage.removeItem(this.KEYS.USER_ROLE);
+        // Clear any legacy localStorage items
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
     },
 
     // Redirect to login page
     redirectToLogin() {
         const currentPath = window.location.pathname;
         if (!currentPath.includes('/html/login.html')) {
-            // Save current URL for redirect after login
             sessionStorage.setItem('redirectAfterLogin', window.location.href);
             window.location.href = '/html/login.html';
         }
     },
 
-    // Redirect to home page (for unauthorized access)
+    // Redirect to home page
     redirectToHome() {
         window.location.href = '/index.html';
     },
@@ -98,17 +84,13 @@ const AUTH = {
         return url;
     },
 
-    // Verify token with server (optional, for extra security)
+    // Verify token with server
     async verifyToken() {
         const token = this.getToken();
         if (!token) return false;
 
         try {
-            const response = await fetch('/api/auth/me', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const response = await window.apiClient.fetchWithAuth('/api/auth/me', { method: 'GET' });
             return response.ok;
         } catch (error) {
             console.error('Token verification failed:', error);
@@ -116,33 +98,9 @@ const AUTH = {
         }
     },
 
-    // Refresh access token
+    // Refresh access token (uses TokenManager which uses cookie)
     async refreshToken() {
-        const refreshToken = this.getRefreshToken();
-        if (!refreshToken) return false;
-
-        try {
-            const response = await fetch('/api/auth/refresh', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ refreshToken })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                localStorage.setItem(this.KEYS.ACCESS_TOKEN, data.accessToken);
-                if (data.refreshToken) {
-                    localStorage.setItem(this.KEYS.REFRESH_TOKEN, data.refreshToken);
-                }
-                return true;
-            }
-            return false;
-        } catch (error) {
-            console.error('Token refresh failed:', error);
-            return false;
-        }
+        return await window.TokenManager?.refreshAccessToken() || false;
     },
 
     // Main guard function - call this to protect a page
@@ -154,30 +112,35 @@ const AUTH = {
             verifyWithServer = false
         } = options;
 
-        // Check if token exists
-        if (requireAuth && !this.isLoggedIn()) {
+        // Try to get token or rehydrate from cookie
+        let isLoggedIn = this.isLoggedIn();
+
+        if (!isLoggedIn && requireAuth) {
+            // Try rehydration
+            console.log('[AUTH Guard] No token in memory, attempting rehydration...');
+            const refreshed = await this.refreshToken();
+            isLoggedIn = refreshed;
+        }
+
+        // Check if auth is required but user not logged in
+        if (requireAuth && !isLoggedIn) {
             if (redirect) {
                 this.redirectToLogin();
             }
             return false;
         }
 
-        // If admin is required but role is not in localStorage, fetch from server
+        // If admin is required, fetch role from server if needed
         if (requireAdmin && !this.getUserRole()) {
+            console.log('[AUTH Guard] Admin required but no role in localStorage, fetching from server...');
             try {
-                const response = await fetch('/api/auth/me', {
-                    headers: {
-                        'Authorization': `Bearer ${this.getToken()}`
-                    }
-                });
+                const response = await window.apiClient.fetchWithAuth('/api/auth/me', { method: 'GET' });
                 if (response.ok) {
                     const user = await response.json();
-                    if (user.fullName) {
-                        localStorage.setItem(this.KEYS.USER_NAME, user.fullName);
-                    }
-                    if (user.role) {
-                        localStorage.setItem(this.KEYS.USER_ROLE, user.role);
-                    }
+                    console.log('[AUTH Guard] Fetched user role:', user.role);
+                    this.saveUserInfo(user.fullName, user.role);
+                } else {
+                    console.log('[AUTH Guard] Failed to fetch user info, status:', response.status);
                 }
             } catch (error) {
                 console.error('Failed to fetch user role:', error);
@@ -185,7 +148,11 @@ const AUTH = {
         }
 
         // Check admin role
+        const savedRole = this.getUserRole();
+        console.log('[AUTH Guard] Checking admin. savedRole:', savedRole, 'isAdmin:', this.isAdmin());
+
         if (requireAdmin && !this.isAdmin()) {
+            console.log('[AUTH Guard] Admin required but user is not admin, redirecting to home...');
             if (redirect) {
                 this.redirectToHome();
             }
@@ -196,7 +163,6 @@ const AUTH = {
         if (verifyWithServer) {
             const isValid = await this.verifyToken();
             if (!isValid) {
-                // Try refresh
                 const refreshed = await this.refreshToken();
                 if (!refreshed) {
                     this.clearAuth();
@@ -215,14 +181,12 @@ const AUTH = {
 // Auto-guard based on body data attributes
 document.addEventListener('DOMContentLoaded', () => {
     const body = document.body;
-    
-    // Check data attributes
+
     const requireAuth = body.dataset.authRequired === 'true';
     const requireAdmin = body.dataset.adminRequired === 'true';
     const redirect = body.dataset.authRedirect !== 'false';
     const verifyWithServer = body.dataset.authVerify === 'true';
 
-    // Only run guard if auth is required
     if (requireAuth || requireAdmin) {
         AUTH.guard({
             requireAuth,
@@ -235,3 +199,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Export for global use
 window.AUTH = AUTH;
+

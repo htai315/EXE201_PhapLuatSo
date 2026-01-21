@@ -8,8 +8,10 @@ let paginationData = null;
 let allAttemptsForChart = []; // Lưu tất cả attempts cho chart
 let scoreChart = null;
 
-document.addEventListener('DOMContentLoaded', () => {
-    if (!AUTH.isLoggedIn()) return;
+document.addEventListener('DOMContentLoaded', async () => {
+    // Use AUTH.guard() for proper rehydration from HttpOnly cookie
+    const isAuth = await AUTH.guard({ requireAuth: true, redirect: true });
+    if (!isAuth) return;
 
     document.getElementById('btnNewTest')?.addEventListener('click', () => {
         window.location.href = '/html/my-quizzes.html';
@@ -107,7 +109,7 @@ function renderChart() {
     const allAttempts = allAttemptsForChart.length > 0 ? allAttemptsForChart : (paginationData?.content || []);
     const last7Days = [];
     const today = new Date();
-    
+
     for (let i = 6; i >= 0; i--) {
         const date = new Date(today);
         date.setDate(date.getDate() - i);
@@ -167,7 +169,7 @@ function renderChart() {
                     padding: 12,
                     displayColors: false,
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             if (context.raw === null) return 'Không có dữ liệu';
                             return 'Điểm TB: ' + context.raw + '/10';
                         }
@@ -198,7 +200,7 @@ function renderHistory() {
     historyList.innerHTML = attempts.map(attempt => {
         const score = (attempt.correctCount / attempt.totalQuestions * 10).toFixed(1);
         const scoreNum = parseFloat(score);
-        
+
         let badgeClass = 'badge-poor';
         let badgeText = 'Còn cố gắng';
         if (scoreNum >= 8) { badgeClass = 'badge-excellent'; badgeText = 'Xuất sắc'; }
@@ -211,18 +213,18 @@ function renderHistory() {
         return '<div class="history-item" onclick="viewAttemptDetail(' + attempt.quizSetId + ')">' +
             '<div class="history-item-icon"><i class="bi bi-file-earmark-text"></i></div>' +
             '<div class="history-item-content">' +
-                '<div class="history-item-title">' + title + '</div>' +
-                '<div class="history-item-meta">' +
-                    '<span><i class="bi bi-clock"></i> ' + timeAgo + '</span>' +
-                    '<span><i class="bi bi-question-circle"></i> ' + attempt.totalQuestions + ' câu</span>' +
-                    '<span><i class="bi bi-check-circle"></i> ' + attempt.correctCount + ' đúng</span>' +
-                '</div>' +
+            '<div class="history-item-title">' + title + '</div>' +
+            '<div class="history-item-meta">' +
+            '<span><i class="bi bi-clock"></i> ' + timeAgo + '</span>' +
+            '<span><i class="bi bi-question-circle"></i> ' + attempt.totalQuestions + ' câu</span>' +
+            '<span><i class="bi bi-check-circle"></i> ' + attempt.correctCount + ' đúng</span>' +
+            '</div>' +
             '</div>' +
             '<div class="history-item-score">' +
-                '<div class="history-score-value">' + score + '<span style="font-size:1rem;color:#9ca3af">/10</span></div>' +
-                '<div class="history-score-badge ' + badgeClass + '">' + badgeText + '</div>' +
+            '<div class="history-score-value">' + score + '<span style="font-size:1rem;color:#9ca3af">/10</span></div>' +
+            '<div class="history-score-badge ' + badgeClass + '">' + badgeText + '</div>' +
             '</div>' +
-        '</div>';
+            '</div>';
     }).join('');
 }
 

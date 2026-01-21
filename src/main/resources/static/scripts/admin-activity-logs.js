@@ -5,7 +5,6 @@ let currentPage = 0;
 document.addEventListener('DOMContentLoaded', () => {
     initSidebar();
     checkAuth();
-    loadActivityLogs();
 });
 
 // ==================== SIDEBAR ====================
@@ -39,31 +38,33 @@ function initSidebar() {
 // ==================== AUTH ====================
 
 async function checkAuth() {
-    if (!AUTH.isLoggedIn()) {
-        window.location.href = '/html/login.html';
+    // Use AUTH.guard() which properly handles rehydration from HttpOnly cookie
+    const isAuthorized = await AUTH.guard({
+        requireAuth: true,
+        requireAdmin: true,
+        redirect: false
+    });
+
+    if (!isAuthorized) {
+        console.log('[Admin Activity Logs] Not authorized, redirecting...');
+        if (!AUTH.isLoggedIn()) {
+            window.location.href = '/html/login.html';
+        } else {
+            alert('Bạn không có quyền truy cập trang này');
+            window.location.href = '/index.html';
+        }
         return;
     }
 
     try {
         const user = await window.apiClient.get('/api/auth/me');
-        
-        console.log('User info:', user); // Debug log
-        
-        // Check if user has ADMIN role (handle both 'ADMIN' and 'ROLE_ADMIN')
-        const isAdmin = user.role === 'ADMIN' || user.role === 'ROLE_ADMIN' || 
-                       (user.roles && (user.roles.includes('ADMIN') || user.roles.includes('ROLE_ADMIN')));
-        
-        if (!isAdmin) {
-            console.error('Access denied: User is not admin. Role:', user.role);
-            alert('Bạn không có quyền truy cập trang này');
-            window.location.href = '/index.html';
-            return;
-        }
-        
+        console.log('User info:', user);
         document.getElementById('adminUserName').textContent = user.fullName || user.email;
+
+        // Load logs after auth confirmed
+        loadActivityLogs();
     } catch (err) {
         console.error('Failed to load user info:', err);
-        window.location.href = '/html/login.html';
     }
 }
 
@@ -76,20 +77,20 @@ function logout() {
 
 async function loadActivityLogs(page = 0) {
     currentPage = page;
-    
+
     try {
         const url = `/api/admin/activity-logs?page=${page}&size=50`;
         const response = await window.apiClient.get(url);
-        
+
         renderLogsTable(response.logs);
         renderPagination(response);
-        
+
         document.getElementById('totalLogsCount').textContent = `${response.totalItems} logs`;
-        
+
     } catch (error) {
         console.error('Failed to load activity logs:', error);
         showAdminToast('Không thể tải activity logs', 'error');
-        
+
         document.getElementById('logsTableBody').innerHTML = `
             <tr>
                 <td colspan="6" class="text-center text-danger">
@@ -104,7 +105,7 @@ async function loadActivityLogs(page = 0) {
 
 function renderLogsTable(logs) {
     const tbody = document.getElementById('logsTableBody');
-    
+
     if (!logs || logs.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -116,7 +117,7 @@ function renderLogsTable(logs) {
         `;
         return;
     }
-    
+
     tbody.innerHTML = logs.map(log => `
         <tr>
             <td>
@@ -167,14 +168,14 @@ function renderActionBadge(actionType) {
 function renderPagination(response) {
     const pagination = document.getElementById('pagination');
     const { currentPage, totalPages, hasPrevious, hasNext } = response;
-    
+
     if (totalPages <= 1) {
         pagination.innerHTML = '';
         return;
     }
-    
+
     let html = '';
-    
+
     // Previous button
     html += `
         <li class="page-item ${!hasPrevious ? 'disabled' : ''}">
@@ -183,11 +184,11 @@ function renderPagination(response) {
             </a>
         </li>
     `;
-    
+
     // Page numbers
     const startPage = Math.max(0, currentPage - 2);
     const endPage = Math.min(totalPages - 1, currentPage + 2);
-    
+
     for (let i = startPage; i <= endPage; i++) {
         html += `
             <li class="page-item ${i === currentPage ? 'active' : ''}">
@@ -195,7 +196,7 @@ function renderPagination(response) {
             </li>
         `;
     }
-    
+
     // Next button
     html += `
         <li class="page-item ${!hasNext ? 'disabled' : ''}">
@@ -204,7 +205,7 @@ function renderPagination(response) {
             </a>
         </li>
     `;
-    
+
     pagination.innerHTML = html;
 }
 

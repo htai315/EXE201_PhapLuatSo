@@ -1,19 +1,22 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Liên Hệ - Pháp Luật Số</title>
-    
+
     <!-- Bootstrap & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap"
+        rel="stylesheet">
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/common.css">
@@ -21,425 +24,453 @@
     <link rel="stylesheet" href="/css/contact.css">
     <link rel="stylesheet" href="/css/toast-notification.css">
 </head>
+
 <body>
 
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
-    <div class="container">
-        <a class="navbar-brand" href="../index.html">
-            <img src="../img/Law.png" alt="Logo">
-            <span>Pháp Luật Số</span>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto align-items-lg-center">
-                <li class="nav-item"><a class="nav-link" href="../index.html">Trang chủ</a></li>
-                <li class="nav-item"><a class="nav-link" href="about.html">Về chúng tôi</a></li>
-                <li class="nav-item"><a class="nav-link" href="legal-chat.html">Chat AI</a></li>
-                <li class="nav-item"><a class="nav-link" href="my-quizzes.html">Bộ đề</a></li>
-                <li class="nav-item"><a class="nav-link" href="guide.html">Hướng dẫn</a></li>
-                <li class="nav-item"><a class="nav-link active" href="contact.html">Liên hệ</a></li>
-                <li class="nav-item ms-lg-3 guest-only">
-                    <a class="btn btn-outline-primary btn-sm px-3" href="login.html">
-                        <i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập
-                    </a>
-                </li>
-                <li class="nav-item ms-lg-2 guest-only">
-                    <a class="btn btn-primary btn-sm px-3" href="register.html">
-                        <i class="bi bi-person-plus me-1"></i>Đăng Ký
-                    </a>
-                </li>
-                <li class="nav-item dropdown ms-lg-3 auth-only d-none">
-                    <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                        <img id="navUserAvatar" src="" alt="Avatar" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #1a4b84;">
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="profile.html"><i class="bi bi-person me-2"></i>Hồ sơ</a></li>
-                        <li><a class="dropdown-item" href="payment-history.html"><i class="bi bi-clock-history me-2"></i>Lịch sử thanh toán</a></li>
-                        <li><a class="dropdown-item" href="plans.html"><i class="bi bi-credit-card me-2"></i>Nâng cấp</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
-                    </ul>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
-
-<!-- Hero Section -->
-<section class="contact-hero">
-    <div class="container">
-        <div class="row align-items-center min-vh-75 py-5">
-            <div class="col-lg-7 fade-in">
-                <div class="hero-badge mb-4">
-                    <i class="bi bi-headset me-2"></i>
-                    Liên Hệ & Hỗ Trợ
-                </div>
-                <h1 class="hero-title mb-4">
-                    Chúng Tôi Luôn <span class="text-gradient">Sẵn Sàng</span> Hỗ Trợ Bạn
-                </h1>
-                <p class="hero-subtitle mb-5">
-                    Có câu hỏi hoặc cần hỗ trợ? Đội ngũ Pháp Luật Số luôn lắng nghe và phản hồi nhanh chóng. Hãy liên hệ với chúng tôi qua các kênh bên dưới.
-                </p>
-                <div class="hero-stats">
-                    <div class="hero-stat">
-                        <span class="stat-number">24h</span>
-                        <span class="stat-label">Phản hồi</span>
-                    </div>
-                    <div class="hero-stat">
-                        <span class="stat-number">99%</span>
-                        <span class="stat-label">Hài lòng</span>
-                    </div>
-                    <div class="hero-stat">
-                        <span class="stat-number">24/7</span>
-                        <span class="stat-label">Hỗ trợ</span>
-                    </div>
-                </div>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">
+                <img src="../img/Law.png" alt="Logo">
+                <span>Pháp Luật Số</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-lg-center">
+                    <li class="nav-item"><a class="nav-link" href="../index.html">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="about.html">Về chúng tôi</a></li>
+                    <li class="nav-item"><a class="nav-link" href="legal-chat.html">Chat AI</a></li>
+                    <li class="nav-item"><a class="nav-link" href="my-quizzes.html">Bộ đề</a></li>
+                    <li class="nav-item"><a class="nav-link" href="guide.html">Hướng dẫn</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="contact.html">Liên hệ</a></li>
+                    <li class="nav-item ms-lg-3 guest-only">
+                        <a class="btn btn-outline-primary btn-sm px-3" href="login.html">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập
+                        </a>
+                    </li>
+                    <li class="nav-item ms-lg-2 guest-only">
+                        <a class="btn btn-primary btn-sm px-3" href="register.html">
+                            <i class="bi bi-person-plus me-1"></i>Đăng Ký
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown ms-lg-3 auth-only d-none">
+                        <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button"
+                            data-bs-toggle="dropdown">
+                            <img id="navUserAvatar" src="" alt="Avatar" class="rounded-circle"
+                                style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #1a4b84;">
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="profile.html"><i class="bi bi-person me-2"></i>Hồ sơ</a>
+                            </li>
+                            <li><a class="dropdown-item" href="payment-history.html"><i
+                                        class="bi bi-clock-history me-2"></i>Lịch sử thanh toán</a></li>
+                            <li><a class="dropdown-item" href="plans.html"><i class="bi bi-credit-card me-2"></i>Nâng
+                                    cấp</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i
+                                        class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+                        </ul>
+                    </li>
+                </ul>
             </div>
         </div>
-    </div>
-</section>
+    </nav>
 
-<!-- Contact Info Cards -->
-<section class="contact-info-section">
-    <div class="container">
-        <div class="row g-4">
-            <div class="col-md-6 col-lg-3 fade-in">
-                <div class="contact-info-card">
-                    <div class="contact-info-icon">
-                        <i class="bi bi-telephone-fill"></i>
+    <!-- Hero Section -->
+    <section class="contact-hero">
+        <div class="container">
+            <div class="row align-items-center min-vh-75 py-5">
+                <div class="col-lg-7 fade-in">
+                    <div class="hero-badge mb-4">
+                        <i class="bi bi-headset me-2"></i>
+                        Liên Hệ & Hỗ Trợ
                     </div>
-                    <h3 class="contact-info-title">Hotline</h3>
-                    <p class="contact-info-text">1900 xxxx xx</p>
-                    <p class="contact-info-note">T2 - T6: 08:30 - 17:30</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3 fade-in-delay-1">
-                <div class="contact-info-card">
-                    <div class="contact-info-icon icon-success">
-                        <i class="bi bi-envelope-fill"></i>
+                    <h1 class="hero-title mb-4">
+                        Chúng Tôi Luôn <span class="text-gradient">Sẵn Sàng</span> Hỗ Trợ Bạn
+                    </h1>
+                    <p class="hero-subtitle mb-5">
+                        Có câu hỏi hoặc cần hỗ trợ? Đội ngũ Pháp Luật Số luôn lắng nghe và phản hồi nhanh chóng. Hãy
+                        liên hệ với chúng tôi qua các kênh bên dưới.
+                    </p>
+                    <div class="hero-stats">
+                        <div class="hero-stat">
+                            <span class="stat-number">24h</span>
+                            <span class="stat-label">Phản hồi</span>
+                        </div>
+                        <div class="hero-stat">
+                            <span class="stat-number">99%</span>
+                            <span class="stat-label">Hài lòng</span>
+                        </div>
+                        <div class="hero-stat">
+                            <span class="stat-number">24/7</span>
+                            <span class="stat-label">Hỗ trợ</span>
+                        </div>
                     </div>
-                    <h3 class="contact-info-title">Email Hỗ Trợ</h3>
-                    <p class="contact-info-text">support@phapluatso.vn</p>
-                    <p class="contact-info-note">Phản hồi trong 24h</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3 fade-in-delay-2">
-                <div class="contact-info-card">
-                    <div class="contact-info-icon icon-warning">
-                        <i class="bi bi-building"></i>
-                    </div>
-                    <h3 class="contact-info-title">Hợp Tác</h3>
-                    <p class="contact-info-text">partner@phapluatso.vn</p>
-                    <p class="contact-info-note">Dành cho doanh nghiệp</p>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3 fade-in-delay-3">
-                <div class="contact-info-card">
-                    <div class="contact-info-icon icon-danger">
-                        <i class="bi bi-geo-alt-fill"></i>
-                    </div>
-                    <h3 class="contact-info-title">Địa Chỉ</h3>
-                    <p class="contact-info-text">TP. Hồ Chí Minh</p>
-                    <p class="contact-info-note">Việt Nam</p>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- Contact Form Section -->
-<section class="contact-form-section">
-    <div class="container">
-        <div class="row align-items-start g-5">
-            <!-- Left: Why Contact Us -->
-            <div class="col-lg-5 fade-in">
+    <!-- Contact Info Cards -->
+    <section class="contact-info-section">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3 fade-in">
+                    <div class="contact-info-card">
+                        <div class="contact-info-icon">
+                            <i class="bi bi-telephone-fill"></i>
+                        </div>
+                        <h3 class="contact-info-title">Hotline</h3>
+                        <p class="contact-info-text">1900 xxxx xx</p>
+                        <p class="contact-info-note">T2 - T6: 08:30 - 17:30</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 fade-in-delay-1">
+                    <div class="contact-info-card">
+                        <div class="contact-info-icon icon-success">
+                            <i class="bi bi-envelope-fill"></i>
+                        </div>
+                        <h3 class="contact-info-title">Email Hỗ Trợ</h3>
+                        <p class="contact-info-text">support@phapluatso.vn</p>
+                        <p class="contact-info-note">Phản hồi trong 24h</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 fade-in-delay-2">
+                    <div class="contact-info-card">
+                        <div class="contact-info-icon icon-warning">
+                            <i class="bi bi-building"></i>
+                        </div>
+                        <h3 class="contact-info-title">Hợp Tác</h3>
+                        <p class="contact-info-text">partner@phapluatso.vn</p>
+                        <p class="contact-info-note">Dành cho doanh nghiệp</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 fade-in-delay-3">
+                    <div class="contact-info-card">
+                        <div class="contact-info-icon icon-danger">
+                            <i class="bi bi-geo-alt-fill"></i>
+                        </div>
+                        <h3 class="contact-info-title">Địa Chỉ</h3>
+                        <p class="contact-info-text">TP. Hồ Chí Minh</p>
+                        <p class="contact-info-note">Việt Nam</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Form Section -->
+    <section class="contact-form-section">
+        <div class="container">
+            <div class="row align-items-start g-5">
+                <!-- Left: Why Contact Us -->
+                <div class="col-lg-5 fade-in">
+                    <div class="section-badge mb-3">
+                        <i class="bi bi-chat-heart me-2"></i>
+                        Hỗ Trợ Tận Tâm
+                    </div>
+                    <h2 class="section-title mb-4">Tại Sao Liên Hệ <span class="text-gradient">Pháp Luật Số</span>?</h2>
+                    <p class="section-description mb-4">
+                        Chúng tôi cam kết mang đến trải nghiệm hỗ trợ tốt nhất cho bạn với đội ngũ chuyên nghiệp và tận
+                        tâm.
+                    </p>
+
+                    <div class="why-contact-list">
+                        <div class="why-contact-item">
+                            <div class="why-icon">
+                                <i class="bi bi-shield-check"></i>
+                            </div>
+                            <div class="why-content">
+                                <h4>Bảo Mật Thông Tin</h4>
+                                <p>Mọi thông tin bạn gửi đều được bảo mật tuyệt đối theo chính sách riêng tư</p>
+                            </div>
+                        </div>
+                        <div class="why-contact-item">
+                            <div class="why-icon icon-success">
+                                <i class="bi bi-lightning-charge"></i>
+                            </div>
+                            <div class="why-content">
+                                <h4>Phản Hồi Nhanh Chóng</h4>
+                                <p>Đội ngũ hỗ trợ sẵn sàng phản hồi trong vòng 24h làm việc</p>
+                            </div>
+                        </div>
+                        <div class="why-contact-item">
+                            <div class="why-icon icon-warning">
+                                <i class="bi bi-tools"></i>
+                            </div>
+                            <div class="why-content">
+                                <h4>Hỗ Trợ Kỹ Thuật</h4>
+                                <p>Giải quyết mọi vấn đề về tài khoản, truy cập và sử dụng nền tảng</p>
+                            </div>
+                        </div>
+                        <div class="why-contact-item">
+                            <div class="why-icon icon-info">
+                                <i class="bi bi-people"></i>
+                            </div>
+                            <div class="why-content">
+                                <h4>Hợp Tác Đối Tác</h4>
+                                <p>Chào đón các trường học, doanh nghiệp cùng xây dựng hệ sinh thái pháp luật số</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Contact Form -->
+                <div class="col-lg-7 fade-in-delay">
+                    <div class="contact-form-card">
+                        <div class="form-header">
+                            <h3><i class="bi bi-send me-2"></i>Gửi Yêu Cầu Hỗ Trợ</h3>
+                            <p>Điền thông tin bên dưới, chúng tôi sẽ liên hệ lại sớm nhất</p>
+                        </div>
+                        <form id="contactForm">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Họ và Tên <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                        <input type="text" class="form-control" id="contactName"
+                                            placeholder="Nhập họ và tên" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Email <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                        <input type="email" class="form-control" id="contactEmail"
+                                            placeholder="name@example.com" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Số Điện Thoại</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                        <input type="tel" class="form-control" id="contactPhone"
+                                            placeholder="Không bắt buộc">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Loại Yêu Cầu <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="contactType" required>
+                                        <option value="" selected disabled>Chọn loại yêu cầu</option>
+                                        <option value="support">Hỗ trợ sử dụng nền tảng</option>
+                                        <option value="feedback">Góp ý / Phản hồi</option>
+                                        <option value="partner">Hợp tác trường / doanh nghiệp</option>
+                                        <option value="technical">Vấn đề kỹ thuật</option>
+                                        <option value="other">Khác</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Nội Dung Chi Tiết <span
+                                            class="text-danger">*</span></label>
+                                    <textarea class="form-control" id="contactMessage" rows="5"
+                                        placeholder="Mô tả rõ yêu cầu của bạn..." required></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="agreePolicy" required>
+                                        <label for="agreePolicy" class="form-check-label">
+                                            Tôi đồng ý rằng thông tin cung cấp sẽ được Pháp Luật Số sử dụng để liên hệ
+                                            và hỗ trợ theo <a href="#" class="text-primary">chính sách bảo mật</a>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary btn-lg w-100" id="submitBtn">
+                                        <i class="bi bi-send me-2"></i>
+                                        Gửi Yêu Cầu
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <div class="container">
+            <div class="text-center mb-5 fade-in">
                 <div class="section-badge mb-3">
-                    <i class="bi bi-chat-heart me-2"></i>
-                    Hỗ Trợ Tận Tâm
+                    <i class="bi bi-question-circle me-2"></i>
+                    FAQ
                 </div>
-                <h2 class="section-title mb-4">Tại Sao Liên Hệ <span class="text-gradient">Pháp Luật Số</span>?</h2>
-                <p class="section-description mb-4">
-                    Chúng tôi cam kết mang đến trải nghiệm hỗ trợ tốt nhất cho bạn với đội ngũ chuyên nghiệp và tận tâm.
-                </p>
-                
-                <div class="why-contact-list">
-                    <div class="why-contact-item">
-                        <div class="why-icon">
-                            <i class="bi bi-shield-check"></i>
-                        </div>
-                        <div class="why-content">
-                            <h4>Bảo Mật Thông Tin</h4>
-                            <p>Mọi thông tin bạn gửi đều được bảo mật tuyệt đối theo chính sách riêng tư</p>
-                        </div>
-                    </div>
-                    <div class="why-contact-item">
-                        <div class="why-icon icon-success">
-                            <i class="bi bi-lightning-charge"></i>
-                        </div>
-                        <div class="why-content">
-                            <h4>Phản Hồi Nhanh Chóng</h4>
-                            <p>Đội ngũ hỗ trợ sẵn sàng phản hồi trong vòng 24h làm việc</p>
-                        </div>
-                    </div>
-                    <div class="why-contact-item">
-                        <div class="why-icon icon-warning">
-                            <i class="bi bi-tools"></i>
-                        </div>
-                        <div class="why-content">
-                            <h4>Hỗ Trợ Kỹ Thuật</h4>
-                            <p>Giải quyết mọi vấn đề về tài khoản, truy cập và sử dụng nền tảng</p>
-                        </div>
-                    </div>
-                    <div class="why-contact-item">
-                        <div class="why-icon icon-info">
-                            <i class="bi bi-people"></i>
-                        </div>
-                        <div class="why-content">
-                            <h4>Hợp Tác Đối Tác</h4>
-                            <p>Chào đón các trường học, doanh nghiệp cùng xây dựng hệ sinh thái pháp luật số</p>
-                        </div>
-                    </div>
-                </div>
+                <h2 class="section-title">Câu Hỏi <span class="text-gradient">Thường Gặp</span></h2>
+                <p class="section-subtitle">Những thắc mắc phổ biến về Pháp Luật Số</p>
             </div>
-            
-            <!-- Right: Contact Form -->
-            <div class="col-lg-7 fade-in-delay">
-                <div class="contact-form-card">
-                    <div class="form-header">
-                        <h3><i class="bi bi-send me-2"></i>Gửi Yêu Cầu Hỗ Trợ</h3>
-                        <p>Điền thông tin bên dưới, chúng tôi sẽ liên hệ lại sớm nhất</p>
-                    </div>
-                    <form id="contactForm">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Họ và Tên <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
-                                    <input type="text" class="form-control" id="contactName" placeholder="Nhập họ và tên" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Email <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                                    <input type="email" class="form-control" id="contactEmail" placeholder="name@example.com" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Số Điện Thoại</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-telephone"></i></span>
-                                    <input type="tel" class="form-control" id="contactPhone" placeholder="Không bắt buộc">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Loại Yêu Cầu <span class="text-danger">*</span></label>
-                                <select class="form-select" id="contactType" required>
-                                    <option value="" selected disabled>Chọn loại yêu cầu</option>
-                                    <option value="support">Hỗ trợ sử dụng nền tảng</option>
-                                    <option value="feedback">Góp ý / Phản hồi</option>
-                                    <option value="partner">Hợp tác trường / doanh nghiệp</option>
-                                    <option value="technical">Vấn đề kỹ thuật</option>
-                                    <option value="other">Khác</option>
-                                </select>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Nội Dung Chi Tiết <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="contactMessage" rows="5" placeholder="Mô tả rõ yêu cầu của bạn..." required></textarea>
-                            </div>
-                            <div class="col-12">
-                                <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" id="agreePolicy" required>
-                                    <label for="agreePolicy" class="form-check-label">
-                                        Tôi đồng ý rằng thông tin cung cấp sẽ được Pháp Luật Số sử dụng để liên hệ và hỗ trợ theo <a href="#" class="text-primary">chính sách bảo mật</a>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <button type="submit" class="btn btn-primary btn-lg w-100" id="submitBtn">
-                                    <i class="bi bi-send me-2"></i>
-                                    Gửi Yêu Cầu
+
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item fade-in">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#faq1">
+                                    <i class="bi bi-clock me-2 text-primary"></i>
+                                    Thời gian phản hồi yêu cầu hỗ trợ là bao lâu?
                                 </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Chúng tôi cam kết phản hồi trong vòng 24h làm việc. Với các vấn đề khẩn cấp, bạn có
+                                    thể gọi trực tiếp hotline để được hỗ trợ ngay.
+                                </div>
                             </div>
                         </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- FAQ Section -->
-<section class="faq-section">
-    <div class="container">
-        <div class="text-center mb-5 fade-in">
-            <div class="section-badge mb-3">
-                <i class="bi bi-question-circle me-2"></i>
-                FAQ
-            </div>
-            <h2 class="section-title">Câu Hỏi <span class="text-gradient">Thường Gặp</span></h2>
-            <p class="section-subtitle">Những thắc mắc phổ biến về Pháp Luật Số</p>
-        </div>
-        
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="accordion" id="faqAccordion">
-                    <div class="accordion-item fade-in">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                                <i class="bi bi-clock me-2 text-primary"></i>
-                                Thời gian phản hồi yêu cầu hỗ trợ là bao lâu?
-                            </button>
-                        </h2>
-                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                Chúng tôi cam kết phản hồi trong vòng 24h làm việc. Với các vấn đề khẩn cấp, bạn có thể gọi trực tiếp hotline để được hỗ trợ ngay.
+                        <div class="accordion-item fade-in-delay-1">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#faq2">
+                                    <i class="bi bi-building me-2 text-primary"></i>
+                                    Làm thế nào để hợp tác với Pháp Luật Số?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Vui lòng gửi email đến partner@phapluatso.vn hoặc điền form liên hệ với loại yêu cầu
+                                    "Hợp tác trường / doanh nghiệp". Đội ngũ kinh doanh sẽ liên hệ lại trong 48h.
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="accordion-item fade-in-delay-1">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                                <i class="bi bi-building me-2 text-primary"></i>
-                                Làm thế nào để hợp tác với Pháp Luật Số?
-                            </button>
-                        </h2>
-                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                Vui lòng gửi email đến partner@phapluatso.vn hoặc điền form liên hệ với loại yêu cầu "Hợp tác trường / doanh nghiệp". Đội ngũ kinh doanh sẽ liên hệ lại trong 48h.
+                        <div class="accordion-item fade-in-delay-2">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#faq3">
+                                    <i class="bi bi-shield-lock me-2 text-primary"></i>
+                                    Thông tin liên hệ của tôi có được bảo mật không?
+                                </button>
+                            </h2>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Tuyệt đối! Mọi thông tin bạn cung cấp chỉ được sử dụng để hỗ trợ và liên hệ. Chúng
+                                    tôi cam kết không chia sẻ thông tin với bên thứ ba.
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="accordion-item fade-in-delay-2">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                                <i class="bi bi-shield-lock me-2 text-primary"></i>
-                                Thông tin liên hệ của tôi có được bảo mật không?
-                            </button>
-                        </h2>
-                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                Tuyệt đối! Mọi thông tin bạn cung cấp chỉ được sử dụng để hỗ trợ và liên hệ. Chúng tôi cam kết không chia sẻ thông tin với bên thứ ba.
-                            </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item fade-in-delay-3">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
-                                <i class="bi bi-credit-card me-2 text-primary"></i>
-                                Tôi gặp vấn đề về thanh toán, phải làm sao?
-                            </button>
-                        </h2>
-                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                Vui lòng liên hệ ngay qua email support@phapluatso.vn kèm mã giao dịch và mô tả vấn đề. Chúng tôi sẽ kiểm tra và hỗ trợ bạn trong thời gian sớm nhất.
+                        <div class="accordion-item fade-in-delay-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#faq4">
+                                    <i class="bi bi-credit-card me-2 text-primary"></i>
+                                    Tôi gặp vấn đề về thanh toán, phải làm sao?
+                                </button>
+                            </h2>
+                            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Vui lòng liên hệ ngay qua email support@phapluatso.vn kèm mã giao dịch và mô tả vấn
+                                    đề. Chúng tôi sẽ kiểm tra và hỗ trợ bạn trong thời gian sớm nhất.
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- Footer -->
-<footer class="footer">
-    <div class="container">
-        <div class="row g-4">
-            <div class="col-lg-4 col-md-6">
-                <div class="footer-brand mb-3">
-                    <i class="bi bi-shield-check me-2 fs-4"></i>
-                    <span class="fw-bold fs-4">Pháp Luật Số</span>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    <div class="footer-brand mb-3">
+                        <i class="bi bi-shield-check me-2 fs-4"></i>
+                        <span class="fw-bold fs-4">Pháp Luật Số</span>
+                    </div>
+                    <p class="footer-description">Trợ lý luật thông minh được hỗ trợ bởi AI, giúp bạn giải quyết mọi vấn
+                        đề pháp lý nhanh chóng và chính xác.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="social-link"><i class="bi bi-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="bi bi-linkedin"></i></a>
+                        <a href="#" class="social-link"><i class="bi bi-youtube"></i></a>
+                    </div>
                 </div>
-                <p class="footer-description">Trợ lý luật thông minh được hỗ trợ bởi AI, giúp bạn giải quyết mọi vấn đề pháp lý nhanh chóng và chính xác.</p>
-                <div class="social-links">
-                    <a href="#" class="social-link"><i class="bi bi-facebook"></i></a>
-                    <a href="#" class="social-link"><i class="bi bi-twitter"></i></a>
-                    <a href="#" class="social-link"><i class="bi bi-linkedin"></i></a>
-                    <a href="#" class="social-link"><i class="bi bi-youtube"></i></a>
+                <div class="col-lg-2 col-md-6">
+                    <h5 class="footer-title">Sản Phẩm</h5>
+                    <ul class="footer-links">
+                        <li><a href="../index.html#features">Tính Năng</a></li>
+                        <li><a href="../index.html#pricing">Bảng Giá</a></li>
+                        <li><a href="../index.html#quiz">Quiz AI</a></li>
+                        <li><a href="../index.html#video">Demo</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <h5 class="footer-title">Công Ty</h5>
+                    <ul class="footer-links">
+                        <li><a href="about.html">Về Chúng Tôi</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Tuyển Dụng</a></li>
+                        <li><a href="contact.html">Liên Hệ</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <h5 class="footer-title">Hỗ Trợ</h5>
+                    <ul class="footer-links">
+                        <li><a href="../index.html#faq">FAQ</a></li>
+                        <li><a href="guide.html">Hướng Dẫn</a></li>
+                        <li><a href="#">API Docs</a></li>
+                        <li><a href="#">Trạng Thái</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <h5 class="footer-title">Pháp Lý</h5>
+                    <ul class="footer-links">
+                        <li><a href="#">Điều Khoản</a></li>
+                        <li><a href="#">Bảo Mật</a></li>
+                        <li><a href="#">Cookie</a></li>
+                        <li><a href="#">Giấy Phép</a></li>
+                    </ul>
                 </div>
             </div>
-            <div class="col-lg-2 col-md-6">
-                <h5 class="footer-title">Sản Phẩm</h5>
-                <ul class="footer-links">
-                    <li><a href="../index.html#features">Tính Năng</a></li>
-                    <li><a href="../index.html#pricing">Bảng Giá</a></li>
-                    <li><a href="../index.html#quiz">Quiz AI</a></li>
-                    <li><a href="../index.html#video">Demo</a></li>
-                </ul>
-            </div>
-            <div class="col-lg-2 col-md-6">
-                <h5 class="footer-title">Công Ty</h5>
-                <ul class="footer-links">
-                    <li><a href="about.html">Về Chúng Tôi</a></li>
-                    <li><a href="#">Blog</a></li>
-                    <li><a href="#">Tuyển Dụng</a></li>
-                    <li><a href="contact.html">Liên Hệ</a></li>
-                </ul>
-            </div>
-            <div class="col-lg-2 col-md-6">
-                <h5 class="footer-title">Hỗ Trợ</h5>
-                <ul class="footer-links">
-                    <li><a href="../index.html#faq">FAQ</a></li>
-                    <li><a href="guide.html">Hướng Dẫn</a></li>
-                    <li><a href="#">API Docs</a></li>
-                    <li><a href="#">Trạng Thái</a></li>
-                </ul>
-            </div>
-            <div class="col-lg-2 col-md-6">
-                <h5 class="footer-title">Pháp Lý</h5>
-                <ul class="footer-links">
-                    <li><a href="#">Điều Khoản</a></li>
-                    <li><a href="#">Bảo Mật</a></li>
-                    <li><a href="#">Cookie</a></li>
-                    <li><a href="#">Giấy Phép</a></li>
-                </ul>
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <p class="mb-0">&copy; 2025 Pháp Luật Số. Tất cả quyền được bảo lưu.</p>
+                <p class="mb-0">Được phát triển với <i class="bi bi-heart-fill text-danger"></i> tại Việt Nam</p>
             </div>
         </div>
-        <hr class="footer-divider">
-        <div class="footer-bottom">
-            <p class="mb-0">&copy; 2025 Pháp Luật Số. Tất cả quyền được bảo lưu.</p>
-            <p class="mb-0">Được phát triển với <i class="bi bi-heart-fill text-danger"></i> tại Việt Nam</p>
-        </div>
-    </div>
-</footer>
+    </footer>
 
-<!-- Toast Container -->
-<div id="toast-container"></div>
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/scripts/api-client.js"></script>
-<script src="/scripts/toast-notification.js"></script>
-<script src="../scripts/script.js"></script>
-<script>
-// Contact Form Handler
-document.getElementById('contactForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const btn = document.getElementById('submitBtn');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang gửi...';
-    btn.disabled = true;
-    
-    // Simulate form submission
-    setTimeout(() => {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-        
-        // Show success toast
-        if (typeof showToast === 'function') {
-            showToast('Gửi yêu cầu thành công! Chúng tôi sẽ liên hệ lại sớm nhất.', 'success');
-        } else {
-            alert('Gửi yêu cầu thành công! Chúng tôi sẽ liên hệ lại sớm nhất.');
-        }
-        
-        // Reset form
-        document.getElementById('contactForm').reset();
-    }, 1500);
-});
-</script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/scripts/token-manager.js"></script>
+    <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/toast-notification.js"></script>
+    <script src="../scripts/script.js"></script>
+    <script>
+        // Contact Form Handler
+        document.getElementById('contactForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const btn = document.getElementById('submitBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang gửi...';
+            btn.disabled = true;
+
+            // Simulate form submission
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+                // Show success toast
+                if (typeof showToast === 'function') {
+                    showToast('Gửi yêu cầu thành công! Chúng tôi sẽ liên hệ lại sớm nhất.', 'success');
+                } else {
+                    alert('Gửi yêu cầu thành công! Chúng tôi sẽ liên hệ lại sớm nhất.');
+                }
+
+                // Reset form
+                document.getElementById('contactForm').reset();
+            }, 1500);
+        });
+    </script>
 </body>
+
 </html>

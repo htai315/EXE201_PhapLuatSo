@@ -1,33 +1,38 @@
 /**
- * API Client với Auto Token Refresh
+ * API Client with In-Memory Token + HttpOnly Cookie Refresh
  * 
- * Tự động refresh access token khi hết hạn (401 Unauthorized)
- * và retry request ban đầu với token mới
+ * Security model:
+ * - Access token: stored in memory via TokenManager (XSS-safe)
+ * - Refresh token: HttpOnly cookie (auto-sent by browser)
+ * 
+ * On 401: calls TokenManager.refreshAccessToken() which uses the cookie
  */
 
 const API_CLIENT = {
     /**
-     * Fetch với auto token refresh
+     * Fetch with auto token refresh
      * @param {string} url - API endpoint
      * @param {object} options - Fetch options
      * @returns {Promise<Response>}
      */
     async fetchWithAuth(url, options = {}) {
-        const token = localStorage.getItem('accessToken');
-        
-        // Add Authorization header
+        // Get token from memory (not localStorage)
+        const token = window.TokenManager?.getAccessToken();
+
+        // Add Authorization header and credentials for cookies
         const headers = {
             ...options.headers,
             'Authorization': token ? `Bearer ${token}` : ''
         };
 
-        // First attempt
+        // First attempt - include credentials for cookie handling
         let response = await fetch(url, {
             ...options,
-            headers
+            headers,
+            credentials: 'include' // CRITICAL: send cookies
         });
 
-        // Nếu 403 Forbidden với ACCOUNT_BANNED → hiển thị thông báo và logout
+        // Handle 403 Forbidden with ACCOUNT_BANNED
         if (response.status === 403) {
             try {
                 const clonedResponse = response.clone();
@@ -41,25 +46,31 @@ const API_CLIENT = {
             }
         }
 
-        // Nếu 401 Unauthorized → thử refresh token
+        // Handle 401 Unauthorized - try refresh
         if (response.status === 401) {
-            console.log('Access token expired, attempting refresh...');
-            
-            const refreshSuccess = await this.refreshToken();
-            
+            // Skip refresh for refresh endpoint itself (prevent infinite loop)
+            if (url.includes('/api/auth/refresh')) {
+                return response;
+            }
+
+            console.log('[API Client] Access token expired, attempting refresh...');
+
+            const refreshSuccess = await window.TokenManager?.refreshAccessToken();
+
             if (refreshSuccess) {
-                // Retry request với token mới
-                const newToken = localStorage.getItem('accessToken');
+                // Retry request with new token from memory
+                const newToken = window.TokenManager?.getAccessToken();
                 response = await fetch(url, {
                     ...options,
                     headers: {
                         ...options.headers,
                         'Authorization': `Bearer ${newToken}`
-                    }
+                    },
+                    credentials: 'include'
                 });
             } else {
                 // Refresh failed → redirect to login
-                console.error('Token refresh failed, redirecting to login');
+                console.error('[API Client] Token refresh failed, redirecting to login');
                 this.redirectToLogin();
             }
         }
@@ -68,42 +79,34 @@ const API_CLIENT = {
     },
 
     /**
-     * Handle account banned - show toast message and logout
-     * @param {string} message - Ban message from server
+     * Handle account banned - show toast and logout
      */
     handleAccountBanned(message) {
-        // Prevent multiple calls
         if (this._handlingBan) return;
         this._handlingBan = true;
-        
-        // Clear tokens
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('userName');
-        
+
+        // Clear tokens via TokenManager
+        window.TokenManager?.clearAccessToken();
+
         const banMessage = message || 'Tài khoản của bạn đã bị khóa.';
-        
-        // Use existing Toast component with same style as other toasts
         this.showBanToast(banMessage);
-        
-        // Redirect to login after 2 seconds
+
         setTimeout(() => {
             this._handlingBan = false;
             window.location.href = '/html/login.html';
         }, 2000);
     },
-    
+
     /**
-     * Show ban toast notification using same style as existing toasts
+     * Show ban toast notification
      */
     showBanToast(message) {
-        // Try to use existing Toast component first
         if (window.Toast && typeof window.Toast.error === 'function') {
             window.Toast.error(message, 2000);
             return;
         }
-        
-        // Fallback: Create toast with same style as toast-notification.css
+
+        // Fallback toast
         let container = document.getElementById('toast-container');
         if (!container) {
             container = document.createElement('div');
@@ -112,7 +115,7 @@ const API_CLIENT = {
             container.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:12px;pointer-events:none;';
             document.body.appendChild(container);
         }
-        
+
         const toast = document.createElement('div');
         toast.className = 'toast toast-error';
         toast.style.cssText = `
@@ -122,7 +125,7 @@ const API_CLIENT = {
             border-left:4px solid #ef4444;pointer-events:auto;
             opacity:0;transform:translateX(400px);transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
         `;
-        
+
         toast.innerHTML = `
             <div class="toast-icon" style="flex-shrink:0;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:linear-gradient(135deg,#ef4444 0%,#dc2626 100%);color:white;">
                 <i class="bi bi-x-circle-fill" style="font-size:1.25rem;"></i>
@@ -131,16 +134,13 @@ const API_CLIENT = {
                 <div class="toast-message" style="font-size:0.95rem;font-weight:500;color:#0f172a;line-height:1.5;">${message}</div>
             </div>
         `;
-        
+
         container.appendChild(toast);
-        
-        // Trigger animation
         setTimeout(() => {
             toast.style.opacity = '1';
             toast.style.transform = 'translateX(0)';
         }, 10);
-        
-        // Auto remove
+
         setTimeout(() => {
             toast.style.opacity = '0';
             toast.style.transform = 'translateX(400px)';
@@ -150,22 +150,18 @@ const API_CLIENT = {
 
     /**
      * Parse error response from API
-     * @param {Response} response - Fetch response
-     * @returns {Promise<Object>} - Error object with message
      */
     async parseErrorResponse(response) {
         let errorMessage = 'Đã xảy ra lỗi';
         try {
             const data = await response.json();
             errorMessage = data.error || data.message || errorMessage;
-            // Return error object with extracted message
             return {
                 error: errorMessage,
                 code: data.code,
                 status: response.status
             };
         } catch (e) {
-            // If response is not JSON, use status text
             return {
                 error: response.statusText || errorMessage,
                 status: response.status
@@ -174,57 +170,11 @@ const API_CLIENT = {
     },
 
     /**
-     * Refresh access token
-     * @returns {Promise<boolean>} - true nếu refresh thành công
-     */
-    async refreshToken() {
-        const refreshToken = localStorage.getItem('refreshToken');
-        
-        if (!refreshToken) {
-            console.error('No refresh token found');
-            return false;
-        }
-
-        try {
-            const response = await fetch('/api/auth/refresh', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ refreshToken })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                
-                // Lưu tokens mới
-                localStorage.setItem('accessToken', data.accessToken);
-                if (data.refreshToken) {
-                    localStorage.setItem('refreshToken', data.refreshToken);
-                }
-                
-                console.log('Token refreshed successfully');
-                return true;
-            } else {
-                console.error('Refresh token invalid or expired');
-                return false;
-            }
-        } catch (error) {
-            console.error('Error refreshing token:', error);
-            return false;
-        }
-    },
-
-    /**
      * Redirect to login page
      */
     redirectToLogin() {
-        // Clear tokens
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('userName');
-        
-        // Redirect
+        window.TokenManager?.clearAccessToken();
+
         const currentPath = window.location.pathname;
         if (!currentPath.includes('/html/login.html')) {
             window.location.href = '/html/login.html';
@@ -238,12 +188,12 @@ const API_CLIENT = {
         const response = await this.fetchWithAuth(url, {
             method: 'GET'
         });
-        
+
         if (!response.ok) {
             const error = await this.parseErrorResponse(response);
             throw error;
         }
-        
+
         return response.json();
     },
 
@@ -258,18 +208,15 @@ const API_CLIENT = {
             },
             body: JSON.stringify(data)
         });
-        
+
         if (!response.ok) {
             const error = await this.parseErrorResponse(response);
             throw error;
         }
-        
-        // Handle empty response (201 Created with no body, etc.)
+
         const text = await response.text();
-        if (!text) {
-            return null;
-        }
-        
+        if (!text) return null;
+
         try {
             return JSON.parse(text);
         } catch (e) {
@@ -288,18 +235,15 @@ const API_CLIENT = {
             },
             body: JSON.stringify(data)
         });
-        
+
         if (!response.ok) {
             const error = await this.parseErrorResponse(response);
             throw error;
         }
-        
-        // Handle empty response (204 No Content or empty body)
+
         const text = await response.text();
-        if (!text) {
-            return null;
-        }
-        
+        if (!text) return null;
+
         try {
             return JSON.parse(text);
         } catch (e) {
@@ -314,18 +258,40 @@ const API_CLIENT = {
         const response = await this.fetchWithAuth(url, {
             method: 'DELETE'
         });
-        
+
         if (!response.ok) {
             const error = await this.parseErrorResponse(response);
             throw error;
         }
-        
-        // Handle empty response (204 No Content or empty body)
+
         const text = await response.text();
-        if (!text) {
-            return null;
+        if (!text) return null;
+
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            return text;
         }
-        
+    },
+
+    /**
+     * Helper: Upload file with FormData
+     */
+    async upload(url, formData) {
+        const response = await this.fetchWithAuth(url, {
+            method: 'POST',
+            body: formData
+            // Don't set Content-Type header - browser will set it with boundary
+        });
+
+        if (!response.ok) {
+            const error = await this.parseErrorResponse(response);
+            throw error;
+        }
+
+        const text = await response.text();
+        if (!text) return null;
+
         try {
             return JSON.parse(text);
         } catch (e) {
@@ -334,6 +300,7 @@ const API_CLIENT = {
     }
 };
 
-// Export cho global scope
+// Export for global scope
 window.apiClient = API_CLIENT;
-window.API_CLIENT = API_CLIENT; // Backward compatibility
+window.API_CLIENT = API_CLIENT;
+

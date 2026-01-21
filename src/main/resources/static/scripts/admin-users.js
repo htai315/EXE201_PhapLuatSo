@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSidebar();
     checkAuth();
     // loadUsers will be called after checkAuth sets currentAdminId
-    
+
     // Search on Enter key
     document.getElementById('searchInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
@@ -53,37 +53,37 @@ function initSidebar() {
 // ==================== AUTH ====================
 
 async function checkAuth() {
-    if (!AUTH.isLoggedIn()) {
-        window.location.href = '/html/login.html';
+    // Use AUTH.guard() which properly handles rehydration from HttpOnly cookie
+    const isAuthorized = await AUTH.guard({
+        requireAuth: true,
+        requireAdmin: true,
+        redirect: false
+    });
+
+    if (!isAuthorized) {
+        console.log('[Admin Users] Not authorized, redirecting...');
+        if (!AUTH.isLoggedIn()) {
+            window.location.href = '/html/login.html';
+        } else {
+            alert('Bạn không có quyền truy cập trang này');
+            window.location.href = '/index.html';
+        }
         return;
     }
 
     try {
         const user = await window.apiClient.get('/api/auth/me');
-        
-        console.log('User info:', user); // Debug log
-        
-        // Check if user has ADMIN role (handle both 'ADMIN' and 'ROLE_ADMIN')
-        const isAdmin = user.role === 'ADMIN' || user.role === 'ROLE_ADMIN' || 
-                       (user.roles && (user.roles.includes('ADMIN') || user.roles.includes('ROLE_ADMIN')));
-        
-        if (!isAdmin) {
-            console.error('Access denied: User is not admin. Role:', user.role);
-            alert('Bạn không có quyền truy cập trang này');
-            window.location.href = '/index.html';
-            return;
-        }
-        
+        console.log('User info:', user);
+
         // Store current admin's ID to prevent self-actions
         currentAdminId = user.id;
-        
+
         document.getElementById('adminUserName').textContent = user.fullName || user.email;
-        
+
         // Now load users after we have the admin ID
         loadUsers();
     } catch (err) {
         console.error('Failed to load user info:', err);
-        window.location.href = '/html/login.html';
     }
 }
 
@@ -96,29 +96,29 @@ function logout() {
 
 async function loadUsers(page = 0) {
     currentPage = page;
-    
+
     try {
         let url = `/api/admin/users?page=${page}&size=20&sort=createdAt&direction=DESC`;
-        
+
         if (currentSearch) {
             url += `&search=${encodeURIComponent(currentSearch)}`;
         }
-        
+
         if (currentStatus) {
             url += `&status=${encodeURIComponent(currentStatus)}`;
         }
-        
+
         const response = await window.apiClient.get(url);
-        
+
         renderUsersTable(response.users);
         renderPagination(response);
-        
+
         document.getElementById('totalUsersCount').textContent = `${response.totalItems} users`;
-        
+
     } catch (error) {
         console.error('Failed to load users:', error);
         showAdminToast('Không thể tải danh sách users', 'error');
-        
+
         document.getElementById('usersTableBody').innerHTML = `
             <tr>
                 <td colspan="8" class="text-center text-danger">
@@ -139,7 +139,7 @@ function searchUsers() {
 
 function renderUsersTable(users) {
     const tbody = document.getElementById('usersTableBody');
-    
+
     if (!users || users.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -151,10 +151,10 @@ function renderUsersTable(users) {
         `;
         return;
     }
-    
+
     tbody.innerHTML = users.map(user => {
         const isCurrentAdmin = user.id === currentAdminId;
-        
+
         return `
         <tr ${isCurrentAdmin ? 'class="table-info"' : ''}>
             <td>
@@ -225,9 +225,9 @@ function renderStatusBadge(user) {
 function renderPagination(response) {
     const pagination = document.getElementById('pagination');
     const { currentPage, totalPages, hasPrevious, hasNext } = response;
-    
+
     let html = '';
-    
+
     // Previous button
     html += `
         <li class="page-item ${!hasPrevious ? 'disabled' : ''}">
@@ -236,11 +236,11 @@ function renderPagination(response) {
             </a>
         </li>
     `;
-    
+
     // Page numbers
     const startPage = Math.max(0, currentPage - 2);
     const endPage = Math.min(totalPages - 1, currentPage + 2);
-    
+
     for (let i = startPage; i <= endPage; i++) {
         html += `
             <li class="page-item ${i === currentPage ? 'active' : ''}">
@@ -248,7 +248,7 @@ function renderPagination(response) {
             </li>
         `;
     }
-    
+
     // Next button
     html += `
         <li class="page-item ${!hasNext ? 'disabled' : ''}">
@@ -257,7 +257,7 @@ function renderPagination(response) {
             </a>
         </li>
     `;
-    
+
     pagination.innerHTML = html;
 }
 
@@ -266,12 +266,12 @@ function renderPagination(response) {
 async function viewUserDetail(userId) {
     try {
         const user = await window.apiClient.get(`/api/admin/users/${userId}`);
-        
+
         const avatarInitial = user.fullName ? user.fullName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase();
-        const avatarContent = user.avatarUrl 
+        const avatarContent = user.avatarUrl
             ? `<img src="${escapeHtml(user.avatarUrl)}" alt="Avatar">`
             : avatarInitial;
-        
+
         const content = `
             <!-- User Header -->
             <div class="user-detail-header">
@@ -415,15 +415,15 @@ async function viewUserDetail(userId) {
                 </div>
             </div>
         `;
-        
+
         document.getElementById('userDetailContent').innerHTML = content;
-        
+
         // Add class to modal for custom styling
         document.getElementById('userDetailModal').classList.add('user-detail-modal');
-        
+
         const modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
         modal.show();
-        
+
     } catch (error) {
         console.error('Failed to load user detail:', error);
         showAdminToast('Không thể tải chi tiết user', 'error');
@@ -436,38 +436,38 @@ function showBanModal(userId, email, fullName = null) {
     selectedUserId = userId;
     document.getElementById('banUserEmail').textContent = email;
     document.getElementById('banReason').value = '';
-    
+
     // Set avatar initial
     const avatarInitial = fullName ? fullName.charAt(0).toUpperCase() : email.charAt(0).toUpperCase();
     document.getElementById('banUserAvatar').textContent = avatarInitial;
-    
+
     const modal = new bootstrap.Modal(document.getElementById('banUserModal'));
     modal.show();
 }
 
 async function confirmBanUser() {
     const reason = document.getElementById('banReason').value.trim();
-    
+
     if (!reason) {
         showAdminToast('Vui lòng nhập lý do ban user', 'warning');
         return;
     }
-    
+
     if (reason.length < 3) {
         showAdminToast('Lý do ban phải có ít nhất 3 ký tự', 'warning');
         return;
     }
-    
+
     try {
         await window.apiClient.post(`/api/admin/users/${selectedUserId}/ban`, { reason });
-        
+
         showAdminToast('Ban user thành công', 'success');
-        
+
         const modal = bootstrap.Modal.getInstance(document.getElementById('banUserModal'));
         modal.hide();
-        
+
         loadUsers(currentPage);
-        
+
     } catch (error) {
         console.error('Failed to ban user:', error);
         const errorMsg = error.error || error.message || 'Unknown error';
@@ -485,17 +485,17 @@ async function unbanUser(userId) {
         cancelText: 'Hủy',
         type: 'info'
     });
-    
+
     if (!confirmed) {
         return;
     }
-    
+
     try {
         await window.apiClient.post(`/api/admin/users/${userId}/unban`, {});
-        
+
         showAdminToast('Unban user thành công', 'success');
         loadUsers(currentPage);
-        
+
     } catch (error) {
         console.error('Failed to unban user:', error);
         const errorMsg = error.error || error.message || 'Unknown error';
@@ -509,13 +509,13 @@ async function deleteUser(userId) {
     if (!confirm('Bạn có chắc muốn xóa user này? (Soft delete)')) {
         return;
     }
-    
+
     try {
         await window.apiClient.delete(`/api/admin/users/${userId}`);
-        
+
         showAdminToast('Xóa user thành công', 'success');
         loadUsers(currentPage);
-        
+
     } catch (error) {
         console.error('Failed to delete user:', error);
         showAdminToast('Không thể xóa user: ' + (error.message || 'Unknown error'), 'error');
@@ -580,39 +580,34 @@ function showAdminToast(message, type = 'info') {
 async function exportUsersCsv() {
     try {
         showAdminToast('Đang tạo file CSV...', 'info');
-        
+
         let url = '/api/admin/users/export';
         const params = [];
-        
+
         if (currentSearch) {
             params.push(`search=${encodeURIComponent(currentSearch)}`);
         }
         if (currentStatus) {
             params.push(`status=${encodeURIComponent(currentStatus)}`);
         }
-        
+
         if (params.length > 0) {
             url += '?' + params.join('&');
         }
-        
-        const token = AUTH.getToken();
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        
+
+        // Use apiClient fetchWithAuth to include token refresh behavior and handle blob
+        const response = await window.apiClient.fetchWithAuth(url, { method: 'GET' });
+
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.message || 'Export failed');
         }
-        
+
         const blob = await response.blob();
         const downloadUrl = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = downloadUrl;
-        
+
         // Get filename from Content-Disposition header or use default
         const contentDisposition = response.headers.get('Content-Disposition');
         let filename = 'users_export.csv';
@@ -622,15 +617,15 @@ async function exportUsersCsv() {
                 filename = match[1];
             }
         }
-        
+
         a.download = filename;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(downloadUrl);
         document.body.removeChild(a);
-        
+
         showAdminToast('Export thành công!', 'success');
-        
+
     } catch (error) {
         console.error('Export failed:', error);
         showAdminToast('Export thất bại: ' + error.message, 'error');
@@ -644,16 +639,16 @@ function showCreditModal(userId, email, action) {
     creditUserId = userId;
     creditUserEmail = email;
     creditAction = action;
-    
+
     document.getElementById('creditUserEmail').value = email;
     document.getElementById('creditChatAmount').value = 0;
     document.getElementById('creditQuizGenAmount').value = 0;
     document.getElementById('creditReason').value = '';
-    
+
     const modalTitle = document.getElementById('creditModalTitle');
     const submitBtn = document.getElementById('creditSubmitBtn');
     const modalHeader = document.querySelector('#creditManageModal .modal-header');
-    
+
     if (action === 'add') {
         modalTitle.textContent = 'Thêm Credits';
         submitBtn.innerHTML = '<i class="bi bi-plus-lg me-1"></i> Thêm Credits';
@@ -665,7 +660,7 @@ function showCreditModal(userId, email, action) {
         submitBtn.className = 'btn btn-danger';
         modalHeader.className = 'modal-header bg-danger text-white';
     }
-    
+
     const modal = new bootstrap.Modal(document.getElementById('creditManageModal'));
     modal.show();
 }
@@ -674,46 +669,46 @@ async function submitCreditAdjust() {
     const chatCredits = parseInt(document.getElementById('creditChatAmount').value) || 0;
     const quizGenCredits = parseInt(document.getElementById('creditQuizGenAmount').value) || 0;
     const reason = document.getElementById('creditReason').value.trim();
-    
+
     if (chatCredits <= 0 && quizGenCredits <= 0) {
         showAdminToast('Vui lòng nhập số credits cần ' + (creditAction === 'add' ? 'thêm' : 'trừ'), 'warning');
         return;
     }
-    
+
     if (!reason) {
         showAdminToast('Vui lòng nhập lý do', 'warning');
         return;
     }
-    
+
     try {
-        const endpoint = creditAction === 'add' 
+        const endpoint = creditAction === 'add'
             ? `/api/admin/users/${creditUserId}/credits/add`
             : `/api/admin/users/${creditUserId}/credits/remove`;
-        
+
         await window.apiClient.post(endpoint, {
             chatCredits,
             quizGenCredits,
             reason
         });
-        
+
         showAdminToast(
-            creditAction === 'add' ? 'Đã thêm credits thành công' : 'Đã trừ credits thành công', 
+            creditAction === 'add' ? 'Đã thêm credits thành công' : 'Đã trừ credits thành công',
             'success'
         );
-        
+
         // Close modal
         const modal = bootstrap.Modal.getInstance(document.getElementById('creditManageModal'));
         modal.hide();
-        
+
         // Close user detail modal and reload
         const detailModal = bootstrap.Modal.getInstance(document.getElementById('userDetailModal'));
         if (detailModal) {
             detailModal.hide();
         }
-        
+
         // Reload users list
         loadUsers(currentPage);
-        
+
     } catch (error) {
         console.error('Credit adjustment failed:', error);
         const errorMsg = error.error || error.message || 'Unknown error';

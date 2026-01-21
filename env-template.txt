@@ -1,0 +1,87 @@
+# ============================================
+# Pháp Luật Số - Environment Configuration Template
+# ============================================
+# 1. Copy nội dung này vào file mới tên ".env"
+# 2. Thay thế các giá trị mẫu bằng thông tin thực của bạn
+# 3. KHÔNG commit file .env lên Git
+
+# ============================================
+# JWT Configuration
+# ============================================
+# Tạo secret ngẫu nhiên: openssl rand -base64 64
+# Phải có ít nhất 32 ký tự
+JWT_SECRET=CHANGE_ME_TO_A_LONG_RANDOM_SECRET_AT_LEAST_32_CHARS_FOR_SECURITY
+
+# ============================================
+# Google OAuth2 Configuration
+# ============================================
+# Lấy từ: https://console.cloud.google.com/apis/credentials
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# ============================================
+# Frontend URLs
+# ============================================
+# Giá trị mặc định cho local development
+FRONTEND_REDIRECT_URL=http://localhost:8080/html/oauth2-redirect.html
+FRONTEND_BASE_URL=http://localhost:8080
+
+# ============================================
+# OpenAI Configuration
+# ============================================
+# Lấy API key từ: https://platform.openai.com/api-keys
+OPENAI_API_KEY=sk-proj-your-openai-api-key-here
+
+# ============================================
+# PayOS Payment Configuration
+# ============================================
+# Lấy từ dashboard PayOS của bạn
+PAYOS_CLIENT_ID=your-payos-client-id
+PAYOS_API_KEY=your-payos-api-key
+PAYOS_CHECKSUM_KEY=your-payos-checksum-key
+
+# Payment URLs (giá trị mặc định cho local development)
+PAYOS_RETURN_URL=http://localhost:8080/html/payment-result.html
+PAYOS_CANCEL_URL=http://localhost:8080/html/plans.html
+
+# ============================================
+# Email Configuration (Gmail SMTP)
+# ============================================
+# Set thành true để bật chức năng email
+MAIL_ENABLED=false
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-gmail-app-password
+
+# ============================================
+# Redis Configuration (Tùy chọn)
+# ============================================
+# Để trống để sử dụng in-memory fallback
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+
+# ============================================
+# Database Configuration (Tùy chọn Override)
+# ============================================
+# Các giá trị này sẽ override defaults trong application.properties
+# Uncomment và sửa nếu cần
+
+# spring.datasource.url=jdbc:postgresql://localhost:5432/exe201_phapluatso
+# spring.datasource.username=postgres
+# spring.datasource.password=your-db-password
+
+# ============================================
+# Development/Testing Flags
+# ============================================
+# Set thành true cho development (tắt một số security features)
+# CẢNH BÁO: Set thành false trong production!
+# payment.test-mode=false
+
+
+
+
+
+
+

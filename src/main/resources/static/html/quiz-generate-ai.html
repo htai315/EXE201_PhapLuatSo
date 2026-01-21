@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,7 +18,9 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap"
+        rel="stylesheet">
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/style.css">
@@ -29,355 +32,347 @@
     <link rel="stylesheet" href="/css/toast-notification.css">
 
 </head>
+
 <body data-auth-required="true">
-<nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
-    <div class="container">
-        <a class="navbar-brand" href="/index.html">
-            <img src="/img/Law.png" alt="Logo">
-            <span>Pháp Luật Số</span>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto align-items-lg-center">
-                <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/legal-chat.html">Chat AI</a></li>
-                <li class="nav-item"><a class="nav-link active" href="/html/my-quizzes.html">Bộ đề</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
-                <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
-                <li class="nav-item ms-lg-3 guest-only">
-                    <a class="btn btn-outline-primary btn-sm px-3" href="/html/login.html">
-                        <i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập
-                    </a>
-                </li>
-                <li class="nav-item ms-lg-2 guest-only">
-                    <a class="btn btn-primary btn-sm px-3" href="/html/register.html">
-                        <i class="bi bi-person-plus me-1"></i>Đăng Ký
-                    </a>
-                </li>
-                <li class="nav-item auth-only d-none">
-                    <div id="quizCreditsCounter"></div>
-                </li>
-                <li class="nav-item dropdown ms-lg-3 auth-only d-none">
-                    <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img id="navUserAvatar" src="" alt="Avatar" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #1a4b84;">
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="/html/profile.html"><i class="bi bi-person me-2"></i>Hồ sơ</a></li>
-                        <li><a class="dropdown-item" href="/html/payment-history.html"><i class="bi bi-clock-history me-2"></i>Lịch sử thanh toán</a></li>
-                        <li><a class="dropdown-item" href="/html/plans.html"><i class="bi bi-credit-card me-2"></i>Nâng cấp</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
-                    </ul>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
-
-<!-- Hero -->
-<div class="ai-hero">
-    <div class="container">
-        <h1><i class="bi bi-magic me-2"></i>Tạo Đề Bằng AI</h1>
-        <p class="mb-0 opacity-75" style="font-size: 0.9rem;">Upload tài liệu và để AI tạo câu hỏi trắc nghiệm tự động</p>
-    </div>
-</div>
-
-<div class="ai-container">
-    <!-- Upload Form -->
-    <div class="upload-card">
-        <h5 class="mb-3"><i class="bi bi-cloud-upload me-2"></i>Upload Tài Liệu</h5>
-        
-        <form id="uploadForm">
-            <!-- Upload Zone -->
-            <div class="upload-zone" id="uploadZone">
-                <i class="bi bi-file-earmark-arrow-up upload-icon"></i>
-                <h6>Kéo thả file vào đây hoặc click để chọn</h6>
-                <p class="text-muted mb-0" style="font-size: 0.875rem;">
-                    Hỗ trợ: PDF, DOCX, TXT (Tối đa 10MB)
-                </p>
-                <input type="file" id="fileInput" accept=".pdf,.docx,.txt" style="display: none;">
-            </div>
-            
-            <!-- File Info -->
-            <div class="file-info" id="fileInfo">
-                <i class="bi bi-file-earmark-text fs-3 text-primary"></i>
-                <div class="flex-grow-1">
-                    <div class="fw-semibold" id="fileName"></div>
-                    <small class="text-muted" id="fileSize"></small>
-                </div>
-                <button type="button" class="btn btn-sm btn-outline-danger" id="removeFile">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
-            
-            <!-- Form Fields -->
-            <div class="row g-3 mt-2">
-                <div class="col-md-8">
-                    <label class="form-label fw-semibold">Tên bộ đề *</label>
-                    <input type="text" class="form-control" id="quizSetName" required 
-                           placeholder="VD: Bộ đề Luật Dân sự 2015">
-                </div>
-                
-                <div class="col-md-2">
-                    <label class="form-label fw-semibold">Số câu hỏi</label>
-                    <select class="form-select" id="questionCount">
-                        <option value="15">15 câu</option>
-                        <option value="20" selected>20 câu</option>
-                        <option value="30">30 câu</option>
-                        <option value="40">40 câu</option>
-                    </select>
-                </div>
-                
-                <div class="col-md-2">
-                    <label class="form-label fw-semibold">Thời gian</label>
-                    <select class="form-select" id="durationMinutes">
-                        <option value="15">15 phút</option>
-                        <option value="30">30 phút</option>
-                        <option value="45" selected>45 phút</option>
-                        <option value="60">60 phút</option>
-                        <option value="90">90 phút</option>
-                        <option value="120">120 phút</option>
-                    </select>
-                </div>
-                
-                <div class="col-12">
-                    <label class="form-label fw-semibold">Mô tả (tùy chọn)</label>
-                    <textarea class="form-control" id="description" rows="2" 
-                              placeholder="Mô tả ngắn về bộ đề này..."></textarea>
-                </div>
-            </div>
-            
-            <!-- Submit Button -->
-            <div class="mt-4">
-                <button type="submit" class="btn btn-primary btn-lg px-4">
-                    <i class="bi bi-magic me-2"></i>Tạo Câu Hỏi Bằng AI
-                </button>
-                <a href="/html/my-quizzes.html" class="btn btn-outline-secondary btn-lg px-4 ms-2">
-                    <i class="bi bi-arrow-left me-2"></i>Quay lại
-                </a>
-            </div>
-        </form>
-    </div>
-    
-    <!-- Results -->
-    <div class="result-card" id="resultCard">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0"><i class="bi bi-check-circle text-success me-2"></i>Đã tạo thành công!</h5>
-            <span class="badge bg-success" id="questionCountBadge">15 câu hỏi</span>
-        </div>
-        
-        <div class="alert alert-info mb-3">
-            <i class="bi bi-info-circle me-2"></i>
-            Bộ đề đã được lưu. Bạn có thể xem và chỉnh sửa câu hỏi bên dưới.
-        </div>
-        
-        <div id="questionsPreview"></div>
-        
-        <div class="mt-4">
-            <a href="/html/my-quizzes.html" class="btn btn-primary px-4">
-                <i class="bi bi-list-ul me-2"></i>Xem Danh Sách Bộ Đề
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+        <div class="container">
+            <a class="navbar-brand" href="/index.html">
+                <img src="/img/Law.png" alt="Logo">
+                <span>Pháp Luật Số</span>
             </a>
-            <button type="button" class="btn btn-outline-primary px-4 ms-2" id="createAnotherBtn">
-                <i class="bi bi-plus-circle me-2"></i>Tạo Bộ Đề Khác
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
             </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-lg-center">
+                    <li class="nav-item"><a class="nav-link" href="/index.html">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/about.html">Về chúng tôi</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/legal-chat.html">Chat AI</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/html/my-quizzes.html">Bộ đề</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/guide.html">Hướng dẫn</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/html/contact.html">Liên hệ</a></li>
+                    <li class="nav-item ms-lg-3 guest-only">
+                        <a class="btn btn-outline-primary btn-sm px-3" href="/html/login.html">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Đăng Nhập
+                        </a>
+                    </li>
+                    <li class="nav-item ms-lg-2 guest-only">
+                        <a class="btn btn-primary btn-sm px-3" href="/html/register.html">
+                            <i class="bi bi-person-plus me-1"></i>Đăng Ký
+                        </a>
+                    </li>
+                    <li class="nav-item auth-only d-none">
+                        <div id="quizCreditsCounter"></div>
+                    </li>
+                    <li class="nav-item dropdown ms-lg-3 auth-only d-none">
+                        <a class="nav-link dropdown-toggle p-0" href="#" id="navbarDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <img id="navUserAvatar" src="" alt="Avatar" class="rounded-circle"
+                                style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #1a4b84;">
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="/html/profile.html"><i class="bi bi-person me-2"></i>Hồ
+                                    sơ</a></li>
+                            <li><a class="dropdown-item" href="/html/payment-history.html"><i
+                                        class="bi bi-clock-history me-2"></i>Lịch sử thanh toán</a></li>
+                            <li><a class="dropdown-item" href="/html/plans.html"><i
+                                        class="bi bi-credit-card me-2"></i>Nâng cấp</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="#" id="navLogoutBtn"><i
+                                        class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <div class="ai-hero">
+        <div class="container">
+            <h1><i class="bi bi-magic me-2"></i>Tạo Đề Bằng AI</h1>
+            <p class="mb-0 opacity-75" style="font-size: 0.9rem;">Upload tài liệu và để AI tạo câu hỏi trắc nghiệm tự
+                động</p>
         </div>
     </div>
-</div>
 
-<!-- Loading Overlay -->
-<div class="loading-overlay" id="loadingOverlay">
-    <div class="loading-content">
-        <div class="spinner"></div>
-        <h5 id="loadingTitle">Đang xử lý...</h5>
-        <p class="text-muted mb-0" id="loadingMessage">AI đang phân tích tài liệu và tạo câu hỏi.</p>
+    <div class="ai-container">
+        <!-- Upload Form -->
+        <div class="upload-card">
+            <h5 class="mb-3"><i class="bi bi-cloud-upload me-2"></i>Upload Tài Liệu</h5>
+
+            <form id="uploadForm">
+                <!-- Upload Zone -->
+                <div class="upload-zone" id="uploadZone">
+                    <i class="bi bi-file-earmark-arrow-up upload-icon"></i>
+                    <h6>Kéo thả file vào đây hoặc click để chọn</h6>
+                    <p class="text-muted mb-0" style="font-size: 0.875rem;">
+                        Hỗ trợ: PDF, DOCX, TXT (Tối đa 10MB)
+                    </p>
+                    <input type="file" id="fileInput" accept=".pdf,.docx,.txt" style="display: none;">
+                </div>
+
+                <!-- File Info -->
+                <div class="file-info" id="fileInfo">
+                    <i class="bi bi-file-earmark-text fs-3 text-primary"></i>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold" id="fileName"></div>
+                        <small class="text-muted" id="fileSize"></small>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="removeFile">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <!-- Form Fields -->
+                <div class="row g-3 mt-2">
+                    <div class="col-md-8">
+                        <label class="form-label fw-semibold">Tên bộ đề *</label>
+                        <input type="text" class="form-control" id="quizSetName" required
+                            placeholder="VD: Bộ đề Luật Dân sự 2015">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">Số câu hỏi</label>
+                        <select class="form-select" id="questionCount">
+                            <option value="15">15 câu</option>
+                            <option value="20" selected>20 câu</option>
+                            <option value="30">30 câu</option>
+                            <option value="40">40 câu</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">Thời gian</label>
+                        <select class="form-select" id="durationMinutes">
+                            <option value="15">15 phút</option>
+                            <option value="30">30 phút</option>
+                            <option value="45" selected>45 phút</option>
+                            <option value="60">60 phút</option>
+                            <option value="90">90 phút</option>
+                            <option value="120">120 phút</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Mô tả (tùy chọn)</label>
+                        <textarea class="form-control" id="description" rows="2"
+                            placeholder="Mô tả ngắn về bộ đề này..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg px-4">
+                        <i class="bi bi-magic me-2"></i>Tạo Câu Hỏi Bằng AI
+                    </button>
+                    <a href="/html/my-quizzes.html" class="btn btn-outline-secondary btn-lg px-4 ms-2">
+                        <i class="bi bi-arrow-left me-2"></i>Quay lại
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Results -->
+        <div class="result-card" id="resultCard">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="bi bi-check-circle text-success me-2"></i>Đã tạo thành công!</h5>
+                <span class="badge bg-success" id="questionCountBadge">15 câu hỏi</span>
+            </div>
+
+            <div class="alert alert-info mb-3">
+                <i class="bi bi-info-circle me-2"></i>
+                Bộ đề đã được lưu. Bạn có thể xem và chỉnh sửa câu hỏi bên dưới.
+            </div>
+
+            <div id="questionsPreview"></div>
+
+            <div class="mt-4">
+                <a href="/html/my-quizzes.html" class="btn btn-primary px-4">
+                    <i class="bi bi-list-ul me-2"></i>Xem Danh Sách Bộ Đề
+                </a>
+                <button type="button" class="btn btn-outline-primary px-4 ms-2" id="createAnotherBtn">
+                    <i class="bi bi-plus-circle me-2"></i>Tạo Bộ Đề Khác
+                </button>
+            </div>
+        </div>
     </div>
-</div>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <h5 id="loadingTitle">Đang xử lý...</h5>
+            <p class="text-muted mb-0" id="loadingMessage">AI đang phân tích tài liệu và tạo câu hỏi.</p>
+        </div>
+    </div>
 
-<!-- Auth Guard -->
-<script src="/scripts/auth-guard.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Custom JS -->
-<script src="/scripts/toast-notification.js"></script>
-<script src="/scripts/api-client.js"></script>
-<script src="/scripts/script.js"></script>
-<script src="/scripts/credits-counter.js"></script>
+    <!-- Auth Guard -->
+    <script src="/scripts/token-manager.js"></script>
+    <script src="/scripts/auth-guard.js"></script>
 
-<script>
-let creditsCounter = null;
+    <!-- Custom JS -->
+    <script src="/scripts/toast-notification.js"></script>
+    <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/script.js"></script>
+    <script src="/scripts/credits-counter.js"></script>
 
-document.addEventListener('DOMContentLoaded', () => {
-    if (!AUTH.isLoggedIn()) return;
+    <script>
+        let creditsCounter = null;
 
-    // Initialize credits counter for quiz generation
-    creditsCounter = new CreditsCounter();
-    creditsCounter.init('quizCreditsCounter', 'quiz_gen');
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Use AUTH.guard() for proper rehydration from HttpOnly cookie
+            const isAuth = await AUTH.guard({ requireAuth: true, redirect: true });
+            if (!isAuth) return;
 
-    const uploadZone = document.getElementById('uploadZone');
-    const fileInput = document.getElementById('fileInput');
-    const fileInfo = document.getElementById('fileInfo');
-    const fileName = document.getElementById('fileName');
-    const fileSize = document.getElementById('fileSize');
-    const removeFileBtn = document.getElementById('removeFile');
-    const uploadForm = document.getElementById('uploadForm');
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const resultCard = document.getElementById('resultCard');
-    const createAnotherBtn = document.getElementById('createAnotherBtn');
+            // Initialize credits counter for quiz generation
+            creditsCounter = new CreditsCounter();
+            creditsCounter.init('quizCreditsCounter', 'quiz_gen');
 
-    let selectedFile = null;
+            const uploadZone = document.getElementById('uploadZone');
+            const fileInput = document.getElementById('fileInput');
+            const fileInfo = document.getElementById('fileInfo');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const removeFileBtn = document.getElementById('removeFile');
+            const uploadForm = document.getElementById('uploadForm');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const resultCard = document.getElementById('resultCard');
+            const createAnotherBtn = document.getElementById('createAnotherBtn');
 
-    // Upload zone click
-    uploadZone.addEventListener('click', () => fileInput.click());
+            let selectedFile = null;
 
-    // File input change
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) handleFileSelect(file);
-    });
+            // Upload zone click
+            uploadZone.addEventListener('click', () => fileInput.click());
 
-    // Drag and drop
-    uploadZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadZone.classList.add('dragover');
-    });
-
-    uploadZone.addEventListener('dragleave', () => {
-        uploadZone.classList.remove('dragover');
-    });
-
-    uploadZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadZone.classList.remove('dragover');
-        const file = e.dataTransfer.files[0];
-        if (file) handleFileSelect(file);
-    });
-
-    // Remove file
-    removeFileBtn.addEventListener('click', () => {
-        selectedFile = null;
-        fileInput.value = '';
-        fileInfo.classList.remove('show');
-        uploadZone.style.display = 'block';
-    });
-
-    // Handle file select
-    function handleFileSelect(file) {
-        // Validate file type
-        const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
-        if (!validTypes.includes(file.type)) {
-            Toast.warning('Chỉ hỗ trợ file PDF, DOCX, TXT');
-            return;
-        }
-
-        // Validate file size (10MB)
-        if (file.size > 10 * 1024 * 1024) {
-            Toast.warning('File không được vượt quá 10MB');
-            return;
-        }
-
-        selectedFile = file;
-        fileName.textContent = file.name;
-        fileSize.textContent = formatFileSize(file.size);
-        fileInfo.classList.add('show');
-        uploadZone.style.display = 'none';
-    }
-
-    // Format file size
-    function formatFileSize(bytes) {
-        if (bytes < 1024) return bytes + ' B';
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-    }
-
-    // Form submit
-    uploadForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        if (!selectedFile) {
-            Toast.warning('Vui lòng chọn file');
-            return;
-        }
-
-        const quizSetName = document.getElementById('quizSetName').value.trim();
-        if (!quizSetName) {
-            Toast.warning('Vui lòng nhập tên bộ đề');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('file', selectedFile);
-        formData.append('quizSetName', quizSetName);
-        formData.append('description', document.getElementById('description').value.trim());
-        formData.append('questionCount', document.getElementById('questionCount').value);
-        formData.append('durationMinutes', document.getElementById('durationMinutes').value);
-
-        loadingOverlay.classList.add('show');
-        
-        // Update loading message based on question count
-        const questionCount = parseInt(document.getElementById('questionCount').value);
-        const loadingTitle = document.getElementById('loadingTitle');
-        const loadingMessage = document.getElementById('loadingMessage');
-        
-        if (questionCount <= 20) {
-            loadingTitle.textContent = 'Đang xử lý...';
-            loadingMessage.textContent = 'AI đang phân tích tài liệu và tạo câu hỏi. Vui lòng đợi 15-30 giây.';
-        } else if (questionCount <= 40) {
-            loadingTitle.textContent = 'Đang tạo ' + questionCount + ' câu hỏi...';
-            loadingMessage.textContent = 'AI đang xử lý theo từng batch. Vui lòng đợi 30-60 giây.';
-        } else {
-            loadingTitle.textContent = 'Đang tạo ' + questionCount + ' câu hỏi...';
-            loadingMessage.textContent = 'Số lượng lớn cần xử lý nhiều batch. Vui lòng đợi 1-2 phút.';
-        }
-
-        try {
-            const token = AUTH.getToken();
-            const response = await fetch('/api/ai/quiz/generate-from-document', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                body: formData
+            // File input change
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) handleFileSelect(file);
             });
 
-            if (!response.ok) {
-                // Parse error response properly
-                let errorMessage = 'Có lỗi xảy ra';
-                try {
-                    const errorData = await response.json();
-                    errorMessage = errorData.error || errorData.message || errorMessage;
-                } catch (parseError) {
-                    // If JSON parse fails, use status text
-                    errorMessage = response.statusText || errorMessage;
+            // Drag and drop
+            uploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadZone.classList.add('dragover');
+            });
+
+            uploadZone.addEventListener('dragleave', () => {
+                uploadZone.classList.remove('dragover');
+            });
+
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file) handleFileSelect(file);
+            });
+
+            // Remove file
+            removeFileBtn.addEventListener('click', () => {
+                selectedFile = null;
+                fileInput.value = '';
+                fileInfo.classList.remove('show');
+                uploadZone.style.display = 'block';
+            });
+
+            // Handle file select
+            function handleFileSelect(file) {
+                // Validate file type
+                const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+                if (!validTypes.includes(file.type)) {
+                    Toast.warning('Chỉ hỗ trợ file PDF, DOCX, TXT');
+                    return;
                 }
-                throw new Error(errorMessage);
+
+                // Validate file size (10MB)
+                if (file.size > 10 * 1024 * 1024) {
+                    Toast.warning('File không được vượt quá 10MB');
+                    return;
+                }
+
+                selectedFile = file;
+                fileName.textContent = file.name;
+                fileSize.textContent = formatFileSize(file.size);
+                fileInfo.classList.add('show');
+                uploadZone.style.display = 'none';
             }
 
-            const data = await response.json();
-            displayResults(data);
-            
-            // Refresh credits counter
-            if (creditsCounter) {
-                creditsCounter.refresh();
+            // Format file size
+            function formatFileSize(bytes) {
+                if (bytes < 1024) return bytes + ' B';
+                if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+                return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
             }
-        } catch (error) {
-            console.error('Error:', error);
-            Toast.error(error.message || 'Có lỗi xảy ra');
-        } finally {
-            loadingOverlay.classList.remove('show');
-        }
-    });
 
-    // Display results
-    function displayResults(data) {
-        document.getElementById('questionCountBadge').textContent = `${data.totalQuestions} câu hỏi`;
-        
-        const preview = document.getElementById('questionsPreview');
-        preview.innerHTML = data.questions.map((q, index) => `
+            // Form submit
+            uploadForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                if (!selectedFile) {
+                    Toast.warning('Vui lòng chọn file');
+                    return;
+                }
+
+                const quizSetName = document.getElementById('quizSetName').value.trim();
+                if (!quizSetName) {
+                    Toast.warning('Vui lòng nhập tên bộ đề');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                formData.append('quizSetName', quizSetName);
+                formData.append('description', document.getElementById('description').value.trim());
+                formData.append('questionCount', document.getElementById('questionCount').value);
+                formData.append('durationMinutes', document.getElementById('durationMinutes').value);
+
+                loadingOverlay.classList.add('show');
+
+                // Update loading message based on question count
+                const questionCount = parseInt(document.getElementById('questionCount').value);
+                const loadingTitle = document.getElementById('loadingTitle');
+                const loadingMessage = document.getElementById('loadingMessage');
+
+                if (questionCount <= 20) {
+                    loadingTitle.textContent = 'Đang xử lý...';
+                    loadingMessage.textContent = 'AI đang phân tích tài liệu và tạo câu hỏi. Vui lòng đợi 15-30 giây.';
+                } else if (questionCount <= 40) {
+                    loadingTitle.textContent = 'Đang tạo ' + questionCount + ' câu hỏi...';
+                    loadingMessage.textContent = 'AI đang xử lý theo từng batch. Vui lòng đợi 30-60 giây.';
+                } else {
+                    loadingTitle.textContent = 'Đang tạo ' + questionCount + ' câu hỏi...';
+                    loadingMessage.textContent = 'Số lượng lớn cần xử lý nhiều batch. Vui lòng đợi 1-2 phút.';
+                }
+
+                try {
+                    // Use API_CLIENT.upload() for proper token handling with auto-refresh
+                    const data = await API_CLIENT.upload('/api/ai/quiz/generate-from-document', formData);
+                    displayResults(data);
+
+                    // Refresh credits counter
+                    if (creditsCounter) {
+                        creditsCounter.refresh();
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Toast.error(error.message || 'Có lỗi xảy ra');
+                } finally {
+                    loadingOverlay.classList.remove('show');
+                }
+            });
+
+            // Display results
+            function displayResults(data) {
+                document.getElementById('questionCountBadge').textContent = `${data.totalQuestions} câu hỏi`;
+
+                const preview = document.getElementById('questionsPreview');
+                preview.innerHTML = data.questions.map((q, index) => `
             <div class="question-preview">
                 <div class="question-number">Câu ${index + 1}</div>
                 <div class="fw-semibold mb-2">${q.question}</div>
@@ -403,23 +398,24 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `).join('');
 
-        uploadForm.parentElement.style.display = 'none';
-        resultCard.classList.add('show');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+                uploadForm.parentElement.style.display = 'none';
+                resultCard.classList.add('show');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
 
-    // Create another
-    createAnotherBtn.addEventListener('click', () => {
-        uploadForm.reset();
-        selectedFile = null;
-        fileInput.value = '';
-        fileInfo.classList.remove('show');
-        uploadZone.style.display = 'block';
-        uploadForm.parentElement.style.display = 'block';
-        resultCard.classList.remove('show');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-});
-</script>
+            // Create another
+            createAnotherBtn.addEventListener('click', () => {
+                uploadForm.reset();
+                selectedFile = null;
+                fileInput.value = '';
+                fileInfo.classList.remove('show');
+                uploadZone.style.display = 'block';
+                uploadForm.parentElement.style.display = 'block';
+                resultCard.classList.remove('show');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+    </script>
 </body>
+
 </html>
