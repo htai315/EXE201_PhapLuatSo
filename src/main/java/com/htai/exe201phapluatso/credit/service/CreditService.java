@@ -44,8 +44,7 @@ public class CreditService {
             UserCreditRepo userCreditRepo,
             CreditTransactionRepo transactionRepo,
             CreditReservationRepo reservationRepo,
-            UserRepo userRepo
-    ) {
+            UserRepo userRepo) {
         this.userCreditRepo = userCreditRepo;
         this.transactionRepo = transactionRepo;
         this.reservationRepo = reservationRepo;
@@ -58,13 +57,13 @@ public class CreditService {
     @Transactional
     public CreditBalanceResponse getCreditBalance(Long userId) {
         UserCredit credits = userCreditRepo.findByUserId(userId).orElse(null);
-        
+
         if (credits == null) {
             log.info("Creating FREE credits for user {} (trigger fallback)", userId);
             credits = createFreeCredits(userId);
         }
 
-        boolean isExpired = credits.getExpiresAt() != null 
+        boolean isExpired = credits.getExpiresAt() != null
                 && LocalDateTime.now().isAfter(credits.getExpiresAt());
 
         String planName = "FREE";
@@ -77,24 +76,23 @@ public class CreditService {
                 credits.getQuizGenCredits(),
                 credits.getExpiresAt(),
                 isExpired,
-                planName
-        );
+                planName);
     }
-    
+
     private UserCredit createFreeCredits(Long userId) {
         User user = userRepo.getReferenceById(userId);
-        
+
         UserCredit newCredit = new UserCredit();
         newCredit.setUser(user);
         newCredit.setChatCredits(10);
         newCredit.setQuizGenCredits(0);
         newCredit.setExpiresAt(null);
         newCredit.setUpdatedAt(LocalDateTime.now());
-        
+
         UserCredit saved = userCreditRepo.save(newCredit);
-        
+
         logTransaction(userId, "BONUS", "CHAT", 10, 10, "Welcome bonus - 10 free chat credits");
-        
+
         return saved;
     }
 
@@ -104,9 +102,9 @@ public class CreditService {
      * Reserve credit for an AI operation
      * Deducts credit immediately and creates a reservation for potential refund
      * Uses optimistic locking with retry
-     * 
-     * @param userId User ID
-     * @param creditType CHAT or QUIZ_GEN
+     *
+     * @param userId        User ID
+     * @param creditType    CHAT or QUIZ_GEN
      * @param operationType AI_CHAT or AI_QUIZ_GEN
      * @return CreditReservation for tracking
      */
@@ -115,7 +113,7 @@ public class CreditService {
         int attempts = 0;
         while (attempts < MAX_RETRY_ATTEMPTS) {
             try {
-                return doReserveCredit(userId, creditType, operationType);
+                return doReserveCredit(userId, creditType, operationType, null);
             } catch (OptimisticLockingFailureException e) {
                 attempts++;
                 log.warn("Optimistic lock conflict for user {}, attempt {}/{}", userId, attempts, MAX_RETRY_ATTEMPTS);
@@ -133,7 +131,42 @@ public class CreditService {
         throw new BadRequestException("Không thể xử lý yêu cầu. Vui lòng thử lại.");
     }
 
-    private CreditReservation doReserveCredit(Long userId, String creditType, String operationType) {
+    /**
+     * Reserve credit for a chat session
+     * Links the reservation to the specific session for session-based billing
+     */
+    @Transactional
+    public CreditReservation reserveSessionCredit(Long userId, Long sessionId) {
+        int attempts = 0;
+        while (attempts < MAX_RETRY_ATTEMPTS) {
+            try {
+                return doReserveCredit(userId, "CHAT", "AI_CHAT_SESSION", sessionId);
+            } catch (OptimisticLockingFailureException e) {
+                attempts++;
+                log.warn("Optimistic lock conflict for session {}, attempt {}/{}", sessionId, attempts,
+                        MAX_RETRY_ATTEMPTS);
+                if (attempts >= MAX_RETRY_ATTEMPTS) {
+                    throw new BadRequestException("Hệ thống đang bận. Vui lòng thử lại sau.");
+                }
+                try {
+                    Thread.sleep(100 * attempts); // Exponential backoff
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new BadRequestException("Yêu cầu bị gián đoạn.");
+                }
+            } catch (org.springframework.dao.DataIntegrityViolationException e) {
+                // Unique constraint violation on ux_reservation_pending_session
+                // This means another request already created a PENDING reservation for this
+                // session
+                log.warn("Duplicate reservation attempt for session {} - already has PENDING reservation", sessionId);
+                throw new com.htai.exe201phapluatso.common.exception.SessionAlreadyChargingException(
+                        "Phiên đang được xử lý. Vui lòng đợi hoặc thử lại.");
+            }
+        }
+        throw new BadRequestException("Không thể xử lý yêu cầu. Vui lòng thử lại.");
+    }
+
+    private CreditReservation doReserveCredit(Long userId, String creditType, String operationType, Long sessionId) {
         UserCredit credits = userCreditRepo.findByUserId(userId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy thông tin credits."));
 
@@ -173,14 +206,15 @@ public class CreditService {
         reservation.setCreatedAt(LocalDateTime.now());
         reservation.setExpiresAt(LocalDateTime.now().plusMinutes(reservationTimeoutMinutes));
         reservation.setOperationType(operationType);
+        reservation.setSessionId(sessionId);
         reservationRepo.save(reservation);
 
         // Log transaction
         int newBalance = "CHAT".equals(creditType) ? credits.getChatCredits() : credits.getQuizGenCredits();
-        logTransaction(userId, "RESERVE", creditType, -1, newBalance, 
+        logTransaction(userId, "RESERVE", creditType, -1, newBalance,
                 "Reserved 1 " + creditType.toLowerCase() + " credit for " + operationType);
 
-        log.info("Reserved 1 {} credit for user {}. Balance: {} -> {}", 
+        log.info("Reserved 1 {} credit for user {}. Balance: {} -> {}",
                 creditType, userId, oldBalance, newBalance);
 
         return reservation;
@@ -205,10 +239,11 @@ public class CreditService {
 
         // Log transaction
         UserCredit credits = userCreditRepo.findByUserId(reservation.getUser().getId()).orElse(null);
-        int balance = credits != null ? 
-                ("CHAT".equals(reservation.getCreditType()) ? credits.getChatCredits() : credits.getQuizGenCredits()) : 0;
-        
-        logTransaction(reservation.getUser().getId(), "CONFIRM", reservation.getCreditType(), 
+        int balance = credits != null
+                ? ("CHAT".equals(reservation.getCreditType()) ? credits.getChatCredits() : credits.getQuizGenCredits())
+                : 0;
+
+        logTransaction(reservation.getUser().getId(), "CONFIRM", reservation.getCreditType(),
                 0, balance, "Confirmed " + reservation.getOperationType() + " operation");
 
         log.info("Confirmed reservation {} for user {}", reservationId, reservation.getUser().getId());
@@ -249,20 +284,22 @@ public class CreditService {
         reservationRepo.save(reservation);
 
         // Log transaction
-        int newBalance = "CHAT".equals(reservation.getCreditType()) ? 
-                credits.getChatCredits() : credits.getQuizGenCredits();
-        logTransaction(userId, "REFUND", reservation.getCreditType(), 
-                reservation.getAmount(), newBalance, 
+        int newBalance = "CHAT".equals(reservation.getCreditType()) ? credits.getChatCredits()
+                : credits.getQuizGenCredits();
+        logTransaction(userId, "REFUND", reservation.getCreditType(),
+                reservation.getAmount(), newBalance,
                 "Refunded " + reservation.getAmount() + " credit - " + reservation.getOperationType() + " failed");
 
-        log.info("Refunded {} {} credit(s) to user {}. Balance: {} -> {}", 
+        log.info("Refunded {} {} credit(s) to user {}. Balance: {} -> {}",
                 reservation.getAmount(), reservation.getCreditType(), userId, oldBalance, newBalance);
     }
 
-    // ==================== LEGACY METHODS (for backward compatibility) ====================
+    // ==================== LEGACY METHODS (for backward compatibility)
+    // ====================
 
     /**
      * Check and deduct 1 chat credit (legacy method)
+     * 
      * @deprecated Use reserveCredit/confirmReservation/refundReservation instead
      */
     @Transactional
@@ -287,12 +324,13 @@ public class CreditService {
 
         logTransaction(userId, "USAGE", "CHAT", -1, credits.getChatCredits(), "Used 1 chat credit");
 
-        log.info("Deducted 1 chat credit from user {}. Balance: {} -> {}", 
+        log.info("Deducted 1 chat credit from user {}. Balance: {} -> {}",
                 userId, oldBalance, credits.getChatCredits());
     }
 
     /**
      * Check and deduct 1 quiz generation credit (legacy method)
+     * 
      * @deprecated Use reserveCredit/confirmReservation/refundReservation instead
      */
     @Transactional
@@ -315,20 +353,27 @@ public class CreditService {
         credits.setUpdatedAt(LocalDateTime.now());
         userCreditRepo.save(credits);
 
-        logTransaction(userId, "USAGE", "QUIZ_GEN", -1, credits.getQuizGenCredits(), 
+        logTransaction(userId, "USAGE", "QUIZ_GEN", -1, credits.getQuizGenCredits(),
                 "Used 1 AI quiz generation credit");
 
-        log.info("Deducted 1 quiz gen credit from user {}. Balance: {} -> {}", 
+        log.info("Deducted 1 quiz gen credit from user {}. Balance: {} -> {}",
                 userId, oldBalance, credits.getQuizGenCredits());
     }
 
     /**
      * Add credits to user (for purchase or bonus)
+     * CRITICAL: Use REQUIRES_NEW to ensure failure doesn't rollback calling
+     * transaction.
+     * This allows PayOSService to save "PAID_CREDIT_FAILED" status even if adding
+     * credits fails.
      */
-    @Transactional
-    public void addCredits(Long userId, int chatCredits, int quizGenCredits, 
-                          String planCode, LocalDateTime expiresAt) {
-        log.info("Adding credits to user {}: chat={}, quizGen={}, plan={}", 
+    @Transactional(rollbackFor = Exception.class)
+    public void addCredits(Long userId,
+                           int chatCredits,
+                           int quizGenCredits,
+                           String planCode,
+                           LocalDateTime expiresAt) {
+        log.info("Adding credits to user {}: chat={}, quizGen={}, plan={}",
                 userId, chatCredits, quizGenCredits, planCode);
 
         UserCredit credits = userCreditRepo.findByUserIdWithLock(userId)
@@ -349,14 +394,14 @@ public class CreditService {
                     "Purchased " + quizGenCredits + " quiz gen credits - Plan: " + planCode);
         }
 
-        log.info("Credits added successfully. New balance: chat={}, quizGen={}", 
+        log.info("Credits added successfully. New balance: chat={}, quizGen={}",
                 credits.getChatCredits(), credits.getQuizGenCredits());
     }
 
-    private void logTransaction(Long userId, String type, String creditType, 
-                               int amount, int balanceAfter, String description) {
+    private void logTransaction(Long userId, String type, String creditType,
+            int amount, int balanceAfter, String description) {
         User user = userRepo.getReferenceById(userId);
-        
+
         CreditTransaction transaction = new CreditTransaction();
         transaction.setUser(user);
         transaction.setType(type);
@@ -365,7 +410,7 @@ public class CreditService {
         transaction.setBalanceAfter(balanceAfter);
         transaction.setDescription(description);
         transaction.setCreatedAt(LocalDateTime.now());
-        
+
         transactionRepo.save(transaction);
     }
 

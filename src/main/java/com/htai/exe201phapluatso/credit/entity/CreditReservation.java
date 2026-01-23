@@ -47,7 +47,10 @@ public class CreditReservation {
     private LocalDateTime refundedAt;
 
     @Column(name = "operation_type", length = 50)
-    private String operationType;  // AI_CHAT, AI_QUIZ_GEN
+    private String operationType;  // AI_CHAT, AI_QUIZ_GEN, AI_CHAT_SESSION
+
+    @Column(name = "session_id")
+    private Long sessionId;
 
     // Getters and Setters
     public Long getId() { return id; }
@@ -78,6 +81,9 @@ public class CreditReservation {
 
     public String getOperationType() { return operationType; }
     public void setOperationType(String operationType) { this.operationType = operationType; }
+
+    public Long getSessionId() { return sessionId; }
+    public void setSessionId(Long sessionId) { this.sessionId = sessionId; }
 
     public boolean isPending() {
         return STATUS_PENDING.equals(status);

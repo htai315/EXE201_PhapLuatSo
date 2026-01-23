@@ -4,6 +4,8 @@ import com.htai.exe201phapluatso.auth.entity.UserCredit;
 import com.htai.exe201phapluatso.auth.repo.UserCreditRepo;
 import com.htai.exe201phapluatso.credit.entity.CreditReservation;
 import com.htai.exe201phapluatso.credit.repo.CreditReservationRepo;
+import com.htai.exe201phapluatso.legal.entity.ChatSession;
+import com.htai.exe201phapluatso.legal.repo.ChatSessionRepo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -26,13 +28,15 @@ public class CreditReservationCleanupScheduler {
 
     private final CreditReservationRepo reservationRepo;
     private final UserCreditRepo userCreditRepo;
+    private final ChatSessionRepo chatSessionRepo;
 
     public CreditReservationCleanupScheduler(
             CreditReservationRepo reservationRepo,
-            UserCreditRepo userCreditRepo
-    ) {
+            UserCreditRepo userCreditRepo,
+            ChatSessionRepo chatSessionRepo) {
         this.reservationRepo = reservationRepo;
         this.userCreditRepo = userCreditRepo;
+        this.chatSessionRepo = chatSessionRepo;
     }
 
     /**
@@ -61,13 +65,13 @@ public class CreditReservationCleanupScheduler {
             }
         }
 
-        log.info("Cleaned up {} expired reservations, refunded {} credits", 
+        log.info("Cleaned up {} expired reservations, refunded {} credits",
                 expiredReservations.size(), refundedCount);
     }
 
     private void refundExpiredReservation(CreditReservation reservation) {
         Long userId = reservation.getUser().getId();
-        
+
         // Restore credit
         UserCredit credits = userCreditRepo.findByUserId(userId).orElse(null);
         if (credits != null) {
@@ -80,12 +84,43 @@ public class CreditReservationCleanupScheduler {
             userCreditRepo.save(credits);
         }
 
+        // Handle session-aware cleanup for chat sessions
+        if (reservation.getSessionId() != null && "CHAT".equals(reservation.getCreditType())) {
+            resetExpiredSessionCharge(reservation);
+        }
+
         // Mark as expired
         reservation.setStatus(CreditReservation.STATUS_EXPIRED);
         reservation.setRefundedAt(LocalDateTime.now());
         reservationRepo.save(reservation);
 
-        log.debug("Refunded expired reservation {} for user {}: {} {} credit(s)", 
+        log.debug("Refunded expired reservation {} for user {}: {} {} credit(s)",
                 reservation.getId(), userId, reservation.getAmount(), reservation.getCreditType());
+    }
+
+    private void resetExpiredSessionCharge(CreditReservation reservation) {
+        try {
+            ChatSession session = chatSessionRepo.findById(reservation.getSessionId()).orElse(null);
+            if (session != null) {
+                // Only reset if session was in CHARGING state, this was the first question,
+                // and this reservation was the one used for charging (defense-in-depth)
+                if ("CHARGING".equals(session.getChargeState())
+                        && session.getUserQuestionCount() == 1 // Issue C fix: only reset first-question attempts
+                        && reservation.getId().equals(session.getChargeReservationId())) {
+
+                    session.setChargeState("NOT_CHARGED");
+                    session.setChargeReservationId(null);
+                    session.setUserQuestionCount(0); // Reset so first question doesn't count
+                    chatSessionRepo.save(session);
+
+                    log.info("Reset expired session charge for session {} (reservation {})",
+                            session.getId(), reservation.getId());
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to reset session state for expired reservation {}: {}",
+                    reservation.getId(), e.getMessage());
+            // Don't throw - cleanup should continue
+        }
     }
 }

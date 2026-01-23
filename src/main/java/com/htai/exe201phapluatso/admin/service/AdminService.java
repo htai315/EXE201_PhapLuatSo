@@ -453,8 +453,9 @@ public class AdminService {
             response.setCreditsExpiresAt(credit.getExpiresAt());
         });
 
-        response.setTotalPayments(paymentRepo.countByUserIdAndStatus(user.getId(), "SUCCESS"));
-        response.setTotalRevenue(paymentRepo.sumAmountByUserIdAndStatus(user.getId(), "SUCCESS"));
+        // Use CREDITED instead of SUCCESS (SUCCESS is deprecated)
+        response.setTotalPayments(paymentRepo.countByUserIdAndStatus(user.getId(), "CREDITED"));
+        response.setTotalRevenue(paymentRepo.sumAmountByUserIdAndStatus(user.getId(), "CREDITED"));
         response.setTotalQuizSets(quizSetRepo.countByCreatedById(user.getId()));
         response.setTotalQuizAttempts(quizAttemptRepo.countByUserId(user.getId()));
         response.setTotalChatSessions(chatSessionRepo.countByUserId(user.getId()));

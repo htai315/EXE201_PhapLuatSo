@@ -210,6 +210,37 @@
     <script src="/scripts/confirm-modal.js"></script>
     <script src="/scripts/script.js"></script>
     <script>
+        // ===== PAYMENT STATUS HELPER FUNCTIONS =====
+        // Backend state machine: PENDING → PAID → CREDITED (final success)
+        // Legacy SUCCESS is migrated to CREDITED
+
+        /**
+         * Check if payment status indicates successful completion (credits added)
+         * @param {string} status - Payment status from backend
+         * @returns {boolean} - True if payment is successfully completed
+         */
+        function isPaymentSuccess(status) {
+            return status === 'CREDITED' || status === 'SUCCESS'; // Backward compatibility
+        }
+
+        /**
+         * Check if payment status indicates final state (stop polling)
+         * @param {string} status - Payment status from backend
+         * @returns {boolean} - True if polling should stop
+         */
+        function isPaymentFinalStatus(status) {
+            return ['CREDITED', 'SUCCESS', 'FAILED', 'CANCELLED', 'EXPIRED', 'PAID_CREDIT_FAILED', 'NEEDS_REVIEW'].includes(status);
+        }
+
+        /**
+         * Check if payment status indicates money was received but credits failed to add
+         * @param {string} status - Payment status from backend
+         * @returns {boolean} - True if money received but credit addition failed
+         */
+        function isPaymentCreditFailed(status) {
+            return ['PAID_CREDIT_FAILED', 'NEEDS_REVIEW'].includes(status);
+        }
+
         // Check for plan parameter in URL and auto-select after login
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -337,6 +368,9 @@
                 paymentStatusCheck.style.display = 'block';
             }, 2000);
 
+            // Store status token for polling
+            currentStatusToken = data.statusToken;
+
             // Start polling for payment status
             startPaymentPolling(data.orderCode);
         }
@@ -344,6 +378,7 @@
         let pollingInterval = null;
         let pollingAttempts = 0;
         let currentOrderCode = null; // Track current order code for cancel
+        let currentStatusToken = null; // Store status token for polling
         const MAX_POLLING_ATTEMPTS = 100; // 5 minutes max (100 * 3 seconds)
 
         // Cleanup function to stop all polling and intervals
@@ -470,7 +505,9 @@
                 }
 
                 try {
-                    const response = await fetch(`/api/payment/status/${orderCode}`);
+                    // Include status token for unauthenticated polling
+                    const tokenParam = currentStatusToken ? `?token=${encodeURIComponent(currentStatusToken)}` : '';
+                    const response = await fetch(`/api/payment/status/${orderCode}${tokenParam}`);
 
                     if (!response.ok) {
                         console.error('Status check failed:', response.status);
@@ -480,11 +517,12 @@
                     const data = await response.json();
                     console.log('Payment status response:', data);
 
-                    // Check for SUCCESS status
-                    if (data.status === 'SUCCESS') {
+                    // Check payment status - mutually exclusive branches
+                    if (isPaymentSuccess(data.status)) {
+                        // SUCCESS: CREDITED or legacy SUCCESS - final success
                         cleanupPolling();
                         currentOrderCode = null;
-                        console.log('Payment SUCCESS detected!');
+                        console.log('Payment SUCCESS detected! Status:', data.status);
 
                         Toast.success('Thanh toán thành công! Đang chuyển hướng...');
 
@@ -494,15 +532,34 @@
                             modal.hide();
                         }
 
-                        // Redirect after short delay
+                        // Redirect after short delay (include status token for polling)
                         setTimeout(() => {
-                            window.location.href = '/html/payment-result.html?orderCode=' + orderCode + '&status=success';
+                            let redirectUrl = '/html/payment-result.html?orderCode=' + orderCode + '&status=success';
+                            if (currentStatusToken) {
+                                redirectUrl += '&token=' + encodeURIComponent(currentStatusToken);
+                            }
+                            window.location.href = redirectUrl;
                         }, 1500);
                         return;
                     }
 
-                    // Check for FAILED status
-                    if (data.status === 'FAILED' || data.status === 'CANCELLED' || data.status === 'EXPIRED') {
+                    else if (isPaymentCreditFailed(data.status)) {
+                        // CREDIT_FAILED: Money received but credit addition failed
+                        cleanupPolling();
+                        currentOrderCode = null;
+                        console.log('Payment CREDIT_FAILED detected! Status:', data.status);
+
+                        Toast.warning('Đã nhận tiền nhưng xử lý credit gặp lỗi. Hệ thống sẽ tự động retry hoặc vui lòng liên hệ hỗ trợ!');
+
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('qrModal'));
+                        if (modal) {
+                            modal.hide();
+                        }
+                        return;
+                    }
+
+                    else if (data.status === 'FAILED' || data.status === 'CANCELLED' || data.status === 'EXPIRED') {
+                        // FAILED: Payment failed, cancelled, or expired - no money received
                         cleanupPolling();
                         currentOrderCode = null;
                         console.log('Payment FAILED/CANCELLED/EXPIRED detected');
@@ -514,6 +571,18 @@
                             modal.hide();
                         }
                         return;
+                    }
+
+                    else if (data.status === 'PAID') {
+                        // PAID: Money received, credits being added - continue polling
+                        console.log('Payment PAID detected - credits being processed, continuing to poll...');
+                        // Don't stop polling, don't close modal
+                    }
+
+                    else {
+                        // UNKNOWN/UNEXPECTED: Continue polling until max attempts, then error
+                        console.log('Payment status unknown/unexpected:', data.status, '- continuing to poll...');
+                        // Don't stop polling for unknown states until max attempts reached
                     }
 
                     // Still PENDING - continue polling

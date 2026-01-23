@@ -102,13 +102,45 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+// ===== PAYMENT STATUS HELPER FUNCTIONS =====
+// Backend state machine: PENDING → PAID → CREDITED (final success)
+// Legacy SUCCESS is migrated to CREDITED
+
+/**
+ * Check if payment status indicates successful completion (credits added)
+ * @param {string} status - Payment status from backend
+ * @returns {boolean} - True if payment is successfully completed
+ */
+function isPaymentSuccess(status) {
+    return status === 'CREDITED' || status === 'SUCCESS'; // Backward compatibility
+}
+
+/**
+ * Check if payment status indicates final state (stop polling)
+ * @param {string} status - Payment status from backend
+ * @returns {boolean} - True if polling should stop
+ */
+function isPaymentFinalStatus(status) {
+    return ['CREDITED', 'SUCCESS', 'FAILED', 'CANCELLED', 'EXPIRED', 'PAID_CREDIT_FAILED', 'NEEDS_REVIEW'].includes(status);
+}
+
+/**
+ * Check if payment status indicates money was received but credits failed to add
+ * @param {string} status - Payment status from backend
+ * @returns {boolean} - True if money received but credit addition failed
+ */
+function isPaymentCreditFailed(status) {
+    return ['PAID_CREDIT_FAILED', 'NEEDS_REVIEW'].includes(status);
+}
+
 // Get URL parameters
 function getUrlParams() {
     const params = new URLSearchParams(window.location.search);
     return {
         orderCode: params.get('orderCode'),
         status: params.get('status'),
-        code: params.get('code') // PayOS response code
+        code: params.get('code'), // PayOS response code
+        token: params.get('token') // Status token for polling
     };
 }
 
@@ -121,24 +153,37 @@ function formatAmount(amount) {
 // Fetch credit balance
 async function fetchCreditBalance() {
     try {
-        // Use apiClient to ensure refresh/retry and avoid localStorage token usage
-        const data = await window.apiClient.get('/api/credits/balance');
-        return data;
+        // Direct fetch with credentials - no apiClient dependency for production safety
+        const response = await fetch('/api/credits/balance', { credentials: 'include' });
+        if (response.ok) {
+            return await response.json();
+        }
+        // 401/403/404 expected in redirect scenarios - return null gracefully
     } catch (error) {
-        console.error('Error fetching credits:', error);
+        console.error('Error fetching credits:', error.message);
+        // Network errors, CORS issues, etc. - return null gracefully
     }
     return null;
 }
 
 // Check payment status from backend
-async function checkPaymentStatus(orderCode) {
+async function checkPaymentStatus(orderCode, token) {
     try {
-        const response = await fetch(`/api/payment/status/${orderCode}`);
+        // Include status token for unauthenticated polling (only if token exists)
+        const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '';
+        const response = await fetch(`/api/payment/status/${orderCode}${tokenParam}`);
+
+        if (response.status === 404) {
+            // Token expired, invalid, or missing - provide user-friendly message
+            throw new Error('Phiên kiểm tra trạng thái thanh toán đã hết hạn hoặc không hợp lệ. Vui lòng kiểm tra lịch sử thanh toán hoặc tạo thanh toán mới.');
+        }
+
         if (response.ok) {
             return await response.json();
         }
     } catch (error) {
-        console.error('Error checking payment status:', error);
+        console.error('Error checking payment status:', error.message);
+        throw error; // Re-throw to preserve specific error messages
     }
     return null;
 }
@@ -148,14 +193,31 @@ async function showSuccess(paymentData) {
     document.getElementById('loadingState').style.display = 'none';
     document.getElementById('successState').style.display = 'block';
     
-    // Fetch and display credits
-    const credits = await fetchCreditBalance();
-    if (credits) {
-        let creditsText = `${credits.chatCredits} Chat`;
-        if (credits.quizGenCredits > 0) {
-            creditsText += ` + ${credits.quizGenCredits} Quiz`;
+    // Display purchased credits immediately (always available on success)
+    let creditsText = '';
+    if (paymentData.chatCredits || paymentData.quizCredits) {
+        creditsText = `+${paymentData.chatCredits || 0} Chat`;
+        if (paymentData.quizCredits > 0) {
+            creditsText += ` +${paymentData.quizCredits} Quiz`;
         }
-        document.getElementById('creditsInfo').textContent = creditsText;
+    } else {
+        creditsText = 'Credits đã được cộng';
+    }
+    document.getElementById('creditsInfo').textContent = creditsText;
+
+    // Optionally fetch and display current balance (may fail in redirect scenarios)
+    try {
+        const currentCredits = await fetchCreditBalance();
+        if (currentCredits) {
+            let balanceText = `${currentCredits.chatCredits} Chat`;
+            if (currentCredits.quizGenCredits > 0) {
+                balanceText += ` + ${currentCredits.quizGenCredits} Quiz`;
+            }
+            document.getElementById('creditsInfo').textContent = balanceText;
+            console.log('Updated credits display with current balance');
+        }
+    } catch (error) {
+        console.log('Could not fetch current balance, keeping purchased credits display');
     }
     
     // Display payment details
@@ -255,8 +317,15 @@ async function processPayment() {
     }
     
     // Check payment status from backend
-    const paymentData = await checkPaymentStatus(params.orderCode);
-    
+    let paymentData;
+    try {
+        paymentData = await checkPaymentStatus(params.orderCode, params.token);
+    } catch (error) {
+        // Handle specific errors like token expiration
+        showFailed(error.message);
+        return;
+    }
+
     if (!paymentData) {
         showFailed('Không thể kiểm tra trạng thái thanh toán');
         return;
@@ -264,12 +333,16 @@ async function processPayment() {
     
     console.log('Payment data:', paymentData);
     
-    if (paymentData.status === 'SUCCESS') {
+    if (isPaymentSuccess(paymentData.status)) {
         await showSuccess(paymentData);
+    } else if (isPaymentCreditFailed(paymentData.status)) {
+        showFailed('Đã nhận tiền nhưng xử lý credit gặp lỗi. Vui lòng liên hệ hỗ trợ!');
     } else if (paymentData.status === 'FAILED') {
         showFailed('Thanh toán không thành công');
+    } else if (paymentData.status === 'CANCELLED' || paymentData.status === 'EXPIRED') {
+        showFailed('Thanh toán đã bị hủy hoặc hết hạn');
     } else {
-        // Still pending - show pending state
+        // Still pending or processing - show pending state
         showPending();
     }
 }

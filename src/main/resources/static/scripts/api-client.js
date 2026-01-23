@@ -75,6 +75,31 @@ const API_CLIENT = {
             }
         }
 
+        // Handle 429 Too Many Requests (rate limit/session limit)
+        if (response.status === 429) {
+            try {
+                const errorData = await response.json();
+                console.warn('[API Client] Rate limit/session limit exceeded:', errorData);
+
+                // Show user-friendly error message with Toast if available
+                if (window.Toast) {
+                    if (errorData.code === 'SESSION_LIMIT_EXCEEDED') {
+                        window.Toast.warning(errorData.error || 'Phiên chat đã đạt 10 câu hỏi. Vui lòng tạo phiên mới.');
+                    } else {
+                        window.Toast.error(errorData.error || 'Quá nhiều yêu cầu. Vui lòng thử lại sau.');
+                    }
+                } else if (window.ERROR_HANDLER) {
+                    window.ERROR_HANDLER.showErrorAlert(errorData.error || 'Quá nhiều yêu cầu. Vui lòng thử lại sau.');
+                }
+
+                // Throw error so caller can also handle
+                throw { ...errorData, status: 429 };
+            } catch (e) {
+                if (e.status === 429) throw e; // Re-throw our custom error
+                console.error('[API Client] Failed to parse 429 response:', e);
+            }
+        }
+
         return response;
     },
 
@@ -302,5 +327,24 @@ const API_CLIENT = {
 
 // Export for global scope
 window.apiClient = API_CLIENT;
+// Global auth ready promise - resolves when auth rehydration completes
+window.authReady = (async function() {
+    try {
+        // Use AUTH.guard if available (preferred), otherwise TokenManager refresh
+        if (typeof AUTH !== 'undefined' && typeof AUTH.guard === 'function') {
+            const isReady = await AUTH.guard({ requireAuth: false, redirect: false });
+            return isReady;
+        } else if (window.TokenManager && typeof window.TokenManager.refreshAccessToken === 'function') {
+            const refreshSuccess = await window.TokenManager.refreshAccessToken();
+            return refreshSuccess;
+        }
+        // No auth system available
+        return false;
+    } catch (error) {
+        console.warn('[authReady] Auth rehydration failed:', error.message);
+        return false;
+    }
+})();
+
 window.API_CLIENT = API_CLIENT;
 

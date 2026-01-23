@@ -140,10 +140,11 @@ public class PaymentIdempotencyRecord {
     }
 
     /**
-     * Check if this record has an active payment (PENDING or SUCCESS).
+     * Check if this record has an active payment (PENDING or CREDITED).
+     * NOTE: SUCCESS status is deprecated, only CREDITED indicates full success
      */
     public boolean hasActivePayment() {
-        return "PENDING".equals(status) || "SUCCESS".equals(status);
+        return "PENDING".equals(status) || "CREDITED".equals(status);
     }
 
     /**

@@ -432,9 +432,9 @@ CREATE INDEX ix_security_audit_user_event ON security_audit_log(user_id, event_t
 -- ============================================================================
 
 CREATE SEQUENCE order_code_sequence
-    START WITH 22222222
+    START WITH 77777777
     INCREMENT BY 1
-    MINVALUE 22222222
+    MINVALUE 77777777
     MAXVALUE 99999999
     NO CYCLE;
 
@@ -647,7 +647,7 @@ COMMENT ON COLUMN payments.qr_code IS 'VietQR string or base64 QR image for reus
 COMMENT ON TABLE credit_reservations IS 'Tracks credit reservations for refund support when AI operations fail';
 COMMENT ON TABLE payment_idempotency_records IS 'Lưu idempotency keys để tránh duplicate payment khi network retry';
 COMMENT ON TABLE security_audit_log IS 'Stores security-related events for audit and monitoring purposes';
-COMMENT ON SEQUENCE order_code_sequence IS 'Sequence for generating unique payment order codes. Range: 22222222-99999999';
+COMMENT ON SEQUENCE order_code_sequence IS 'Sequence for generating unique payment order codes. Range: 77777777-99999999';
 
 -- ============================================================================
 -- END OF CLEAN MIGRATION

@@ -363,7 +363,7 @@
         #qrModal #paymentAmount {
             width: 100%;
         }
-        }
+
     </style>
 </head>
 
@@ -541,10 +541,50 @@
     <script src="/scripts/script.js"></script>
 
     <script>
+        // ===== PAYMENT STATUS HELPER FUNCTIONS =====
+        // Backend state machine: PENDING → PAID → CREDITED (final success)
+        // Legacy SUCCESS is migrated to CREDITED
+
+        /**
+         * Check if payment status indicates successful completion (credits added)
+         * @param {string} status - Payment status from backend
+         * @returns {boolean} - True if payment is successfully completed
+         */
+        function isPaymentSuccess(status) {
+            return status === 'CREDITED' || status === 'SUCCESS'; // Backward compatibility
+        }
+
+        /**
+         * Check if payment status indicates final state (stop polling)
+         * @param {string} status - Payment status from backend
+         * @returns {boolean} - True if polling should stop
+         */
+        function isPaymentFinalStatus(status) {
+            return ['CREDITED', 'SUCCESS', 'FAILED', 'CANCELLED', 'EXPIRED', 'PAID_CREDIT_FAILED', 'NEEDS_REVIEW'].includes(status);
+        }
+
+        /**
+         * Check if payment status indicates money was received but credits failed to add
+         * @param {string} status - Payment status from backend
+         * @returns {boolean} - True if money received but credit addition failed
+         */
+        function isPaymentCreditFailed(status) {
+            return ['PAID_CREDIT_FAILED', 'NEEDS_REVIEW'].includes(status);
+        }
+
         let allPayments = [];
         let currentFilter = 'all';
 
         document.addEventListener('DOMContentLoaded', async () => {
+            // Wait for auth rehydration to complete before making API calls
+            const isAuthenticated = await window.authReady;
+
+            if (!isAuthenticated) {
+                // User is not logged in - redirect to login
+                window.location.href = '/html/login.html?returnUrl=' + encodeURIComponent(window.location.pathname);
+                return;
+            }
+
             await loadPaymentHistory();
             setupFilterTabs();
         });
@@ -581,9 +621,9 @@
 
         function updateStatistics(payments) {
             const total = payments.length;
-            const success = payments.filter(p => p.status === 'SUCCESS').length;
+            const success = payments.filter(p => isPaymentSuccess(p.status)).length;
             const totalAmount = payments
-                .filter(p => p.status === 'SUCCESS')
+                .filter(p => isPaymentSuccess(p.status))
                 .reduce((sum, p) => sum + parseFloat(p.amount), 0);
 
             document.getElementById('totalPayments').textContent = total;
@@ -636,7 +676,7 @@
                         ` : ''}
                     </div>
 
-                    ${payment.status === 'SUCCESS' ? `
+                    ${isPaymentSuccess(payment.status) ? `
                         <div class="credits-info">
                             <div class="credit-badge">
                                 <i class="bi bi-chat-dots-fill"></i>
@@ -693,6 +733,8 @@
                     currentFilter = tab.dataset.filter;
                     const filtered = currentFilter === 'all'
                         ? allPayments
+                        : currentFilter === 'SUCCESS'
+                        ? allPayments.filter(p => isPaymentSuccess(p.status))
                         : allPayments.filter(p => p.status === currentFilter);
 
                     renderPayments(filtered);
@@ -736,6 +778,7 @@
         // ========== CONTINUE PAYMENT ==========
         let pollingInterval = null;
         let currentOrderCode = null;
+        let currentStatusToken = null;
 
         async function continuePayment(orderCode, planCode) {
             console.log('Continue payment:', orderCode, planCode);
@@ -745,6 +788,8 @@
                 const response = await API_CLIENT.get(`/api/payment/continue/${orderCode}`);
 
                 if (response.qrCode) {
+                    // Store status token for polling (may be null for continue payments)
+                    currentStatusToken = response.statusToken;
                     showQRModal(response);
                 } else if (response.paymentUrl) {
                     window.open(response.paymentUrl, '_blank');
@@ -814,10 +859,14 @@
                 if (document.hidden) return;
 
                 try {
-                    const response = await fetch(`/api/payment/status/${orderCode}`);
+                    // Include status token for unauthenticated polling
+                    const tokenParam = currentStatusToken ? `?token=${encodeURIComponent(currentStatusToken)}` : '';
+                    const response = await fetch(`/api/payment/status/${orderCode}${tokenParam}`);
                     const data = await response.json();
 
-                    if (data.status === 'SUCCESS') {
+                    // Check payment status - mutually exclusive branches
+                    if (isPaymentSuccess(data.status)) {
+                        // SUCCESS: CREDITED or legacy SUCCESS - final success
                         cleanupPolling();
                         showToast('Thanh toán thành công!', 'success');
 
@@ -830,7 +879,22 @@
                         return;
                     }
 
-                    if (data.status === 'FAILED' || data.status === 'CANCELLED' || data.status === 'EXPIRED') {
+                    else if (isPaymentCreditFailed(data.status)) {
+                        // CREDIT_FAILED: Money received but credit addition failed
+                        cleanupPolling();
+                        showToast('Đã nhận tiền nhưng xử lý credit gặp lỗi. Hệ thống sẽ tự động retry hoặc vui lòng liên hệ hỗ trợ!', 'warning');
+
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('qrModal'));
+                        if (modal) modal.hide();
+
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                        return;
+                    }
+
+                    else if (data.status === 'FAILED' || data.status === 'CANCELLED' || data.status === 'EXPIRED') {
+                        // FAILED: Payment failed, cancelled, or expired - no money received
                         cleanupPolling();
                         showToast('Thanh toán thất bại hoặc đã bị hủy!', 'error');
 
@@ -841,6 +905,18 @@
                             window.location.reload();
                         }, 1500);
                         return;
+                    }
+
+                    else if (data.status === 'PAID') {
+                        // PAID: Money received, credits being added - continue polling
+                        console.log('Payment PAID detected - credits being processed, continuing to poll...');
+                        // Don't stop polling, don't close modal
+                    }
+
+                    else {
+                        // UNKNOWN/UNEXPECTED: Continue polling until max attempts, then error
+                        console.log('Payment status unknown/unexpected:', data.status, '- continuing to poll...');
+                        // Don't stop polling for unknown states until max attempts reached
                     }
                 } catch (error) {
                     console.error('Polling error:', error);

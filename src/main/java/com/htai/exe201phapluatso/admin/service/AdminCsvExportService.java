@@ -262,7 +262,8 @@ public class AdminCsvExportService {
     private String translatePaymentStatus(String status) {
         if (status == null) return "N/A";
         return switch (status.toUpperCase()) {
-            case "SUCCESS" -> "Thành công";
+            case "CREDITED" -> "Thành công";  // SUCCESS deprecated, use CREDITED
+            case "SUCCESS" -> "Thành công";  // Backward compatibility
             case "PENDING" -> "Đang chờ";
             case "FAILED" -> "Thất bại";
             case "CANCELLED" -> "Đã hủy";

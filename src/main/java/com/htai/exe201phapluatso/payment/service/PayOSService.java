@@ -84,8 +84,7 @@ public class PayOSService {
             CreditService creditService,
             QRCodeService qrCodeService,
             OrderCodeGenerator orderCodeGenerator,
-            PaymentEmailService paymentEmailService
-    ) {
+            PaymentEmailService paymentEmailService) {
         this.payOS = payOS;
         this.paymentRepo = paymentRepo;
         this.userRepo = userRepo;
@@ -98,7 +97,8 @@ public class PayOSService {
 
     /**
      * Create payment with pessimistic lock to prevent race condition.
-     * Uses database lock on user's pending payments to ensure only one payment is created at a time.
+     * Uses database lock on user's pending payments to ensure only one payment is
+     * created at a time.
      */
     @Transactional
     public CreatePaymentResponse createPayment(Long userId, String planCode) {
@@ -121,68 +121,68 @@ public class PayOSService {
         if (reusePendingPayment) {
             List<Payment> pendingPayments = paymentRepo.findPendingPaymentsByUserIdWithLock(userId);
             log.debug("Found {} pending payments for user {}", pendingPayments.size(), userId);
-            
+
             if (!pendingPayments.isEmpty()) {
                 // Tìm pending payment cùng gói
                 Payment matchingPending = pendingPayments.stream()
                         .filter(p -> p.getPlan() != null && p.getPlan().getCode().equals(planCode))
                         .findFirst()
                         .orElse(null);
-                
+
                 // Nếu có pending payment cùng gói và còn mới (trong vòng spamBlockMinutes)
                 if (matchingPending != null) {
                     LocalDateTime createdAt = matchingPending.getCreatedAt();
-                    boolean isRecent = createdAt != null && 
+                    boolean isRecent = createdAt != null &&
                             createdAt.isAfter(LocalDateTime.now().minusMinutes(spamBlockMinutes));
-                    
-                    log.info("Found pending payment: orderCode={}, user={}, plan={}, createdAt={}, isRecent={}", 
+
+                    log.info("Found pending payment: orderCode={}, user={}, plan={}, createdAt={}, isRecent={}",
                             matchingPending.getOrderCode(), userId, planCode, createdAt, isRecent);
-                    
+
                     if (isRecent) {
                         try {
                             // Lấy payment info từ PayOS để check status
                             var paymentInfo = payOS.paymentRequests().get(matchingPending.getOrderCode());
                             String statusName = paymentInfo.getStatus() != null ? paymentInfo.getStatus().name() : null;
-                            
+
                             log.info("PayOS status for orderCode={}: {}", matchingPending.getOrderCode(), statusName);
-                            
+
                             if ("PENDING".equals(statusName) || "PROCESSING".equals(statusName)) {
                                 // Payment link vẫn còn active → REUSE
                                 // Lấy checkoutUrl và qrCode đã lưu trong database
                                 String checkoutUrl = matchingPending.getCheckoutUrl();
                                 String qrCode = matchingPending.getQrCode();
-                                
+
                                 // Fallback nếu không có trong DB (payment cũ trước khi có feature này)
                                 if (checkoutUrl == null || checkoutUrl.isBlank()) {
                                     checkoutUrl = buildCheckoutUrl(matchingPending.getOrderCode());
                                 }
                                 if (qrCode == null || qrCode.isBlank()) {
-                                    log.warn("No saved QR code found, generating from checkout URL (may not be scannable by bank app)");
+                                    log.warn(
+                                            "No saved QR code found, generating from checkout URL (may not be scannable by bank app)");
                                     qrCode = generateQRCodeSafe(checkoutUrl, matchingPending.getOrderCode());
                                 }
-                                
-                                log.info("REUSING payment link: orderCode={}, url={}, hasQR={}", 
+
+                                log.info("REUSING payment link: orderCode={}, url={}, hasQR={}",
                                         matchingPending.getOrderCode(), checkoutUrl, qrCode != null);
-                                
+
                                 return new CreatePaymentResponse(
                                         checkoutUrl,
                                         String.valueOf(matchingPending.getOrderCode()),
                                         qrCode,
                                         (long) plan.getPrice(),
-                                        plan.getName()
-                                );
+                                        plan.getName());
                             } else {
                                 // Payment đã expired/cancelled → Tạo mới
                                 log.info("Payment link expired/cancelled (status={}), will create new one", statusName);
                                 matchingPending.setStatus("EXPIRED");
                                 paymentRepo.save(matchingPending);
                             }
-                            
+
                         } catch (Exception e) {
                             // Không lấy được payment từ PayOS - có thể đã hết hạn
-                            log.warn("Cannot get payment from PayOS (orderCode={}): {}", 
+                            log.warn("Cannot get payment from PayOS (orderCode={}): {}",
                                     matchingPending.getOrderCode(), e.getMessage());
-                            
+
                             // Đánh dấu payment cũ là EXPIRED và tạo mới
                             matchingPending.setStatus("EXPIRED");
                             paymentRepo.save(matchingPending);
@@ -213,14 +213,14 @@ public class PayOSService {
 
         try {
             String description = "Don hang " + orderCode;
-            
+
             log.info("========== CREATING PAYOS PAYMENT ==========");
             log.info("OrderCode: {}", orderCode);
             log.info("Amount: {}", plan.getPrice());
             log.info("Description: {}", description);
             log.info("ReturnUrl: {}", returnUrl);
             log.info("CancelUrl: {}", cancelUrl);
-            
+
             CreatePaymentLinkRequest request = CreatePaymentLinkRequest.builder()
                     .orderCode(orderCode)
                     .amount((long) plan.getPrice())
@@ -231,8 +231,8 @@ public class PayOSService {
 
             var paymentLink = callPayOSWithRetry(request, maxRetries);
 
-            log.info("PayOS Response: checkoutUrl={}, qrCode={}, paymentLinkId={}", 
-                    paymentLink.getCheckoutUrl(), 
+            log.info("PayOS Response: checkoutUrl={}, qrCode={}, paymentLinkId={}",
+                    paymentLink.getCheckoutUrl(),
                     paymentLink.getQrCode(),
                     paymentLink.getPaymentLinkId());
             log.info("========== PAYOS PAYMENT CREATED ==========");
@@ -240,7 +240,7 @@ public class PayOSService {
             String checkoutUrl = paymentLink.getCheckoutUrl();
             String qrCode = paymentLink.getQrCode();
             String qrCodeToSave = qrCode; // Lưu QR gốc từ PayOS (VietQR string hoặc URL)
-            
+
             // Fallback: Generate QR code if PayOS doesn't provide one
             if (qrCode == null || qrCode.isBlank()) {
                 log.info("PayOS did not provide QR code, generating our own");
@@ -269,8 +269,7 @@ public class PayOSService {
                     String.valueOf(orderCode),
                     qrCode,
                     (long) plan.getPrice(),
-                    plan.getName()
-            );
+                    plan.getName());
 
         } catch (Exception e) {
             log.error("========== PAYOS PAYMENT FAILED ==========");
@@ -284,7 +283,7 @@ public class PayOSService {
     private vn.payos.model.v2.paymentRequests.CreatePaymentLinkResponse callPayOSWithRetry(
             CreatePaymentLinkRequest request, int maxRetries) throws Exception {
         Exception lastException = null;
-        
+
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             try {
                 log.info("Calling PayOS API... (attempt {}/{})", attempt, maxRetries);
@@ -292,13 +291,13 @@ public class PayOSService {
             } catch (Exception e) {
                 lastException = e;
                 log.warn("PayOS API call failed (attempt {}/{}): {}", attempt, maxRetries, e.getMessage());
-                
+
                 String errorMsg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
-                if (errorMsg.contains("invalid") || errorMsg.contains("unauthorized") || 
-                    errorMsg.contains("duplicate") || errorMsg.contains("already exists")) {
+                if (errorMsg.contains("invalid") || errorMsg.contains("unauthorized") ||
+                        errorMsg.contains("duplicate") || errorMsg.contains("already exists")) {
                     throw e;
                 }
-                
+
                 if (attempt < maxRetries) {
                     long waitTime = retryBaseDelayMs * (1L << (attempt - 1));
                     log.info("Waiting {}ms before retry...", waitTime);
@@ -306,7 +305,7 @@ public class PayOSService {
                 }
             }
         }
-        
+
         throw lastException;
     }
 
@@ -331,104 +330,160 @@ public class PayOSService {
     }
 
     /**
-     * Handle webhook with retry mechanism for race condition when payment not yet committed.
-     * PayOS may send webhook before createPayment transaction commits.
+     * Handle webhook with PRODUCTION-SAFE flow.
+     * 
+     * STATE MACHINE:
+     * - PENDING → PAID → CREDITED (happy path)
+     * - PENDING → PAID → PAID_CREDIT_FAILED (credit add failed, will be retried by
+     * job)
+     * - PENDING → FAILED/CANCELLED (PayOS code != "00", no money received)
+     * 
+     * SAFETY GUARANTEES:
+     * 1. Atomic claim via UPDATE query - only ONE thread processes each webhook
+     * 2. Never set FAILED when money is received (code="00")
+     * 3. No exceptions thrown to prevent PayOS infinite retry
+     * 4. Credits are added AFTER payment status is set to PAID
      */
     @Transactional
     public void handleWebhook(Map<String, Object> webhookData) {
+        long orderCode = 0;
         try {
             log.info("========== PayOS WEBHOOK START ==========");
             log.info("Webhook data: {}", webhookData);
 
+            // Step 1: Verify signature - throws exception if invalid
             var verifiedData = payOS.webhooks().verify(webhookData);
-            
-            long orderCode = verifiedData.getOrderCode();
+
+            orderCode = verifiedData.getOrderCode();
             String code = verifiedData.getCode();
 
             log.info("Verified webhook: orderCode={}, code={}", orderCode, code);
 
-            // Retry mechanism: payment may not exist yet if webhook arrives before transaction commits
+            // Step 2: Load payment FIRST (with retry for race condition with createPayment)
+            // CRITICAL: Ensure payment exists before claiming webhook
             Payment payment = findPaymentWithRetry(orderCode);
 
-            if (payment.getWebhookProcessed() != null && payment.getWebhookProcessed()) {
-                log.warn("Webhook already processed for orderCode: {}", orderCode);
+            // Step 3: ATOMIC CLAIM - prevents race condition
+            // Only ONE thread can claim and process this webhook
+            // IMPORTANT: Claim AFTER confirming payment exists
+            int claimed = paymentRepo.claimWebhook(orderCode);
+            if (claimed == 0) {
+                log.info("Webhook already claimed/processed for orderCode: {} - skipping", orderCode);
+                return;
+            }
+            log.info("Successfully claimed webhook for orderCode: {}", orderCode);
+
+            // Step 4: Check if already in final state (extra safety)
+            if (payment.isSuccessful()) {
+                log.warn("Payment already successful for orderCode: {} - skipping", orderCode);
                 return;
             }
 
-            if ("SUCCESS".equals(payment.getStatus()) || "FAILED".equals(payment.getStatus())) {
-                log.warn("Payment already in final state: {} for orderCode: {}", payment.getStatus(), orderCode);
-                payment.setWebhookProcessed(true);
-                paymentRepo.save(payment);
-                return;
-            }
-
+            // Step 5: Process based on PayOS response code
             if ("00".equals(code)) {
-                Plan plan = payment.getPlan();
-                LocalDateTime expiresAt = plan.getDurationMonths() > 0
-                        ? LocalDateTime.now().plusMonths(plan.getDurationMonths())
-                        : null;
-
-                try {
-                    creditService.addCredits(
-                            payment.getUser().getId(),
-                            plan.getChatCredits(),
-                            plan.getQuizGenCredits(),
-                            plan.getCode(),
-                            expiresAt
-                    );
-                    log.info("Credits added successfully for orderCode: {}", orderCode);
-                } catch (Exception e) {
-                    log.error("Failed to add credits for orderCode: {}", orderCode, e);
-                    payment.setStatus("FAILED");
-                    payment.setWebhookProcessed(true);
-                    paymentRepo.save(payment);
-                    throw new BadRequestException("Failed to add credits: " + e.getMessage());
-                }
-
-                payment.setStatus("SUCCESS");
-                payment.setPaidAt(LocalDateTime.now());
-                payment.setTransactionId(verifiedData.getReference());
-                payment.setWebhookProcessed(true);
-                paymentRepo.save(payment);
-
-                // Gửi email xác nhận thanh toán (async - không block webhook)
-                paymentEmailService.sendPaymentSuccessEmail(payment);
-
-                log.info("Payment SUCCESS: orderCode={}, credits added", orderCode);
+                // ========== PAYMENT SUCCESS - money received from user ==========
+                String transactionRef = verifiedData.getReference();
+                processSuccessfulPayment(payment, transactionRef);
             } else {
-                payment.setStatus("FAILED");
-                payment.setWebhookProcessed(true);
-                paymentRepo.save(payment);
-                log.warn("Payment FAILED: orderCode={}, code={}", orderCode, code);
+                // ========== PAYMENT FAILED - no money received ==========
+                processFailedPayment(payment, code);
             }
 
             log.info("========== PayOS WEBHOOK END ==========");
 
-        } catch (NotFoundException e) {
-            log.error("Payment not found in webhook after retries", e);
-            throw e;
         } catch (Exception e) {
-            log.error("Webhook processing failed", e);
-            throw new BadRequestException("Invalid webhook: " + e.getMessage());
+            // Log error but DON'T throw - we don't want PayOS to retry infinitely
+            log.error("Webhook processing error for orderCode={}: {}", orderCode, e.getMessage(), e);
+            // Payment status already updated in try block, no rollback needed
         }
     }
 
     /**
+     * Process successful payment (PayOS code="00" = money received)
+     * 
+     * FLOW: PENDING → PAID → CREDITED (or PAID_CREDIT_FAILED)
+     * 
+     * CRITICAL: Never set FAILED here - user already paid!
+     * 
+     * @param payment        Payment entity
+     * @param transactionRef PayOS transaction reference ID
+     */
+    private void processSuccessfulPayment(Payment payment, String transactionRef) {
+        long orderCode = payment.getOrderCode();
+
+        // Step 1: Mark as PAID first (money received, credits not yet added)
+        payment.setStatus(Payment.STATUS_PAID);
+        payment.setPaidAt(LocalDateTime.now());
+        payment.setTransactionId(transactionRef);
+        paymentRepo.save(payment);
+        log.info("Payment marked as PAID: orderCode={}", orderCode);
+
+        // Step 2: Try to add credits
+        Plan plan = payment.getPlan();
+        LocalDateTime expiresAt = plan.getDurationMonths() > 0
+                ? LocalDateTime.now().plusMonths(plan.getDurationMonths())
+                : null;
+
+        try {
+            creditService.addCredits(
+                    payment.getUser().getId(),
+                    plan.getChatCredits(),
+                    plan.getQuizGenCredits(),
+                    plan.getCode(),
+                    expiresAt);
+
+            // Step 3a: Credits added successfully → CREDITED
+            payment.setStatus(Payment.STATUS_CREDITED);
+            paymentRepo.save(payment);
+            log.info("Payment CREDITED successfully: orderCode={}, chatCredits={}, quizCredits={}",
+                    orderCode, plan.getChatCredits(), plan.getQuizGenCredits());
+
+            // Send success email (async)
+            paymentEmailService.sendPaymentSuccessEmail(payment);
+
+        } catch (Exception e) {
+            // Step 3b: Credit add failed → PAID_CREDIT_FAILED (NOT FAILED!)
+            // CRITICAL: User already paid, do NOT set FAILED
+            log.error("Failed to add credits for PAID orderCode={}: {}", orderCode, e.getMessage(), e);
+
+            payment.setStatus(Payment.STATUS_PAID_CREDIT_FAILED);
+            payment.incrementCreditRetryCount();
+            paymentRepo.save(payment);
+
+            log.warn("Payment marked as PAID_CREDIT_FAILED: orderCode={} - will be retried by scheduled job",
+                    orderCode);
+            // Don't throw - let the retry job handle it
+        }
+    }
+
+    /**
+     * Process failed payment (PayOS code != "00" = no money received)
+     * 
+     * Safe to mark as FAILED because user didn't pay.
+     */
+    private void processFailedPayment(Payment payment, String code) {
+        payment.setStatus(Payment.STATUS_FAILED);
+        paymentRepo.save(payment);
+        log.warn("Payment FAILED: orderCode={}, code={} (no money received)", payment.getOrderCode(), code);
+    }
+
+    /**
      * Find payment with retry mechanism.
-     * Handles race condition when webhook arrives before createPayment transaction commits.
+     * Handles race condition when webhook arrives before createPayment transaction
+     * commits.
      */
     private Payment findPaymentWithRetry(long orderCode) {
         for (int attempt = 1; attempt <= webhookRetryMaxAttempts; attempt++) {
             var paymentOpt = paymentRepo.findByOrderCodeWithLock(orderCode);
-            
+
             if (paymentOpt.isPresent()) {
                 log.info("Payment found on attempt {}: orderCode={}", attempt, orderCode);
                 return paymentOpt.get();
             }
-            
+
             if (attempt < webhookRetryMaxAttempts) {
                 long waitTime = webhookRetryDelayMs * attempt;
-                log.info("Payment not found, retrying in {}ms (attempt {}/{})", 
+                log.info("Payment not found, retrying in {}ms (attempt {}/{})",
                         waitTime, attempt, webhookRetryMaxAttempts);
                 try {
                     Thread.sleep(waitTime);
@@ -438,8 +493,8 @@ public class PayOSService {
                 }
             }
         }
-        
-        throw new NotFoundException("Payment not found after " + webhookRetryMaxAttempts + 
+
+        throw new NotFoundException("Payment not found after " + webhookRetryMaxAttempts +
                 " attempts: orderCode=" + orderCode);
     }
 
@@ -468,13 +523,13 @@ public class PayOSService {
         response.put("orderCode", orderCode);
         response.put("status", payment.getStatus());
         response.put("amount", payment.getAmount());
-        
+
         Plan plan = payment.getPlan();
         if (plan != null) {
             response.put("planCode", plan.getCode());
             response.put("planName", plan.getName());
-            
-            if ("SUCCESS".equals(payment.getStatus())) {
+
+            if ("CREDITED".equals(payment.getStatus())) {  // SUCCESS deprecated
                 response.put("paidAt", payment.getPaidAt());
                 response.put("chatCredits", plan.getChatCredits());
                 response.put("quizCredits", plan.getQuizGenCredits());
@@ -508,7 +563,7 @@ public class PayOSService {
         try {
             var paymentInfo = payOS.paymentRequests().get(orderCode);
             String statusName = paymentInfo.getStatus() != null ? paymentInfo.getStatus().name() : null;
-            
+
             if (!"PENDING".equals(statusName) && !"PROCESSING".equals(statusName)) {
                 // Payment đã hết hạn trên PayOS
                 payment.setStatus("EXPIRED");
@@ -525,7 +580,7 @@ public class PayOSService {
         // Get checkout URL and QR code
         String checkoutUrl = payment.getCheckoutUrl();
         String qrCode = payment.getQrCode();
-        
+
         // Fallback if not saved in DB
         if (checkoutUrl == null || checkoutUrl.isBlank()) {
             checkoutUrl = buildCheckoutUrl(orderCode);
@@ -536,16 +591,15 @@ public class PayOSService {
         }
 
         Plan plan = payment.getPlan();
-        
+
         log.info("Returning payment for continue: orderCode={}, hasQR={}", orderCode, qrCode != null);
-        
+
         return new CreatePaymentResponse(
                 checkoutUrl,
                 String.valueOf(orderCode),
                 qrCode,
                 payment.getAmount().longValue(),
-                plan != null ? plan.getName() : null
-        );
+                plan != null ? plan.getName() : null);
     }
 
     public List<PaymentHistoryResponse> getPaymentHistory(Long userId) {
@@ -553,7 +607,7 @@ public class PayOSService {
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
 
         List<Payment> payments = paymentRepo.findByUserOrderByCreatedAtDesc(user);
-        
+
         if (payments.size() > 50) {
             log.info("User {} has {} payments, returning last 50 only", userId, payments.size());
             payments = payments.subList(0, 50);
@@ -577,8 +631,7 @@ public class PayOSService {
                         payment.getPaidAt(),
                         payment.getPlan().getChatCredits(),
                         payment.getPlan().getQuizGenCredits(),
-                        payment.getPlan().getDurationMonths()
-                ))
+                        payment.getPlan().getDurationMonths()))
                 .toList();
     }
 
@@ -598,10 +651,10 @@ public class PayOSService {
         try {
             log.info("Cancelling PayOS payment: orderCode={}", orderCode);
             payOS.paymentRequests().cancel(orderCode, "Cancelled by user");
-            
+
             payment.setStatus("CANCELLED");
             paymentRepo.save(payment);
-            
+
             log.info("Payment cancelled successfully: orderCode={}", orderCode);
         } catch (Exception e) {
             log.error("Failed to cancel payment: orderCode={}", orderCode, e);
@@ -613,34 +666,34 @@ public class PayOSService {
     @Transactional
     public void cleanupStalePendingPayments() {
         log.info("Running stale payment cleanup task...");
-        
+
         LocalDateTime staleTime = LocalDateTime.now().minusMinutes(stalePaymentMinutes);
         LocalDateTime oneDayAgo = LocalDateTime.now().minusHours(24);
-        
+
         List<Payment> stalePayments = paymentRepo.findByStatusAndCreatedAtBefore("PENDING", staleTime);
-        
+
         if (stalePayments.isEmpty()) {
             log.info("No stale payments found");
             return;
         }
-        
+
         // Tăng batch size lên 50
         int batchSize = Math.min(stalePayments.size(), 50);
         if (stalePayments.size() > batchSize) {
             log.info("Found {} stale payments, processing first {} only", stalePayments.size(), batchSize);
             stalePayments = stalePayments.subList(0, batchSize);
         }
-        
+
         int processed = 0;
         int expired = 0;
         int cancelled = 0;
-        
+
         for (Payment payment : stalePayments) {
             try {
                 var paymentInfo = payOS.paymentRequests().get(payment.getOrderCode());
                 var status = paymentInfo.getStatus();
                 String statusName = status != null ? status.name() : null;
-                
+
                 if ("CANCELLED".equals(statusName) || "EXPIRED".equals(statusName)) {
                     payment.setStatus("EXPIRED");
                     paymentRepo.save(payment);
@@ -662,74 +715,74 @@ public class PayOSService {
                 processed++;
             } catch (Exception e) {
                 String errorMsg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
-                
+
                 // PayOS không tìm thấy payment → EXPIRED
-                if (errorMsg.contains("không tồn tại") || errorMsg.contains("not found") || 
-                    errorMsg.contains("tạm dừng") || errorMsg.contains("404")) {
+                if (errorMsg.contains("không tồn tại") || errorMsg.contains("not found") ||
+                        errorMsg.contains("tạm dừng") || errorMsg.contains("404")) {
                     payment.setStatus("EXPIRED");
                     paymentRepo.save(payment);
                     expired++;
                     log.info("Marked payment {} as EXPIRED (not found on PayOS)", payment.getOrderCode());
-                } 
+                }
                 // Payment quá cũ (>24h) → EXPIRED luôn
                 else if (payment.getCreatedAt().isBefore(oneDayAgo)) {
                     payment.setStatus("EXPIRED");
                     paymentRepo.save(payment);
                     expired++;
                     log.info("Marked payment {} as EXPIRED (>24h old)", payment.getOrderCode());
-                } 
+                }
                 // Lỗi khác nhưng payment đã quá 2 giờ → EXPIRED
                 else if (payment.getCreatedAt().isBefore(LocalDateTime.now().minusHours(2))) {
                     payment.setStatus("EXPIRED");
                     paymentRepo.save(payment);
                     expired++;
                     log.info("Marked payment {} as EXPIRED (>2h old, API error)", payment.getOrderCode());
-                }
-                else {
+                } else {
                     log.debug("Skipping payment {} - will retry later: {}", payment.getOrderCode(), errorMsg);
                 }
                 processed++;
             }
         }
-        
-        log.info("Stale payment cleanup completed. Processed: {}, Expired: {}, Cancelled: {}", 
+
+        log.info("Stale payment cleanup completed. Processed: {}, Expired: {}, Cancelled: {}",
                 processed, expired, cancelled);
     }
 
     /**
      * Cleanup old failed/expired/cancelled payments to prevent database bloat.
-     * Runs daily at 3 AM. Deletes payments older than 30 days that are not SUCCESS.
+     * Runs daily at 3 AM. Deletes payments older than 30 days that are not CREDITED.
+     * NOTE: SUCCESS status is deprecated, only CREDITED indicates full success
      */
     @Scheduled(cron = "0 0 3 * * ?") // Chạy lúc 3:00 AM mỗi ngày
     @Transactional
     public void cleanupOldFailedPayments() {
         log.info("Running old payment cleanup task...");
-        
+
         LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
-        
+
         // Chỉ xóa các payment không thành công và đã quá 30 ngày
         List<String> statusesToDelete = List.of("EXPIRED", "CANCELLED", "FAILED");
         int totalDeleted = 0;
-        
+
         for (String status : statusesToDelete) {
             try {
                 List<Payment> oldPayments = paymentRepo.findByStatusAndCreatedAtBefore(status, thirtyDaysAgo);
-                
+
                 if (!oldPayments.isEmpty()) {
                     // Xóa theo batch để tránh lock quá lâu
                     int batchSize = Math.min(oldPayments.size(), 100);
                     List<Payment> toDelete = oldPayments.subList(0, batchSize);
-                    
+
                     paymentRepo.deleteAll(toDelete);
                     totalDeleted += toDelete.size();
-                    
+
                     log.info("Deleted {} old {} payments (>30 days)", toDelete.size(), status);
                 }
             } catch (Exception e) {
                 log.error("Failed to delete old {} payments: {}", status, e.getMessage());
             }
         }
-        
+
         if (totalDeleted > 0) {
             log.info("Old payment cleanup completed. Total deleted: {}", totalDeleted);
         } else {

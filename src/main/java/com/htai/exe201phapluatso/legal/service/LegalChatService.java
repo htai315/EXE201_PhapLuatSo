@@ -74,10 +74,6 @@ public class LegalChatService {
     public ChatResponse chat(Long userId, String question, ConversationContext conversationContext) {
         validateQuestion(question);
 
-        // STEP 0: Reserve credit BEFORE processing (will be refunded if AI fails)
-        com.htai.exe201phapluatso.credit.entity.CreditReservation reservation = creditService.reserveCredit(userId,
-                "CHAT", "AI_CHAT");
-
         log.info("Processing chat question for user {}: {}", userId, question);
 
         try {
@@ -88,8 +84,6 @@ public class LegalChatService {
 
             if (relevantArticles.isEmpty()) {
                 log.warn("No relevant articles found for question");
-                // Confirm credit even if no results (search was performed)
-                creditService.confirmReservation(reservation.getId());
                 return createNoResultsResponse();
             }
 
@@ -99,17 +93,13 @@ public class LegalChatService {
             // Step 4: Build citations (only from relevant articles)
             List<CitationDTO> citations = buildCitations(relevantArticles);
 
-            // Confirm credit deduction on success
-            creditService.confirmReservation(reservation.getId());
-
             log.info("Chat response generated with {} relevant citations (filtered from {} candidates)",
                     citations.size(), searchResult.metadata().originalCandidates());
             return new ChatResponse(answer, citations);
 
         } catch (Exception e) {
-            // Refund credit if AI operation fails
-            log.error("AI chat failed, refunding credit for user {}: {}", userId, e.getMessage());
-            creditService.refundReservation(reservation.getId());
+            // Re-throw exception - credit handling is now done at session level
+            log.error("AI chat failed for user {}: {}", userId, e.getMessage());
             throw e;
         }
     }

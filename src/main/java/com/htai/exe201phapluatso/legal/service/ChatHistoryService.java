@@ -1,9 +1,10 @@
 package com.htai.exe201phapluatso.legal.service;
 
 import com.htai.exe201phapluatso.auth.entity.User;
-import com.htai.exe201phapluatso.auth.repo.UserRepo;
 import com.htai.exe201phapluatso.common.exception.ForbiddenException;
 import com.htai.exe201phapluatso.common.exception.NotFoundException;
+import com.htai.exe201phapluatso.credit.service.CreditService;
+import com.htai.exe201phapluatso.credit.entity.CreditReservation;
 import com.htai.exe201phapluatso.legal.dto.*;
 import com.htai.exe201phapluatso.legal.entity.ChatMessage;
 import com.htai.exe201phapluatso.legal.entity.ChatSession;
@@ -32,46 +33,39 @@ public class ChatHistoryService {
 
     private final ChatSessionRepo sessionRepo;
     private final ChatMessageRepo messageRepo;
-    private final UserRepo userRepo;
     private final LegalChatService chatService;
+    private final CreditService creditService;
     private final EntityManager entityManager;
     private final MemoryService memoryService;
 
     public ChatHistoryService(
             ChatSessionRepo sessionRepo,
             ChatMessageRepo messageRepo,
-            UserRepo userRepo,
             LegalChatService chatService,
+            CreditService creditService,
             EntityManager entityManager,
             MemoryService memoryService) {
         this.sessionRepo = sessionRepo;
         this.messageRepo = messageRepo;
-        this.userRepo = userRepo;
         this.chatService = chatService;
+        this.creditService = creditService;
         this.entityManager = entityManager;
         this.memoryService = memoryService;
     }
 
-    /**
-     * Get all chat sessions for a user (paginated with optional search)
-     */
+    // ====== GET SESSIONS ======
     @Transactional(readOnly = true)
-    public List<ChatSessionDTO> getUserSessions(String userEmail, Integer page, Integer size, String search) {
-        User user = userRepo.findByEmail(userEmail)
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
-
-        // Default pagination values
+    public List<ChatSessionDTO> getUserSessions(Long userId, Integer page, Integer size, String search) {
         int pageNum = (page != null && page >= 0) ? page : 0;
         int pageSize = (size != null && size > 0 && size <= 100) ? size : 20;
 
         Pageable pageable = PageRequest.of(pageNum, pageSize);
         Page<ChatSession> sessionPage;
 
-        // Search or get all
         if (search != null && !search.trim().isEmpty()) {
-            sessionPage = sessionRepo.searchByUserIdAndTitle(user.getId(), search.trim(), pageable);
+            sessionPage = sessionRepo.searchByUserIdAndTitle(userId, search.trim(), pageable);
         } else {
-            sessionPage = sessionRepo.findByUserIdOrderByUpdatedAtDesc(user.getId(), pageable);
+            sessionPage = sessionRepo.findByUserIdOrderByUpdatedAtDesc(userId, pageable);
         }
 
         List<ChatSession> sessions = sessionPage.getContent();
@@ -79,8 +73,7 @@ public class ChatHistoryService {
             return List.of();
         }
 
-        // Batch query for message counts - FIX N+1
-        List<Long> sessionIds = sessions.stream().map(ChatSession::getId).collect(Collectors.toList());
+        List<Long> sessionIds = sessions.stream().map(ChatSession::getId).toList();
         Map<Long, Long> messageCounts = getMessageCountsMap(sessionIds);
 
         return sessions.stream()
@@ -90,12 +83,9 @@ public class ChatHistoryService {
                         session.getCreatedAt(),
                         session.getUpdatedAt(),
                         messageCounts.getOrDefault(session.getId(), 0L)))
-                .collect(Collectors.toList());
+                .toList();
     }
 
-    /**
-     * Get message counts for multiple sessions in one query
-     */
     private Map<Long, Long> getMessageCountsMap(List<Long> sessionIds) {
         if (sessionIds.isEmpty()) {
             return Map.of();
@@ -110,92 +100,187 @@ public class ChatHistoryService {
         return map;
     }
 
-    /**
-     * Get total count of sessions for a user (for pagination)
-     */
     @Transactional(readOnly = true)
-    public long getUserSessionsCount(String userEmail, String search) {
-        User user = userRepo.findByEmail(userEmail)
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
-
+    public long getUserSessionsCount(Long userId, String search) {
         if (search != null && !search.trim().isEmpty()) {
             Pageable pageable = PageRequest.of(0, 1);
-            return sessionRepo.searchByUserIdAndTitle(user.getId(), search.trim(), pageable).getTotalElements();
-        } else {
-            return sessionRepo.findByUserIdOrderByUpdatedAtDesc(user.getId()).size();
+            return sessionRepo.searchByUserIdAndTitle(userId, search.trim(), pageable).getTotalElements();
         }
+        return sessionRepo.findByUserIdOrderByUpdatedAtDesc(userId).size();
     }
 
-    /**
-     * Get messages in a session
-     */
+    // ====== GET MESSAGES ======
     @Transactional(readOnly = true)
-    public List<ChatMessageDTO> getSessionMessages(String userEmail, Long sessionId) {
-        ChatSession session = getSessionAndCheckOwnership(userEmail, sessionId);
-
+    public List<ChatMessageDTO> getSessionMessages(Long userId, Long sessionId) {
+        getSessionAndCheckOwnership(userId, sessionId); // Validates ownership
         List<ChatMessage> messages = messageRepo.findBySessionIdWithCitations(sessionId);
-
-        return messages.stream()
-                .map(this::toMessageDTO)
-                .collect(Collectors.toList());
+        return messages.stream().map(this::toMessageDTO).toList();
     }
 
+    // ====== SEND MESSAGE ORCHESTRATOR ======
     /**
-     * Send message in new or existing session
+     * Send message in new or existing session.
+     * 
+     * TRUE 3-PHASE DESIGN:
+     * - Phase A: Short @Transactional (validation + charge + increment count ONLY)
+     * - Phase B: NO transaction (AI call)
+     * - Phase C: Short @Transactional (confirm/refund + persist messages)
      */
-    @Transactional
-    public SendMessageResponse sendMessage(String userEmail, Long sessionId, String question) {
-        User user = userRepo.findByEmail(userEmail)
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
+    public SendMessageResponse sendMessage(Long userId, String userEmail, Long sessionId, String question) {
+        PhaseAResult phaseAResult = executePhaseAWithRetry(userId, userEmail, sessionId, question);
 
+        ChatResponse chatResponse;
+        try {
+            chatResponse = chatService.chat(
+                    phaseAResult.userId(),
+                    question,
+                    phaseAResult.conversationContext());
+        } catch (Exception e) {
+            executePhaseCFailure(phaseAResult);
+            throw new com.htai.exe201phapluatso.common.exception.AiChatFailedException(
+                    "AI không thể xử lý yêu cầu. Vui lòng thử lại sau.", e);
+        }
+
+        return executePhaseCSuccess(phaseAResult, question, chatResponse);
+    }
+
+    private PhaseAResult executePhaseAWithRetry(Long userId, String userEmail, Long sessionId, String question) {
+        int maxRetries = 2;
+        for (int attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                return executePhaseA(userId, userEmail, sessionId, question);
+            } catch (org.springframework.dao.OptimisticLockingFailureException e) {
+                if (attempt >= maxRetries) {
+                    log.warn("Phase A failed after {} retries for session {}", maxRetries + 1, sessionId);
+                    throw e;
+                }
+                log.info("Optimistic lock conflict on attempt {}, retrying...", attempt + 1);
+                try {
+                    Thread.sleep(50L * (attempt + 1));
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new com.htai.exe201phapluatso.common.exception.BadRequestException("Yêu cầu bị gián đoạn.");
+                }
+            }
+        }
+        throw new com.htai.exe201phapluatso.common.exception.BadRequestException(
+                "Không thể xử lý yêu cầu. Vui lòng thử lại.");
+    }
+
+    // ====== PHASE A ======
+    @Transactional
+    public PhaseAResult executePhaseA(Long userId, String userEmail, Long sessionId, String question) {
         ChatSession session;
         ConversationContext conversationContext = null;
+        Long reservationId = null;
+        boolean wasFirstChargeAttempt = false;
 
         if (sessionId == null) {
-            // Create new session
-            session = createNewSession(user, question);
-        } else {
-            // Use existing session
-            session = getSessionAndCheckOwnership(userEmail, sessionId);
+            // Create new session using userId reference (no user query)
+            session = createNewSession(userId, question);
 
-            // Delegate context building to MemoryService (extracted for separation of
-            // concerns)
+            CreditReservation reservation = creditService.reserveSessionCredit(userId, session.getId());
+            session.setChargeState("CHARGING");
+            session.setChargeReservationId(reservation.getId());
+            session.setUserQuestionCount(1);
+            sessionRepo.save(session);
+
+            reservationId = reservation.getId();
+            wasFirstChargeAttempt = true;
+        } else {
+            // Use existing session - ownership checked by findByIdAndUserId
+            session = getSessionAndCheckOwnership(userId, sessionId);
+
+            if (session.getUserQuestionCount() >= 10) {
+                throw new com.htai.exe201phapluatso.common.exception.SessionLimitExceededException(
+                        "Phiên chat đã đạt 10 câu hỏi. Vui lòng tạo phiên mới.");
+            }
+
+            if ("NOT_CHARGED".equals(session.getChargeState())) {
+                CreditReservation reservation = creditService.reserveSessionCredit(userId, session.getId());
+                session.setChargeState("CHARGING");
+                session.setChargeReservationId(reservation.getId());
+                reservationId = reservation.getId();
+                wasFirstChargeAttempt = true;
+            }
+
+            session.setUserQuestionCount(session.getUserQuestionCount() + 1);
+            sessionRepo.save(session);
+
             conversationContext = memoryService.buildConversationContext(sessionId);
         }
 
-        // Save user message
+        return new PhaseAResult(
+                userId,
+                session.getId(),
+                reservationId,
+                wasFirstChargeAttempt,
+                session.getUserQuestionCount(),
+                conversationContext,
+                userEmail,
+                question);
+    }
+
+    // ====== PHASE C FAILURE ======
+    @Transactional
+    public void executePhaseCFailure(PhaseAResult phaseAResult) {
+        if (phaseAResult.wasFirstChargeAttempt()
+                && phaseAResult.reservationId() != null
+                && phaseAResult.questionNumber() == 1) {
+
+            ChatSession session = sessionRepo.findById(phaseAResult.sessionId()).orElse(null);
+
+            if (session != null && "CHARGING".equals(session.getChargeState())) {
+                creditService.refundReservation(phaseAResult.reservationId());
+                session.setChargeState("NOT_CHARGED");
+                session.setChargeReservationId(null);
+                session.setUserQuestionCount(0);
+                sessionRepo.save(session);
+                log.info("Refunded first question failure for session {}", phaseAResult.sessionId());
+            }
+        }
+    }
+
+    // ====== PHASE C SUCCESS ======
+    @Transactional
+    public SendMessageResponse executePhaseCSuccess(PhaseAResult phaseAResult, String question,
+            ChatResponse chatResponse) {
+        ChatSession session = sessionRepo.findById(phaseAResult.sessionId())
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy phiên chat"));
+
+        if (phaseAResult.wasFirstChargeAttempt()
+                && phaseAResult.reservationId() != null
+                && "CHARGING".equals(session.getChargeState())) {
+            creditService.confirmReservation(phaseAResult.reservationId());
+            session.setChargeState("CHARGED");
+            log.info("Confirmed session charge for session {}", session.getId());
+        }
+
         ChatMessage userMessage = new ChatMessage();
         userMessage.setSession(session);
         userMessage.setRole("USER");
-        userMessage.setContent(question);
+        userMessage.setContent(phaseAResult.userQuestion());
         userMessage = messageRepo.save(userMessage);
 
-        // Generate AI response with conversation context
-        ChatResponse chatResponse = chatService.chat(user.getId(), question, conversationContext);
-
-        // Save assistant message with citations
         ChatMessage assistantMessage = new ChatMessage();
         assistantMessage.setSession(session);
         assistantMessage.setRole("ASSISTANT");
         assistantMessage.setContent(chatResponse.answer());
 
-        // Add citations to message (use EntityManager.getReference to avoid loading
-        // full entities)
         if (chatResponse.citations() != null && !chatResponse.citations().isEmpty()) {
             List<LegalArticle> articles = chatResponse.citations().stream()
                     .map(citation -> entityManager.getReference(LegalArticle.class, citation.articleId()))
                     .collect(Collectors.toList());
             assistantMessage.setCitations(articles);
         }
-
         assistantMessage = messageRepo.save(assistantMessage);
 
-        // Update session timestamp
         session.setUpdatedAt(LocalDateTime.now());
         sessionRepo.save(session);
 
         log.info("Message sent in session {} by user {} (with context: {})",
-                session.getId(), userEmail, conversationContext != null && !conversationContext.isEmpty());
+                session.getId(), phaseAResult.userEmail(),
+                phaseAResult.conversationContext() != null && !phaseAResult.conversationContext().isEmpty());
 
         return new SendMessageResponse(
                 session.getId(),
@@ -203,21 +288,32 @@ public class ChatHistoryService {
                 toMessageDTOFromResponse(assistantMessage, chatResponse.citations()));
     }
 
-    /**
-     * Delete a chat session
-     */
-    @Transactional
-    public void deleteSession(String userEmail, Long sessionId) {
-        ChatSession session = getSessionAndCheckOwnership(userEmail, sessionId);
-        sessionRepo.delete(session);
-        log.info("Session {} deleted by user {}", sessionId, userEmail);
+    public record PhaseAResult(
+            Long userId,
+            Long sessionId,
+            Long reservationId,
+            boolean wasFirstChargeAttempt,
+            int questionNumber,
+            ConversationContext conversationContext,
+            String userEmail,
+            String userQuestion) {
     }
 
-    // Helper methods
+    // ====== DELETE ======
+    @Transactional
+    public void deleteSession(Long userId, Long sessionId) {
+        ChatSession session = getSessionAndCheckOwnership(userId, sessionId);
+        sessionRepo.delete(session);
+        log.info("Session {} deleted by user {}", sessionId, userId);
+    }
 
-    private ChatSession createNewSession(User user, String firstQuestion) {
+    // ====== HELPER METHODS ======
+
+    private ChatSession createNewSession(Long userId, String firstQuestion) {
         ChatSession session = new ChatSession();
-        session.setUser(user);
+        // Use reference to avoid loading User entity
+        User userRef = entityManager.getReference(User.class, userId);
+        session.setUser(userRef);
         session.setTitle(generateTitle(firstQuestion));
         session.setCreatedAt(LocalDateTime.now());
         session.setUpdatedAt(LocalDateTime.now());
@@ -231,15 +327,17 @@ public class ChatHistoryService {
         return question.substring(0, MAX_TITLE_LENGTH) + "...";
     }
 
-    private ChatSession getSessionAndCheckOwnership(String userEmail, Long sessionId) {
-        ChatSession session = sessionRepo.findById(sessionId)
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy phiên chat"));
-
-        if (!session.getUser().getEmail().equals(userEmail)) {
-            throw new ForbiddenException("Bạn không có quyền truy cập phiên chat này");
-        }
-
-        return session;
+    /**
+     * Ownership check using findByIdAndUserId - NO lazy user access
+     */
+    private ChatSession getSessionAndCheckOwnership(Long userId, Long sessionId) {
+        return sessionRepo.findByIdAndUserId(sessionId, userId)
+                .orElseThrow(() -> {
+                    if (!sessionRepo.existsById(sessionId)) {
+                        return new NotFoundException("Không tìm thấy phiên chat");
+                    }
+                    return new ForbiddenException("Bạn không có quyền truy cập phiên chat này");
+                });
     }
 
     private ChatMessageDTO toMessageDTO(ChatMessage message) {

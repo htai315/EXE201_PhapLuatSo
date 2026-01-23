@@ -31,9 +31,8 @@ public interface CreditReservationRepo extends JpaRepository<CreditReservation, 
      */
     @Query("SELECT cr FROM CreditReservation cr WHERE cr.user.id = :userId AND cr.creditType = :creditType AND cr.status = 'PENDING'")
     List<CreditReservation> findPendingByUserIdAndCreditType(
-            @Param("userId") Long userId, 
-            @Param("creditType") String creditType
-    );
+            @Param("userId") Long userId,
+            @Param("creditType") String creditType);
 
     /**
      * Bulk update expired reservations to EXPIRED status
@@ -42,4 +41,19 @@ public interface CreditReservationRepo extends JpaRepository<CreditReservation, 
     @Modifying
     @Query("UPDATE CreditReservation cr SET cr.status = 'EXPIRED', cr.refundedAt = :now WHERE cr.status = 'PENDING' AND cr.expiresAt < :now")
     int markExpiredReservations(@Param("now") LocalDateTime now);
+
+    /**
+     * Find pending reservation for a specific session.
+     * Used for session billing to find the current charging reservation.
+     */
+    @Query("SELECT cr FROM CreditReservation cr WHERE cr.sessionId = :sessionId AND cr.status = 'PENDING'")
+    java.util.Optional<CreditReservation> findPendingBySessionId(@Param("sessionId") Long sessionId);
+
+    /**
+     * Find reservation by ID and session ID for validation.
+     */
+    @Query("SELECT cr FROM CreditReservation cr WHERE cr.id = :reservationId AND cr.sessionId = :sessionId")
+    java.util.Optional<CreditReservation> findByIdAndSessionId(
+            @Param("reservationId") Long reservationId,
+            @Param("sessionId") Long sessionId);
 }
