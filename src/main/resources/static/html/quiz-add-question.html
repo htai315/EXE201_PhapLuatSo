@@ -193,6 +193,7 @@
     <script src="/scripts/toast-notification.js"></script>
     <script src="/scripts/error-handler.js"></script>
     <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/app-runtime.js"></script>
     <script src="/scripts/script.js"></script>
     <script>
         const API_BASE = '/api/quiz-sets';
@@ -231,8 +232,15 @@
         async function loadQuizSetTitle(setId) {
             ERROR_HANDLER.showLoading(true);
             try {
-                // Sử dụng API_CLIENT với auto token refresh
-                const data = await API_CLIENT.get(`${API_BASE}/${setId}`);
+                try { await AppRuntime.authReady(); } catch (e) { /* ignore */ }
+                const client = AppRuntime.getClient();
+                if (!client) {
+                    console.warn('[QuizAddQuestion] API client not available; cannot load set title');
+                    showAlert('Hệ thống tạm thời không khả dụng');
+                    return;
+                }
+                // Sử dụng client với auto token refresh
+                const data = await AppRuntime.safe('QuizAddQuestion:getSet', () => client.get(`${API_BASE}/${setId}`));
 
                 const titleEl = document.getElementById('setTitleText');
                 titleEl.textContent = `Bộ đề: ${data.title}`;
@@ -276,8 +284,11 @@
                         }
                     }
 
-                    // Sử dụng API_CLIENT với auto token refresh
-                    await API_CLIENT.post(`${API_BASE}/${currentQuizSetId}/questions`, {
+                    try { await AppRuntime.authReady(); } catch (e) { /* ignore */ }
+                    const client = AppRuntime.getClient();
+                    if (!client) throw new Error('API client not available');
+                    // Sử dụng client với auto token refresh
+                    await AppRuntime.safe('QuizAddQuestion:create', () => client.post(`${API_BASE}/${currentQuizSetId}/questions`, {
                         questionText,
                         explanation: explanation || null,
                         options

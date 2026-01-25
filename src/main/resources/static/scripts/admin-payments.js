@@ -2,8 +2,15 @@
 
 let currentPage = 0;
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     initSidebar();
+    // Wait for AppRuntime auth bootstrap before checking
+    try {
+        await AppRuntime.domReady();
+        try { await AppRuntime.authReady(); } catch (e) { /* ignore */ }
+    } catch (e) {
+        console.warn('[AdminPayments] AppRuntime bootstrap failed', e);
+    }
     checkAuth();
 });
 
@@ -53,7 +60,12 @@ async function checkAuth() {
     }
 
     try {
-        const user = await window.apiClient.get('/api/auth/me');
+        const client = AppRuntime.getClient();
+        if (!client) {
+            console.warn('[AdminPayments] API client not available; aborting user load');
+            return;
+        }
+        const user = await AppRuntime.safe('AdminPayments:getMe', () => AppRuntime.getMe(client));
         document.getElementById('adminUserName').textContent = user.fullName || user.email;
 
         // Load data after auth confirmed
@@ -71,7 +83,12 @@ function logout() {
 
 async function loadPaymentStats() {
     try {
-        const stats = await window.apiClient.get('/api/admin/payments/stats');
+        const client = AppRuntime.getClient();
+        if (!client) {
+            console.warn('[AdminPayments] API client not available; cannot load payment stats');
+            return;
+        }
+        const stats = await AppRuntime.safe('AdminPayments:getStats', () => client.get('/api/admin/payments/stats'));
 
         document.getElementById('totalPayments').textContent = formatNumber(stats.totalPayments);
         document.getElementById('successfulPayments').textContent = formatNumber(stats.successfulPayments);
@@ -94,7 +111,12 @@ async function loadPayments(page = 0) {
 
     try {
         const url = `/api/admin/payments?page=${page}&size=20&sort=createdAt&direction=DESC`;
-        const response = await window.apiClient.get(url);
+        const client = AppRuntime.getClient();
+        if (!client) {
+            console.warn('[AdminPayments] API client not available; cannot load payments');
+            return;
+        }
+        const response = await AppRuntime.safe('AdminPayments:loadPayments', () => client.get(url));
 
         renderPaymentsTable(response.payments);
         renderPagination(response);
@@ -252,8 +274,10 @@ async function exportPaymentsCsv() {
 
         const url = '/api/admin/payments/export';
 
-        // Use central apiClient to ensure refresh/retry behavior; preserve blob handling
-        const response = await window.apiClient.fetchWithAuth(url, { method: 'GET' });
+        // Use canonical client to ensure refresh/retry behavior; preserve blob handling
+        const client = AppRuntime.getClient();
+        if (!client) throw new Error('API client not available');
+        const response = await client.fetchWithAuth(url, { method: 'GET' });
 
         if (!response.ok) {
             const error = await response.json();

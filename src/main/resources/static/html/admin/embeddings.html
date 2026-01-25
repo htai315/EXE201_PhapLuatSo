@@ -597,6 +597,7 @@
     <script src="/scripts/auth-guard.js"></script>
     <script src="/scripts/toast-notification.js"></script>
     <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/app-runtime.js"></script>
 </body>
 
 </html>
@@ -631,7 +632,16 @@
         }
 
         try {
-            const user = await API_CLIENT.get('/api/auth/me');
+            // Standardized client access + auth bootstrap
+            try { await AppRuntime.authReady(); } catch (e) { /* ignore */ }
+            const client = AppRuntime.getClient();
+            if (!client) {
+                console.warn('[Admin Embeddings] API client not available; cannot load user info');
+                Toast.error('Không thể tải thông tin user (client không sẵn sàng)');
+                return;
+            }
+
+            const user = await AppRuntime.safe('AdminEmbeddings:getMe', () => AppRuntime.getMe(client));
             document.getElementById('adminUserName').textContent = user.fullName || 'Admin';
 
             // Setup sidebar
@@ -659,7 +669,13 @@
     // Load stats
     async function loadStats() {
         try {
-            const stats = await API_CLIENT.get('/api/admin/embeddings/stats');
+            try { await AppRuntime.authReady(); } catch (e) { /* ignore */ }
+            const client = AppRuntime.getClient();
+            if (!client) {
+                console.warn('[Admin Embeddings] API client not available; cannot load stats');
+                return;
+            }
+            const stats = await AppRuntime.safe('AdminEmbeddings:getStats', () => client.get('/api/admin/embeddings/stats'));
 
             // Update stats
             document.getElementById('totalArticles').textContent = stats.totalArticles || 0;
@@ -714,7 +730,10 @@
             addLog('Bắt đầu generate tất cả embeddings...', 'info');
             updateStatus('processing');
 
-            const result = await API_CLIENT.post('/api/admin/embeddings/generate-all');
+            try { await AppRuntime.authReady(); } catch (e) { /* ignore */ }
+            const client = AppRuntime.getClient();
+            if (!client) throw new Error('API client missing');
+            const result = await AppRuntime.safe('AdminEmbeddings:generateAll', () => client.post('/api/admin/embeddings/generate-all'));
 
             if (result.success) {
                 addLog(`Hoàn thành! Đã generate ${result.totalGenerated} embeddings, còn lại ${result.remaining}`, 'success');
@@ -757,8 +776,10 @@
 
             addLog(`Bắt đầu generate batch ${batchSize} articles...`, 'info');
             updateStatus('processing');
-
-            const result = await API_CLIENT.post(`/api/admin/embeddings/generate-batch?batchSize=${batchSize}`);
+            try { await AppRuntime.authReady(); } catch (e) { /* ignore */ }
+            const client = AppRuntime.getClient();
+            if (!client) throw new Error('API client missing');
+            const result = await AppRuntime.safe('AdminEmbeddings:generateBatch', () => client.post(`/api/admin/embeddings/generate-batch?batchSize=${batchSize}`));
 
             if (result.success) {
                 addLog(`Hoàn thành batch! Đã generate ${result.generated} embeddings, còn lại ${result.remaining}`, 'success');

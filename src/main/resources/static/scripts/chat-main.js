@@ -352,24 +352,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Use AUTH.guard when available (non-redirecting) or fallback to TokenManager refresh.
     (async () => {
         try {
-            let ready = true;
-
-            if (typeof AUTH !== 'undefined' && typeof AUTH.guard === 'function') {
-                try {
-                    // Do not perform redirects from the guard here; we only want to know
-                    // whether the user is authenticated so chat can initialize.
-                    ready = await AUTH.guard({ requireAuth: true, redirect: false });
-                } catch (e) {
-                    console.warn('AUTH.guard error', e);
-                    ready = false;
-                }
-            } else if (window.TokenManager && typeof window.TokenManager.refreshAccessToken === 'function') {
-                try {
-                    ready = await window.TokenManager.refreshAccessToken();
-                } catch (e) {
-                    console.warn('TokenManager.refreshAccessToken error', e);
-                    ready = false;
-                }
+            let ready = false;
+            try {
+                ready = await AppRuntime.authReady();
+            } catch (e) {
+                console.warn('[Chat] authReady rejected', e);
+                ready = false;
             }
 
             if (ready && typeof AUTH !== 'undefined' && AUTH.isLoggedIn()) {

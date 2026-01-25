@@ -537,6 +537,7 @@
     <!-- Custom JS -->
     <script src="/scripts/toast-notification.js"></script>
     <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/app-runtime.js"></script>
     <script src="/scripts/confirm-modal.js"></script>
     <script src="/scripts/script.js"></script>
 
@@ -592,7 +593,10 @@
         async function loadPaymentHistory() {
             try {
                 console.log('🔄 Loading payment history...');
-                const response = await API_CLIENT.get('/api/payment/history');
+                await AppRuntime.domReady();
+                try { await AppRuntime.authReady(); } catch (e) { console.warn('[Payment History] authReady rejected', e); }
+                const client = AppRuntime.requireClient('PaymentHistory');
+                const response = await AppRuntime.safe('PaymentHistory:get', () => client.get('/api/payment/history'));
                 console.log('✅ Response received:', response);
 
                 allPayments = Array.isArray(response) ? response : (response.payments || []);
@@ -785,7 +789,13 @@
 
             try {
                 // Gọi API continue để lấy QR code của đơn hàng cụ thể
-                const response = await API_CLIENT.get(`/api/payment/continue/${orderCode}`);
+                const client = AppRuntime.getClient();
+                if (!client) {
+                    console.warn('[PaymentHistory] API client not available; cannot continue payment');
+                    showToast('Hệ thống tạm thời không khả dụng', 'error');
+                    return;
+                }
+                const response = await AppRuntime.safe('PaymentHistory:continue', () => client.get(`/api/payment/continue/${orderCode}`));
 
                 if (response.qrCode) {
                     // Store status token for polling (may be null for continue payments)
@@ -948,7 +958,13 @@
             if (!confirmed) return;
 
             try {
-                const response = await API_CLIENT.post(`/api/payment/cancel/${orderCode}`);
+                const client = AppRuntime.getClient();
+                if (!client) {
+                    console.warn('[PaymentHistory] API client not available; cannot cancel payment');
+                    showToast('Hệ thống tạm thời không khả dụng', 'error');
+                    return;
+                }
+                const response = await AppRuntime.safe('PaymentHistory:cancel', () => client.post(`/api/payment/cancel/${orderCode}`));
 
                 if (response.status === 'success') {
                     showToast('Đã hủy đơn hàng thành công', 'success');

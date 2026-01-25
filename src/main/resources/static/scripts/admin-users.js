@@ -72,7 +72,12 @@ async function checkAuth() {
     }
 
     try {
-        const user = await window.apiClient.get('/api/auth/me');
+        const client = AppRuntime.getClient();
+        if (!client) {
+            console.warn('[Admin Users] API client not available; aborting');
+            return;
+        }
+        const user = await AppRuntime.safe('AdminUsers:getMe', () => AppRuntime.getMe(client));
         console.log('User info:', user);
 
         // Store current admin's ID to prevent self-actions
@@ -108,7 +113,12 @@ async function loadUsers(page = 0) {
             url += `&status=${encodeURIComponent(currentStatus)}`;
         }
 
-        const response = await window.apiClient.get(url);
+        const client = AppRuntime.getClient();
+        if (!client) {
+            console.warn('[Admin Users] API client not available; cannot load users');
+            return;
+        }
+        const response = await AppRuntime.safe('AdminUsers:loadUsers', () => client.get(url));
 
         renderUsersTable(response.users);
         renderPagination(response);
@@ -265,7 +275,12 @@ function renderPagination(response) {
 
 async function viewUserDetail(userId) {
     try {
-        const user = await window.apiClient.get(`/api/admin/users/${userId}`);
+        const client = AppRuntime.getClient();
+        if (!client) {
+            console.warn('[AdminUsers] API client not available; cannot load user detail');
+            return;
+        }
+        const user = await AppRuntime.safe('AdminUsers:getUser', () => client.get(`/api/admin/users/${userId}`));
 
         const avatarInitial = user.fullName ? user.fullName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase();
         const avatarContent = user.avatarUrl
@@ -459,7 +474,9 @@ async function confirmBanUser() {
     }
 
     try {
-        await window.apiClient.post(`/api/admin/users/${selectedUserId}/ban`, { reason });
+        const client = AppRuntime.getClient();
+        if (!client) throw new Error('API client not available');
+        await AppRuntime.safe('AdminUsers:banUser', () => client.post(`/api/admin/users/${selectedUserId}/ban`, { reason }));
 
         showAdminToast('Ban user thành công', 'success');
 
@@ -491,7 +508,9 @@ async function unbanUser(userId) {
     }
 
     try {
-        await window.apiClient.post(`/api/admin/users/${userId}/unban`, {});
+        const client = AppRuntime.getClient();
+        if (!client) throw new Error('API client not available');
+        await AppRuntime.safe('AdminUsers:unbanUser', () => client.post(`/api/admin/users/${userId}/unban`, {}));
 
         showAdminToast('Unban user thành công', 'success');
         loadUsers(currentPage);
@@ -511,7 +530,9 @@ async function deleteUser(userId) {
     }
 
     try {
-        await window.apiClient.delete(`/api/admin/users/${userId}`);
+        const client = AppRuntime.getClient();
+        if (!client) throw new Error('API client not available');
+        await AppRuntime.safe('AdminUsers:deleteUser', () => client.delete(`/api/admin/users/${userId}`));
 
         showAdminToast('Xóa user thành công', 'success');
         loadUsers(currentPage);
@@ -595,8 +616,10 @@ async function exportUsersCsv() {
             url += '?' + params.join('&');
         }
 
-        // Use apiClient fetchWithAuth to include token refresh behavior and handle blob
-        const response = await window.apiClient.fetchWithAuth(url, { method: 'GET' });
+        // Use canonical client fetchWithAuth to include token refresh behavior and handle blob
+        const client = AppRuntime.getClient();
+        if (!client) throw new Error('API client not available');
+        const response = await client.fetchWithAuth(url, { method: 'GET' });
 
         if (!response.ok) {
             const error = await response.json();
@@ -685,11 +708,13 @@ async function submitCreditAdjust() {
             ? `/api/admin/users/${creditUserId}/credits/add`
             : `/api/admin/users/${creditUserId}/credits/remove`;
 
-        await window.apiClient.post(endpoint, {
+        const client2 = AppRuntime.getClient();
+        if (!client2) throw new Error('API client not available');
+        await AppRuntime.safe('AdminUsers:adjustCredits', () => client2.post(endpoint, {
             chatCredits,
             quizGenCredits,
             reason
-        });
+        }));
 
         showAdminToast(
             creditAction === 'add' ? 'Đã thêm credits thành công' : 'Đã trừ credits thành công',

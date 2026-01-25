@@ -219,6 +219,7 @@
     <!-- Custom JS -->
     <script src="/scripts/toast-notification.js"></script>
     <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/app-runtime.js"></script>
     <script src="/scripts/script.js"></script>
     <script src="/scripts/credits-counter.js"></script>
 
@@ -351,8 +352,12 @@
                 }
 
                 try {
-                    // Use API_CLIENT.upload() for proper token handling with auto-refresh
-                    const data = await API_CLIENT.upload('/api/ai/quiz/generate-from-document', formData);
+                    // Ensure client + auth
+                    try { await AppRuntime.authReady(); } catch (e) { /* ignore */ }
+                    const client = AppRuntime.getClient();
+                    if (!client) throw new Error('API client not available');
+                    // Use client.upload() for proper token handling with auto-refresh
+                    const data = await AppRuntime.safe('QuizGenerateAI:upload', () => client.upload('/api/ai/quiz/generate-from-document', formData));
                     displayResults(data);
 
                     // Refresh credits counter

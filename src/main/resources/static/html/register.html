@@ -434,7 +434,8 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/scripts/token-manager.js"></script>
   <script src="/scripts/toast-notification.js"></script>
-  <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/app-runtime.js"></script>
   <script src="/scripts/password-validator.js"></script>
 
   <script>
@@ -615,7 +616,12 @@
         }
 
         try {
-          await API_CLIENT.post("/api/auth/register", { email, password, fullName });
+          const client = AppRuntime.getClient();
+          if (!client) {
+            Toast.error('Hệ thống tạm thời không khả dụng', 4000);
+            return;
+          }
+          await AppRuntime.safe('Register:create', () => client.post("/api/auth/register", { email, password, fullName }));
           Toast.success('Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.', 4000);
           showEmailVerificationModal(email);
         } catch (error) {
@@ -665,7 +671,14 @@
           btn.disabled = true;
           btn.textContent = 'Đang gửi...';
           try {
-            await API_CLIENT.post('/api/auth/resend-verification', { email });
+            const client = AppRuntime.getClient();
+            if (!client) {
+              Toast.error('Hệ thống tạm thời không khả dụng');
+              btn.disabled = false;
+              btn.textContent = 'Không nhận được email? Gửi lại';
+              return;
+            }
+            await AppRuntime.safe('Register:resendVerify', () => client.post('/api/auth/resend-verification', { email }));
             Toast.success('Email xác thực đã được gửi lại!');
             btn.textContent = 'Đã gửi lại email';
           } catch (error) {

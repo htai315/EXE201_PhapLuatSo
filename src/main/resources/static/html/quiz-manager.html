@@ -184,6 +184,7 @@
     <script src="/scripts/confirm-modal.js"></script>
     <script src="/scripts/error-handler.js"></script>
     <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/app-runtime.js"></script>
     <script src="/scripts/script.js"></script>
     <script>
         const API_BASE = '/api/quiz-sets';
@@ -221,11 +222,18 @@
         async function loadQuizSetAndQuestions(setId) {
             ERROR_HANDLER.showLoading(true);
             try {
-                // API_CLIENT.get() trả về data trực tiếp (đã parse JSON)
-                // và throw error nếu response không ok
+                // Ensure auth/bootstrap and client
+                try { await AppRuntime.authReady(); } catch (e) { /* proceed */ }
+                const client = AppRuntime.getClient();
+                if (!client) {
+                    console.warn('[QuizManager] API client not available');
+                    showAlert('Hệ thống tạm thời không khả dụng');
+                    return;
+                }
+                // API calls via canonical client
                 const [setData, questions] = await Promise.all([
-                    API_CLIENT.get(`${API_BASE}/${setId}`),
-                    API_CLIENT.get(`${API_BASE}/${setId}/questions`)
+                    client.get(`${API_BASE}/${setId}`),
+                    client.get(`${API_BASE}/${setId}/questions`)
                 ]);
 
                 currentQuizSetData = setData;
@@ -398,8 +406,11 @@
 
             ERROR_HANDLER.showLoading(true);
             try {
-                // Sử dụng API_CLIENT với auto token refresh
-                await API_CLIENT.delete(`${API_BASE}/${currentQuizSetId}`);
+                // Ensure client
+                const client = AppRuntime.getClient();
+                if (!client) throw new Error('API client missing');
+                // Sử dụng client với auto token refresh
+                await client.delete(`${API_BASE}/${currentQuizSetId}`);
 
                 Toast.success('Đã xóa bộ đề thành công');
                 setTimeout(() => {
@@ -437,13 +448,16 @@
 
             ERROR_HANDLER.showLoading(true);
             try {
-                // Sử dụng API_CLIENT với auto token refresh
-                await API_CLIENT.delete(`${API_BASE}/${currentQuizSetId}/questions/${questionId}`);
+                // Ensure client
+                const client = AppRuntime.getClient();
+                if (!client) throw new Error('API client missing');
+                // Sử dụng client với auto token refresh
+                await client.delete(`${API_BASE}/${currentQuizSetId}/questions/${questionId}`);
 
                 Toast.success('Đã xóa câu hỏi thành công');
 
-                // Reload list - API_CLIENT.get() trả về data trực tiếp
-                const questions = await API_CLIENT.get(`${API_BASE}/${currentQuizSetId}/questions`);
+                // Reload list - client.get() trả về data trực tiếp
+                const questions = await client.get(`${API_BASE}/${currentQuizSetId}/questions`);
                 renderQuestions(questions);
             } catch (err) {
                 console.error(err);
@@ -467,8 +481,10 @@
                     ? `${API_BASE}/${currentQuizSetId}/export/pdf-with-answers`
                     : `${API_BASE}/${currentQuizSetId}/export/pdf`;
 
-                // Use central apiClient to ensure refresh/retry behavior
-                const response = await window.apiClient.fetchWithAuth(endpoint, { method: 'GET' });
+                // Use canonical client to ensure refresh/retry behavior
+                const client = AppRuntime.getClient();
+                if (!client) throw new Error('API client not available');
+                const response = await client.fetchWithAuth(endpoint, { method: 'GET' });
 
                 if (!response.ok) {
                     throw new Error('Không thể xuất PDF');

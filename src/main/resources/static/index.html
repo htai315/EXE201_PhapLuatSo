@@ -538,10 +538,13 @@
             <div class="row justify-content-center fade-in-delay">
                 <div class="col-lg-10">
                     <div class="video-container">
-                        <video controls class="w-100 rounded-4 shadow-lg">
-                            <source src="/img/VideoDemo.mp4" type="video/mp4">
-                            Trình duyệt của bạn không hỗ trợ video.
-                        </video>
+                        <div class="w-100 rounded-4 shadow-lg bg-gradient text-center p-5" style="min-height: 400px; display: flex; align-items: center; justify-content: center;">
+                            <div>
+                                <i class="bi bi-play-circle-fill text-white" style="font-size: 4rem; opacity: 0.7;"></i>
+                                <h4 class="text-white mt-3">Video Demo Sắp Có</h4>
+                                <p class="text-white-50">Chúng tôi đang chuẩn bị video hướng dẫn chi tiết về cách sử dụng AI Luật</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -958,21 +961,30 @@
     <script src="/scripts/toast-notification.js"></script>
     <script type="module" src="/scripts/token-manager.js"></script>
     <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/app-runtime.js"></script>
     <script src="/scripts/confirm-modal.js"></script>
     <script src="/scripts/admin-nav-link.js"></script>
     <script src="/scripts/script.js"></script>
 
     <script>
         // Payment function for pricing cards - redirect to plans page
-        function selectPlan(planName) {
+        async function selectPlan(planName) {
             if (planName === 'FREE') {
                 Toast.info('Bạn đã có gói FREE miễn phí khi đăng ký!');
                 return;
             }
 
-            // Check if user is logged in (use central AUTH/TokenManager, avoid localStorage)
-            const isLoggedIn = (window.AUTH && typeof window.AUTH.isLoggedIn === 'function' && window.AUTH.isLoggedIn()) 
-                || (window.TokenManager && typeof window.TokenManager.isAuthenticated === 'function' && window.TokenManager.isAuthenticated());
+            // Always check fresh authentication state (same logic as navbar init above)
+            let isLoggedIn = false;
+            try {
+                if (window.TokenManager && typeof window.TokenManager.refreshAccessToken === 'function') {
+                    await window.TokenManager.refreshAccessToken();
+                    isLoggedIn = !!(window.TokenManager && window.TokenManager.isAuthenticated && window.TokenManager.isAuthenticated());
+                }
+            } catch (e) {
+                console.warn('[Index] selectPlan auth check failed, assuming not logged in', e);
+                isLoggedIn = false;
+            }
 
             if (!isLoggedIn) {
                 // Lưu plan muốn mua để sau khi login sẽ redirect về trang plans
@@ -987,6 +999,73 @@
             // Redirect to plans page with selected plan
             window.location.href = '/html/plans.html?plan=' + planName;
         }
+
+        // Initialize auth state for navbar on page load (ALWAYS refresh token on page load)
+        (async () => {
+            try {
+                // Always attempt to refresh token on page load (don't rely on cached authReady promise)
+                let hasToken = false;
+
+                // Wait for TokenManager to be available (it's loaded as module)
+                const waitForTokenManager = () => {
+                    return new Promise((resolve) => {
+                        const check = () => {
+                            if (window.TokenManager && typeof window.TokenManager.refreshAccessToken === 'function') {
+                                resolve();
+                            } else {
+                                setTimeout(check, 10);
+                            }
+                        };
+                        check();
+                    });
+                };
+
+                try {
+                    console.log('[Index] Waiting for TokenManager...');
+                    await waitForTokenManager();
+                    console.log('[Index] TokenManager ready, attempting refresh...');
+
+                    // Debug: check if refresh cookie exists (NOTE: HttpOnly cookies not visible in document.cookie)
+                    const hasRefreshCookie = document.cookie.includes('refresh_token');
+                    console.log('[Index] Refresh cookie present in document.cookie:', hasRefreshCookie, '(Note: HttpOnly cookies not visible to JS)');
+
+                    const refreshed = await window.TokenManager.refreshAccessToken();
+                    hasToken = !!(window.TokenManager && window.TokenManager.isAuthenticated && window.TokenManager.isAuthenticated());
+                    console.log('[Index] Token refresh result:', refreshed, 'hasToken:', hasToken);
+                } catch (e) {
+                    console.warn('[Index] Token refresh failed:', e?.message || e);
+                    hasToken = false;
+                }
+
+                // Update navbar visibility
+                const guestElements = document.querySelectorAll('.guest-only');
+                const authElements = document.querySelectorAll('.auth-only');
+
+                if (hasToken) {
+                    // User is authenticated - show auth elements, hide guest elements
+                    guestElements.forEach(el => el.classList.add('d-none'));
+                    authElements.forEach(el => el.classList.remove('d-none'));
+                    console.log('[Index] Showing authenticated navbar - guest elements:', guestElements.length, 'auth elements:', authElements.length);
+                } else {
+                    // User not authenticated - show guest elements, hide auth elements
+                    guestElements.forEach(el => el.classList.remove('d-none'));
+                    authElements.forEach(el => el.classList.add('d-none'));
+                    console.log('[Index] Showing guest navbar - guest elements:', guestElements.length, 'auth elements:', authElements.length);
+                }
+
+                // Additional debug: check final state
+                setTimeout(() => {
+                    const finalGuest = document.querySelectorAll('.guest-only:not(.d-none)');
+                    const finalAuth = document.querySelectorAll('.auth-only:not(.d-none)');
+                    console.log('[Index] Final state - visible guest elements:', finalGuest.length, 'visible auth elements:', finalAuth.length);
+                }, 100);
+            } catch (e) {
+                console.warn('[Index] Auth bootstrap failed', e);
+                // Default to guest state
+                document.querySelectorAll('.guest-only').forEach(el => el.classList.remove('d-none'));
+                document.querySelectorAll('.auth-only').forEach(el => el.classList.add('d-none'));
+            }
+        })();
     </script>
 </body>
 

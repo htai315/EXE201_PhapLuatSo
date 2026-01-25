@@ -9,28 +9,42 @@
     // Check if user is admin and add admin link to navbar
     async function addAdminLinkToNavbar() {
         try {
-            // Wait for TokenManager to be available
-            if (!window.TokenManager) {
-                console.log('[AdminNav] TokenManager not available');
+       // Ensure DOM is ready
+       await AppRuntime.domReady();
+
+            // Always refresh token to ensure latest auth state
+            let hasToken = false;
+            if (window.TokenManager && typeof window.TokenManager.refreshAccessToken === 'function') {
+                try {
+                    console.log('[AdminNav] Refreshing token...');
+                    const refreshed = await window.TokenManager.refreshAccessToken();
+                    hasToken = !!(window.TokenManager && window.TokenManager.isAuthenticated && window.TokenManager.isAuthenticated());
+                    console.log('[AdminNav] Token refresh result:', refreshed, 'hasToken:', hasToken);
+                } catch (e) {
+                    console.warn('[AdminNav] Token refresh failed:', e?.message || e);
+                    hasToken = false;
+                }
+            }
+
+            if (!hasToken) {
+                console.log('[AdminNav] No valid token, skipping admin check');
                 return;
             }
 
-            // Only check if already authenticated - DO NOT call refresh here
-            // script.js already handles rehydration, calling refresh again causes token reuse
-            if (!window.TokenManager.isAuthenticated()) {
-                console.log('[AdminNav] Not authenticated');
+            // Resolve client via AppRuntime
+            const client = AppRuntime.getClient();
+            if (!client) {
+                console.warn('[AdminNav] API client not available; cannot check admin role');
                 return;
             }
 
-            // Get user info to check role using API_CLIENT
-            const user = await window.API_CLIENT?.get('/api/auth/me');
-            if (!user) return;
+            const user = await AppRuntime.safe('AdminNav:getMe', () => AppRuntime.getMe(client));
+            if (!user) {
+                console.warn('[AdminNav] user info empty after getMe');
+                return;
+            }
 
-            // Check if user has ADMIN role (handle both 'ADMIN' and 'ROLE_ADMIN')
-            const isAdmin = user.role === 'ADMIN' || user.role === 'ROLE_ADMIN' ||
-                (user.roles && (user.roles.includes('ADMIN') || user.roles.includes('ROLE_ADMIN')));
-
-            if (isAdmin) {
+            if (AppRuntime.isAdmin(user)) {
                 insertAdminLink();
             }
         } catch (error) {
@@ -46,8 +60,23 @@
         // Find the dropdown menu (auth-only section)
         const dropdownMenu = document.querySelector('.dropdown-menu');
         if (!dropdownMenu) {
-            console.log('Dropdown menu not found, retrying...');
-            setTimeout(insertAdminLink, 500);
+            console.log('[AdminNav] dropdown menu not found — observing DOM for insertion');
+            // Observe DOM for dropdown-menu insertion (robust vs setTimeout)
+            const observer = new MutationObserver((mutations, obs) => {
+                const dd = document.querySelector('.dropdown-menu') ||
+                           document.querySelector('.navbar .dropdown-menu') ||
+                           document.querySelector('[data-navbar-dropdown]');
+                if (dd) {
+                    console.log('[AdminNav] dropdown menu appeared — inserting admin link');
+                    obs.disconnect();
+                    insertAdminLink();
+                }
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+            // Fail-safe: stop observing after 10s to avoid leaks
+            setTimeout(() => {
+                try { observer.disconnect(); } catch (e) {}
+            }, 10000);
             return;
         }
 
@@ -78,16 +107,19 @@
         console.log('✓ Admin Panel link added to navbar');
     }
 
-    // Run when DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            // Delay to ensure TokenManager and API_CLIENT are ready
-            setTimeout(addAdminLinkToNavbar, 500);
-        });
-    } else {
-        // Delay to ensure TokenManager and API_CLIENT are ready
-        setTimeout(addAdminLinkToNavbar, 500);
+    // Run when DOM is ready — auth refresh happens inside addAdminLinkToNavbar
+    async function runAfterDomAndAuth() {
+        // Wait for DOM ready if not already
+        if (document.readyState === 'loading') {
+            await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve));
+        }
+
+        // Now attempt to add admin link (will refresh token internally)
+        await addAdminLinkToNavbar();
     }
+
+    // Start the process (no setTimeout hacks)
+    runAfterDomAndAuth().catch(e => console.error('[AdminNav] Failed to initialize:', e));
 
     // Also run when auth state changes (after login)
     window.addEventListener('auth-state-changed', addAdminLinkToNavbar);

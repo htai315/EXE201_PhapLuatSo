@@ -207,6 +207,7 @@
     <script src="/scripts/auth-guard.js"></script>
     <script src="/scripts/toast-notification.js"></script>
     <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/app-runtime.js"></script>
     <script src="/scripts/confirm-modal.js"></script>
     <script src="/scripts/script.js"></script>
     <script>
@@ -284,8 +285,9 @@
             }
 
             try {
-                // Use central apiClient to handle token refresh and retry
-                const data = await window.apiClient.post('/api/payment/create', { planCode: planName });
+                // Use canonical client via AppRuntime
+                const client = AppRuntime.requireClient('Plans');
+                const data = await AppRuntime.safe('Plans:createPayment', () => client.post('/api/payment/create', { planCode: planName }));
 
                 // Show QR Code modal
                 if (data.qrCode) {
@@ -456,7 +458,8 @@
 
             try {
                 // Use apiClient to ensure token refresh and retry behavior
-                const response = await window.apiClient.fetchWithAuth(`/api/payment/cancel/${orderCode}`, { method: 'POST' });
+                    const client = AppRuntime.requireClient('Plans');
+                    const response = await client.fetchWithAuth(`/api/payment/cancel/${orderCode}`, { method: 'POST' });
                 const data = await response.json();
 
                 if (data.status === 'success') {

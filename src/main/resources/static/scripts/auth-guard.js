@@ -90,8 +90,15 @@ const AUTH = {
         if (!token) return false;
 
         try {
-            const response = await window.apiClient.fetchWithAuth('/api/auth/me', { method: 'GET' });
-            return response.ok;
+            const client = AppRuntime.getClient();
+            if (!client) return false;
+            // Use centralized AppRuntime.getMe to validate token and fetch user info
+            try {
+                const me = await AppRuntime.safe('AuthGuard:verifyToken', () => AppRuntime.getMe(client));
+                return !!me;
+            } catch (e) {
+                return false;
+            }
         } catch (error) {
             console.error('Token verification failed:', error);
             return false;
@@ -134,13 +141,15 @@ const AUTH = {
         if (requireAdmin && !this.getUserRole()) {
             console.log('[AUTH Guard] Admin required but no role in localStorage, fetching from server...');
             try {
-                const response = await window.apiClient.fetchWithAuth('/api/auth/me', { method: 'GET' });
-                if (response.ok) {
-                    const user = await response.json();
-                    console.log('[AUTH Guard] Fetched user role:', user.role);
-                    this.saveUserInfo(user.fullName, user.role);
+                const client = AppRuntime.getClient();
+                if (client) {
+                    const user = await AppRuntime.safe('AuthGuard:getMe', () => AppRuntime.getMe(client));
+                    if (user) {
+                        console.log('[AUTH Guard] Fetched user role:', user.role);
+                        this.saveUserInfo(user.fullName, user.role);
+                    }
                 } else {
-                    console.log('[AUTH Guard] Failed to fetch user info, status:', response.status);
+                    console.log('[AUTH Guard] No API client available to fetch user role');
                 }
             } catch (error) {
                 console.error('Failed to fetch user role:', error);

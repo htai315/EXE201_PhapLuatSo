@@ -1,31 +1,25 @@
 <!doctype html>
 <html>
-<head><meta charset="utf-8"><title>App</title></head>
+<head><meta charset="utf-8"><title>App (dev)</title></head>
 <body style="font-family:system-ui;margin:40px">
-<h2>App Test</h2>
-<button onclick="me()">GET /api/auth/me</button>
-<button onclick="refresh()">POST /api/auth/refresh</button>
-<button onclick="logout()">POST /api/auth/logout</button>
+<h2>App Test (dev)</h2>
+<button onclick="me()">GET me</button>
+<button onclick="refresh()">POST refresh</button>
+<button onclick="logout()">POST logout</button>
 <pre id="out"></pre>
 
 <script>
     const out = document.getElementById("out");
     const show = x => out.textContent = typeof x === "string" ? x : JSON.stringify(x,null,2);
 
-    // google redirect -> tokens in URL fragment (dev-only)
-    if (location.hash.includes("access=")) {
-        const p = new URLSearchParams(location.hash.substring(1));
-        const access = p.get("access");
-        const expires = p.get("expires") || 900;
-        if (window.TokenManager && typeof window.TokenManager.setAccessToken === 'function') {
-            window.TokenManager.setAccessToken(access, parseInt(expires));
-        }
-        history.replaceState({}, "", "/app.html");
-    }
-
     async function me(){
         try {
-            const data = await window.apiClient.get('/api/auth/me');
+            const client = AppRuntime.getClient();
+            if (!client) {
+                show({status: 503, body: 'API client not available'});
+                return;
+            }
+            const data = await AppRuntime.safe('DevApp:me', () => AppRuntime.getMe(client));
             show({status: 200, body: data});
         } catch (err) {
             show({status: err.status || 500, body: err});
@@ -53,3 +47,5 @@
 </script>
 </body>
 </html>
+
+

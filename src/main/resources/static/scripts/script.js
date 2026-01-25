@@ -167,13 +167,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         }
 
-        // Check if we have token in memory
-        let hasToken = window.TokenManager?.isAuthenticated()
-
-        // If no token in memory, try to rehydrate from HttpOnly cookie
-        if (!hasToken && window.TokenManager) {
-            console.log("[Navbar] Attempting rehydration from cookie...")
-            hasToken = await window.TokenManager.refreshAccessToken()
+        // Always refresh token on page load (same logic as index.html)
+        let hasToken = false;
+        try {
+            if (window.TokenManager && typeof window.TokenManager.refreshAccessToken === 'function') {
+                console.log('[Navbar] Refreshing token on page load...');
+                const refreshed = await window.TokenManager.refreshAccessToken();
+                hasToken = !!(window.TokenManager && window.TokenManager.isAuthenticated && window.TokenManager.isAuthenticated());
+                console.log('[Navbar] Token refresh result:', refreshed, 'hasToken:', hasToken);
+            }
+        } catch (e) {
+            console.warn('[Navbar] Token refresh failed:', e?.message || e);
+            hasToken = false;
         }
 
         if (!hasToken) {
@@ -181,8 +186,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             return
         }
 
-        // Fetch user info using apiClient (which uses TokenManager)
-        const data = await window.apiClient?.get("/api/auth/me").catch(() => null)
+        // Fetch user info using AppRuntime.getMe (canonical)
+        const client = AppRuntime.getClient();
+        if (!client) {
+            showGuest();
+            return;
+        }
+        const data = await AppRuntime.safe('Navbar:getMe', () => AppRuntime.getMe(client)).catch(() => null);
 
         if (!data) {
             showGuest()

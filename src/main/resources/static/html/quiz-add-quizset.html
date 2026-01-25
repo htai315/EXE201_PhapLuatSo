@@ -188,6 +188,7 @@
     <script src="/scripts/toast-notification.js"></script>
     <script src="/scripts/error-handler.js"></script>
     <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/app-runtime.js"></script>
     <script src="/scripts/script.js"></script>
     <script>
         const API_BASE = '/api/quiz-sets';
@@ -207,12 +208,18 @@
                     const description = document.getElementById('quizDescription').value.trim();
                     const durationMinutes = parseInt(document.getElementById('quizDuration').value, 10);
 
-                    // Sử dụng API_CLIENT với auto token refresh
-                    const data = await API_CLIENT.post(API_BASE, {
+                    try { await AppRuntime.authReady(); } catch (e) { /* ignore */ }
+                    const client = AppRuntime.getClient();
+                    if (!client) {
+                        showAlert('Hệ thống tạm thời không khả dụng');
+                        return;
+                    }
+                    // Sử dụng client với auto token refresh
+                    const data = await AppRuntime.safe('QuizAddQuizset:create', () => client.post(API_BASE, {
                         title,
                         description: description || null,
                         durationMinutes
-                    });
+                    }));
 
                     // Sau khi tạo xong chuyển sang trang thêm câu hỏi cho bộ đề đó
                     window.location.href = `/html/quiz-add-question.html?setId=${data.id}`;

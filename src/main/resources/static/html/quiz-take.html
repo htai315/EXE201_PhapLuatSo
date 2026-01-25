@@ -191,6 +191,7 @@
     <script src="/scripts/toast-notification.js"></script>
     <script src="/scripts/error-handler.js"></script>
     <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/app-runtime.js"></script>
     <script src="/scripts/script.js"></script>
     <script>
         const API_BASE = '/api/quiz-sets';
@@ -257,8 +258,16 @@
         async function loadExam(setId) {
             ERROR_HANDLER.showLoading(true);
             try {
-                // Sử dụng API_CLIENT với auto token refresh
-                const data = await API_CLIENT.get(`${API_BASE}/${setId}/exam`);
+                // Ensure auth/bootstrap and client
+                try { await AppRuntime.authReady(); } catch (e) { /* ignore */ }
+                const client = AppRuntime.getClient();
+                if (!client) {
+                    console.warn('[QuizTake] API client not available; cannot load exam');
+                    showAlert('Hệ thống tạm thời không khả dụng');
+                    return;
+                }
+                // Sử dụng client với auto token refresh
+                const data = await AppRuntime.safe('QuizTake:loadExam', () => client.get(`${API_BASE}/${setId}/exam`));
 
                 examQuestions = data.questions || [];
 
@@ -464,8 +473,14 @@
                     }))
                 };
 
-                // Sử dụng API_CLIENT với auto token refresh
-                const data = await API_CLIENT.post(`${API_BASE}/${quizSetId}/exam/submit`, payload);
+                // Ensure client + auth
+                try { await AppRuntime.authReady(); } catch (e) { /* ignore */ }
+                const client = AppRuntime.getClient();
+                if (!client) {
+                    throw new Error('API client not available');
+                }
+                // Sử dụng client với auto token refresh
+                const data = await AppRuntime.safe('QuizTake:submit', () => client.post(`${API_BASE}/${quizSetId}/exam/submit`, payload));
 
                 showResult(data);
 

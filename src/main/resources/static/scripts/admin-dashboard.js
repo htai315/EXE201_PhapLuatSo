@@ -66,7 +66,12 @@ async function checkAuth() {
 
     try {
         // User is authorized, load and display admin info
-        const user = await window.apiClient.get('/api/auth/me');
+        const client = AppRuntime.getClient();
+        if (!client) {
+            console.warn('[Admin Dashboard] API client not available; aborting');
+            return;
+        }
+        const user = await AppRuntime.safe('AdminDashboard:getMe', () => AppRuntime.getMe(client));
         console.log('User info:', user);
 
         // Update admin name display
@@ -92,7 +97,9 @@ function logout() {
 
 async function loadDashboardStats() {
     try {
-        const stats = await window.apiClient.get('/api/admin/stats');
+        const client = AppRuntime.getClient();
+        if (!client) throw new Error('API client not available');
+        const stats = await AppRuntime.safe('AdminDashboard:stats', () => client.get('/api/admin/stats'));
 
         // User statistics
         document.getElementById('totalUsers').textContent = formatNumber(stats.totalUsers);
@@ -130,11 +137,13 @@ async function loadCharts() {
         const toStr = to.toISOString().split('T')[0];
 
         // Load revenue chart
-        const revenueData = await window.apiClient.get(`/api/admin/stats/revenue?from=${fromStr}&to=${toStr}`);
+        const client = AppRuntime.getClient();
+        if (!client) throw new Error('API client not available');
+        const revenueData = await AppRuntime.safe('AdminDashboard:revenue', () => client.get(`/api/admin/stats/revenue?from=${fromStr}&to=${toStr}`));
         renderRevenueChart(revenueData);
 
         // Load user growth chart
-        const userGrowthData = await window.apiClient.get(`/api/admin/stats/user-growth?from=${fromStr}&to=${toStr}`);
+        const userGrowthData = await AppRuntime.safe('AdminDashboard:userGrowth', () => client.get(`/api/admin/stats/user-growth?from=${fromStr}&to=${toStr}`));
         renderUserGrowthChart(userGrowthData);
 
     } catch (error) {
@@ -377,7 +386,12 @@ async function loadCreditAnalytics() {
         const fromStr = from.toISOString().split('T')[0];
         const toStr = to.toISOString().split('T')[0];
 
-        const analytics = await window.apiClient.get(`/api/admin/credits/analytics?from=${fromStr}&to=${toStr}`);
+        const client = AppRuntime.getClient();
+        if (!client) {
+            console.warn('[AdminDashboard] API client not available; skipping credit analytics');
+            return;
+        }
+        const analytics = await AppRuntime.safe('AdminDashboard:creditsAnalytics', () => client.get(`/api/admin/credits/analytics?from=${fromStr}&to=${toStr}`));
 
         // Update stats
         document.getElementById('totalChatUsed').textContent = formatNumber(analytics.totalChatUsed);

@@ -32,7 +32,13 @@ class CreditsCounter {
      */
     async fetchCredits() {
         try {
-            this.credits = await window.apiClient.get('/api/credits/balance');
+            const client = AppRuntime.getClient();
+            if (!client) {
+                console.warn('[CreditsCounter] API client not available; cannot fetch credits');
+                this.credits = null;
+                return;
+            }
+            this.credits = await AppRuntime.safe('CreditsCounter:getBalance', () => client.get('/api/credits/balance'));
         } catch (error) {
             console.error('Error fetching credits:', error);
             this.credits = null;

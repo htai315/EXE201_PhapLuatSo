@@ -186,6 +186,7 @@
     <script src="/scripts/toast-notification.js"></script>
     <script src="/scripts/error-handler.js"></script>
     <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/app-runtime.js"></script>
     <script src="/scripts/script.js"></script>
     <script>
         const API_BASE = '/api/quiz-sets';
@@ -227,8 +228,15 @@
         async function loadQuizSetTitle(setId) {
             ERROR_HANDLER.showLoading(true);
             try {
-                // Sử dụng API_CLIENT với auto token refresh
-                const data = await API_CLIENT.get(`${API_BASE}/${setId}`);
+                try { await AppRuntime.authReady(); } catch (e) { /* ignore */ }
+                const client = AppRuntime.getClient();
+                if (!client) {
+                    console.warn('[QuizEditQuestion] API client not available; cannot load set title');
+                    showAlert('Hệ thống tạm thời không khả dụng');
+                    return;
+                }
+                // Sử dụng client với auto token refresh
+                const data = await AppRuntime.safe('QuizEditQuestion:getSet', () => client.get(`${API_BASE}/${setId}`));
 
                 document.getElementById('setTitleText').textContent = `Bộ đề: ${data.title}`;
             } catch (err) {
@@ -243,8 +251,15 @@
             console.log('loadQuestionDetail called with:', { setId, questionId });
             ERROR_HANDLER.showLoading(true);
             try {
-                // Sử dụng API_CLIENT với auto token refresh
-                const list = await API_CLIENT.get(`${API_BASE}/${setId}/questions`);
+                try { await AppRuntime.authReady(); } catch (e) { /* ignore */ }
+                const client = AppRuntime.getClient();
+                if (!client) {
+                    console.warn('[QuizEditQuestion] API client not available; cannot load questions');
+                    showAlert('Hệ thống tạm thời không khả dụng');
+                    return;
+                }
+                // Sử dụng client với auto token refresh
+                const list = await AppRuntime.safe('QuizEditQuestion:getQuestions', () => client.get(`${API_BASE}/${setId}/questions`));
 
                 console.log('Loaded questions:', list.length, 'questions');
                 console.log('Looking for questionId:', questionId);
@@ -301,8 +316,11 @@
                         if (!opt.optionText) throw new Error(`Phương án ${opt.optionKey} không được để trống`);
                     }
 
-                    // Sử dụng API_CLIENT với auto token refresh
-                    await API_CLIENT.put(`${API_BASE}/${currentQuizSetId}/questions/${currentQuestionId}`, {
+                    // Ensure client
+                    const client = AppRuntime.getClient();
+                    if (!client) throw new Error('API client missing');
+                    // Sử dụng client với auto token refresh
+                    await AppRuntime.safe('QuizEditQuestion:update', () => client.put(`${API_BASE}/${currentQuizSetId}/questions/${currentQuestionId}`, {
                         questionText,
                         explanation: explanation || null,
                         options

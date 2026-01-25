@@ -330,21 +330,39 @@ window.apiClient = API_CLIENT;
 // Global auth ready promise - resolves when auth rehydration completes
 window.authReady = (async function() {
     try {
-        // Use AUTH.guard if available (preferred), otherwise TokenManager refresh
-        if (typeof AUTH !== 'undefined' && typeof AUTH.guard === 'function') {
-            const isReady = await AUTH.guard({ requireAuth: false, redirect: false });
-            return isReady;
-        } else if (window.TokenManager && typeof window.TokenManager.refreshAccessToken === 'function') {
-            const refreshSuccess = await window.TokenManager.refreshAccessToken();
-            return refreshSuccess;
+        console.debug('[authReady] starting');
+        // Prefer TokenManager refresh so TokenManager holds the access token in memory after resolve
+        if (window.TokenManager && typeof window.TokenManager.refreshAccessToken === 'function') {
+            console.debug('[authReady] TokenManager detected, attempting refresh...');
+            try {
+                const refreshed = await window.TokenManager.refreshAccessToken();
+                const isAuthenticated = !!(window.TokenManager && window.TokenManager.isAuthenticated && window.TokenManager.isAuthenticated());
+                console.debug('[authReady] refresh result:', refreshed, 'isAuthenticated:', isAuthenticated);
+                return isAuthenticated;
+            } catch (e) {
+                console.warn('[authReady] TokenManager.refreshAccessToken() failed:', e && e.message ? e.message : e);
+                // fallback to AUTH.guard below
+            }
         }
+
+        // Fallback: use AUTH.guard if available
+        if (typeof AUTH !== 'undefined' && typeof AUTH.guard === 'function') {
+            console.debug('[authReady] falling back to AUTH.guard');
+            const isReady = await AUTH.guard({ requireAuth: false, redirect: false });
+            console.debug('[authReady] AUTH.guard result:', isReady);
+            return isReady;
+        }
+
         // No auth system available
+        console.debug('[authReady] no TokenManager or AUTH available; resolving false');
         return false;
     } catch (error) {
-        console.warn('[authReady] Auth rehydration failed:', error.message);
+        console.warn('[authReady] Auth rehydration failed:', error && error.message ? error.message : error);
         return false;
     }
 })();
 
-window.API_CLIENT = API_CLIENT;
-
+// Note: do NOT assign to `window.API_CLIENT` here because `API_CLIENT` is declared as
+// a top-level `const` which creates a non-writable global property. Assigning
+// `window.API_CLIENT = API_CLIENT` would attempt to write that readonly property
+// and triggers an error in strict environments / some editors.

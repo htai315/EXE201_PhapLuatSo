@@ -40,9 +40,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Load tất cả data cho chart (riêng biệt với pagination)
 async function loadChartData() {
     try {
-        const chartData = await API_CLIENT.get(
-            API_BASE + '/exam/history?page=0&size=' + CHART_PAGE_SIZE
-        );
+        try { await AppRuntime.authReady(); } catch (e) { /* ignore */ }
+        const client = AppRuntime.getClient();
+        if (!client) {
+            console.warn('[QuizHistory] API client not available; cannot load chart data');
+            allAttemptsForChart = [];
+            return;
+        }
+        const chartData = await AppRuntime.safe('QuizHistory:chartData', () => client.get(API_BASE + '/exam/history?page=0&size=' + CHART_PAGE_SIZE));
         allAttemptsForChart = chartData?.content || [];
     } catch (err) {
         console.error('Error loading chart data:', err);
@@ -53,9 +58,14 @@ async function loadChartData() {
 async function loadHistory() {
     ERROR_HANDLER.showLoading(true);
     try {
-        paginationData = await API_CLIENT.get(
-            API_BASE + '/exam/history?page=' + currentPage + '&size=' + PAGE_SIZE
-        );
+        try { await AppRuntime.authReady(); } catch (e) { /* ignore */ }
+        const client = AppRuntime.getClient();
+        if (!client) {
+            console.warn('[QuizHistory] API client not available; cannot load history');
+            Toast.show('Hệ thống tạm thời không khả dụng', 'error', 3000);
+            return;
+        }
+        paginationData = await AppRuntime.safe('QuizHistory:loadHistory', () => client.get(API_BASE + '/exam/history?page=' + currentPage + '&size=' + PAGE_SIZE));
         renderStats();
         renderChart();
         renderHistory();

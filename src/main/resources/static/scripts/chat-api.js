@@ -46,7 +46,9 @@ export async function loadChatSessions(page = 0, size = 20, search = '') {
         params.append('search', search);
     }
     // Route through central api client which handles token refresh and retries
-    return await window.apiClient.get(`${API_ENDPOINTS.SESSIONS}?${params}`);
+    const client = AppRuntime.getClient();
+    if (!client) throw new Error('API client not available');
+    return await AppRuntime.safe('ChatAPI:loadSessions', () => client.get(`${API_ENDPOINTS.SESSIONS}?${params}`));
 }
 
 /**
@@ -55,7 +57,9 @@ export async function loadChatSessions(page = 0, size = 20, search = '') {
  * @returns {Promise<Array>} Array of messages
  */
 export async function loadSessionMessages(sessionId) {
-    return await window.apiClient.get(API_ENDPOINTS.SESSION_MESSAGES(sessionId));
+    const client = AppRuntime.getClient();
+    if (!client) throw new Error('API client not available');
+    return await AppRuntime.safe('ChatAPI:loadMessages', () => client.get(API_ENDPOINTS.SESSION_MESSAGES(sessionId)));
 }
 
 /**
@@ -70,7 +74,9 @@ export async function sendMessage(question, sessionId = null) {
         : API_ENDPOINTS.NEW_SESSION_MESSAGE;
 
     try {
-        return await window.apiClient.post(endpoint, { question });
+        const client = AppRuntime.getClient();
+        if (!client) throw new Error('API client not available');
+        return await AppRuntime.safe('ChatAPI:sendMessage', () => client.post(endpoint, { question }));
     } catch (error) {
         // Normalize error to match previous behavior (throw Error with message)
         if (error && typeof error === 'object' && error.error) {
@@ -89,7 +95,9 @@ export async function sendMessage(question, sessionId = null) {
  * @returns {Promise<void>}
  */
 export async function deleteSession(sessionId) {
-    await window.apiClient.delete(API_ENDPOINTS.DELETE_SESSION(sessionId));
+    const client = AppRuntime.getClient();
+    if (!client) throw new Error('API client not available');
+    await AppRuntime.safe('ChatAPI:deleteSession', () => client.delete(API_ENDPOINTS.DELETE_SESSION(sessionId)));
 }
 
 export { API_ENDPOINTS };

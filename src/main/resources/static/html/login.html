@@ -423,8 +423,9 @@
 
   <!-- Custom JS -->
   <script src="/scripts/toast-notification.js"></script>
-  <script src="/scripts/token-manager.js"></script>
-  <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/token-manager.js"></script>
+    <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/app-runtime.js"></script>
   <script src="/scripts/script.js"></script>
 
   <script>
@@ -441,18 +442,47 @@
         window.history.replaceState({}, document.title, window.location.pathname);
       }
 
-      // Check if user is already logged in via cookie
-      // Try to rehydrate from refresh token cookie first
-      if (window.TokenManager) {
-        window.TokenManager.refreshAccessToken().then(function (success) {
-          if (success) {
-            console.log('User already logged in via cookie, redirecting to home...');
-            window.location.href = '/index.html';
-          } else {
-            console.log('No valid session, staying on login page');
+      // Check if user is already authenticated; redirect to home only if /api/auth/me succeeds
+      (async () => {
+        console.log('[Login] entering login page');
+
+        // Disable automatic redirect to login during auth check (we're already on login page!)
+        const originalRedirectToLogin = window.API_CLIENT?.redirectToLogin;
+        if (window.API_CLIENT) {
+          window.API_CLIENT.redirectToLogin = () => {
+            console.log('[Login] Suppressing redirect during auth check (already on login page)');
+          };
+        }
+
+        try {
+          // First, ensure token rehydration completes
+          await AppRuntime.authReady();
+          console.log('[Login] authReady completed');
+
+          // Now check actual authentication status via /api/auth/me
+          const client = AppRuntime.getClient();
+          if (!client) {
+            console.log('[Login] no API client available, staying on login page');
+            return;
           }
-        });
-      }
+
+          const me = await AppRuntime.safe('Login:checkAuth', () => AppRuntime.getMe(client));
+          console.log('[Login] /me status = 200, user authenticated:', me?.email);
+
+          // Only redirect if /me succeeded (user is authenticated)
+          console.log('[Login] redirecting to /index.html');
+          window.location.href = '/index.html';
+
+        } catch (e) {
+          // /api/auth/me failed (401/403/network error) - stay on login page
+          console.log('[Login] /me failed or authReady rejected, staying on login page:', e?.message || e);
+        } finally {
+          // Restore original redirect function
+          if (window.API_CLIENT && originalRedirectToLogin) {
+            window.API_CLIENT.redirectToLogin = originalRedirectToLogin;
+          }
+        }
+      })();
 
       const form = document.querySelector(".auth-form");
       const emailInput = document.getElementById("loginEmail");
@@ -553,8 +583,13 @@
           return;
         }
 
-        try {
-          const data = await API_CLIENT.post("/api/auth/login", { email, password });
+          try {
+          const client = AppRuntime.getClient();
+          if (!client) {
+            Toast.error('Hệ thống tạm thời không khả dụng (client không sẵn sàng)');
+            return;
+          }
+          const data = await AppRuntime.safe('Login:login', () => client.post("/api/auth/login", { email, password }));
 
           // Store access token in memory only (refresh token is in HttpOnly cookie)
           if (window.TokenManager) {
@@ -563,7 +598,10 @@
 
           // Fetch user info to save role for auth-guard
           try {
-            const user = await API_CLIENT.get('/api/auth/me');
+            if (window.authReady && typeof window.authReady.then === 'function') {
+              try { await window.authReady; } catch (e) { /* ignore */ }
+            }
+            const user = await AppRuntime.safe('Login:getMe', () => AppRuntime.getMe(client));
             if (user.fullName) {
               localStorage.setItem('userName', user.fullName);
             }
@@ -621,7 +659,14 @@
           btn.textContent = 'Đang gửi...';
 
           try {
-            await API_CLIENT.post('/api/auth/resend-verification', { email });
+            const client = AppRuntime.getClient();
+            if (!client) {
+              Toast.error('Hệ thống tạm thời không khả dụng (client không sẵn sàng)');
+              btn.disabled = false;
+              btn.textContent = 'Gửi lại email xác thực';
+              return;
+            }
+            await AppRuntime.safe('Login:resendVerify', () => client.post('/api/auth/resend-verification', { email }));
             Toast.success('Email xác thực đã được gửi! Vui lòng kiểm tra hộp thư.');
             errorDiv.innerHTML = `
             <div class="alert alert-success py-2 px-3 mb-0 mt-2" style="border-radius: 10px;">

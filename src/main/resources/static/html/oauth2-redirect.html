@@ -125,24 +125,16 @@
 
                 // Fetch user info to populate localStorage with name/role (not tokens)
                 try {
-                    const userResponse = await fetch('/api/auth/me', {
-                        method: 'GET',
-                        credentials: 'include',
-                        headers: {
-                            'Authorization': 'Bearer ' + data.accessToken
+                    const client = AppRuntime.getClient();
+                    if (client) {
+                        const user = await AppRuntime.safe('OAuth2:getMe', () => AppRuntime.getMe(client));
+                        if (user) {
+                            console.log('[OAuth2] User info fetched:', user.email);
+                            if (user.fullName) localStorage.setItem('userName', user.fullName);
+                            if (user.role) localStorage.setItem('userRole', user.role);
                         }
-                    });
-
-                    if (userResponse.ok) {
-                        const user = await userResponse.json();
-                        console.log('[OAuth2] User info fetched:', user.email);
-
-                        if (user.fullName) {
-                            localStorage.setItem('userName', user.fullName);
-                        }
-                        if (user.role) {
-                            localStorage.setItem('userRole', user.role);
-                        }
+                    } else {
+                        console.warn('[OAuth2] API client not available; skipping user fetch');
                     }
                 } catch (userError) {
                     console.warn('[OAuth2] Could not fetch user info:', userError);

@@ -292,6 +292,7 @@
     <script src="/scripts/auth-guard.js"></script>
     <script src="/scripts/toast-notification.js"></script>
     <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/app-runtime.js"></script>
     <script src="/scripts/script.js"></script>
 
     <script>
@@ -316,7 +317,9 @@
 
         async function loadUserProfile() {
             try {
-                const user = await API_CLIENT.get('/api/auth/me');
+                try { await AppRuntime.authReady(); } catch (e) { /* ignore */ }
+                const client = AppRuntime.requireClient('Profile');
+                const user = await AppRuntime.safe('Profile:getMe', () => AppRuntime.getMe(client));
 
                 // Update UI
                 document.getElementById('profileFullName').textContent = user.fullName || 'Người dùng';
@@ -340,7 +343,12 @@
 
         async function loadCreditsInfo() {
             try {
-                const credits = await API_CLIENT.get('/api/credits/balance');
+                const client = AppRuntime.getClient();
+                if (!client) {
+                    console.warn('[Profile] API client not available; cannot load credits');
+                    return;
+                }
+                const credits = await AppRuntime.safe('Profile:getCredits', () => client.get('/api/credits/balance'));
 
                 // Update credits UI
                 document.getElementById('chatCreditsValue').textContent = credits.chatCredits || 0;
@@ -412,7 +420,9 @@
             formData.append('avatar', file);
 
             try {
-                await API_CLIENT.upload('/api/user/avatar', formData);
+                const client = AppRuntime.getClient();
+                if (!client) throw new Error('API client not available');
+                await AppRuntime.safe('Profile:uploadAvatar', () => client.upload('/api/user/avatar', formData));
                 Toast.success('Cập nhật ảnh đại diện thành công');
             } catch (err) {
                 console.error('Error uploading avatar:', err);
@@ -518,10 +528,12 @@
             if (hasError) return;
 
             try {
-                await API_CLIENT.post('/api/user/change-password', {
+                const client = AppRuntime.getClient();
+                if (!client) throw new Error('API client not available');
+                await AppRuntime.safe('Profile:changePassword', () => client.post('/api/user/change-password', {
                     currentPassword,
                     newPassword
-                });
+                }));
 
                 // Success
                 Toast.success('Đổi mật khẩu thành công!');

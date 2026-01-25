@@ -522,6 +522,7 @@
     <script src="/scripts/auth-guard.js"></script>
     <script src="/scripts/toast-notification.js"></script>
     <script src="/scripts/api-client.js"></script>
+    <script src="/scripts/app-runtime.js"></script>
     <script src="/scripts/confirm-modal.js"></script>
 
     <script>
@@ -565,7 +566,10 @@
             }
 
             try {
-                const user = await API_CLIENT.get('/api/auth/me');
+                // Standardized client access + auth bootstrap
+                try { await AppRuntime.authReady(); } catch (e) { /* ignore */ }
+                const client = AppRuntime.requireClient('AdminLegal');
+                const user = await AppRuntime.safe('AdminLegal:getMe', () => AppRuntime.getMe(client));
                 document.getElementById('adminUserName').textContent = user.fullName || 'Admin';
 
                 // Setup sidebar
@@ -682,7 +686,14 @@
                     formData.append('file', file);
                     formData.append('documentName', file.name.replace('.pdf', ''));
 
-                    const response = await API_CLIENT.fetchWithAuth('/api/legal/documents/upload', {
+                    try { await AppRuntime.authReady(); } catch (e) { /* ignore */ }
+                    const client = AppRuntime.getClient();
+                    if (!client) {
+                        console.warn('[Admin Legal] API client not available; upload skipped');
+                        failCount++;
+                        continue;
+                    }
+                    const response = await client.fetchWithAuth('/api/legal/documents/upload', {
                         method: 'POST',
                         body: formData
                     });
@@ -731,7 +742,13 @@
         // Load stats
         async function loadStats() {
             try {
-                const stats = await API_CLIENT.get('/api/legal/documents/stats');
+                try { await AppRuntime.authReady(); } catch (e) { /* ignore */ }
+                const client = AppRuntime.getClient();
+                if (!client) {
+                    console.warn('[Admin Legal] API client not available; cannot load stats');
+                    return;
+                }
+                const stats = await AppRuntime.safe('AdminLegal:stats', () => client.get('/api/legal/documents/stats'));
                 document.getElementById('totalDocuments').textContent = stats.totalDocuments || 0;
                 document.getElementById('totalArticles').textContent = stats.totalArticles || 0;
             } catch (error) {
@@ -746,8 +763,14 @@
                 if (searchQuery) {
                     url += `&search=${encodeURIComponent(searchQuery)}`;
                 }
-
-                const data = await API_CLIENT.get(url);
+                try { await AppRuntime.authReady(); } catch (e) { /* ignore */ }
+                const client = AppRuntime.getClient();
+                if (!client) {
+                    console.warn('[Admin Legal] API client not available; cannot load documents');
+                    documentsList.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><i class="bi bi-exclamation-circle"></i><p>Hệ thống tạm thời không khả dụng</p></div>`;
+                    return;
+                }
+                const data = await AppRuntime.safe('AdminLegal:loadDocuments', () => client.get(url));
                 totalPages = data.totalPages || 0;
                 displayDocuments(data.documents || []);
                 displayPagination();
@@ -857,7 +880,10 @@
 
             showLoading(true);
             try {
-                await API_CLIENT.delete(`/api/legal/documents/${id}`);
+                try { await AppRuntime.authReady(); } catch (e) { /* ignore */ }
+                const client = AppRuntime.getClient();
+                if (!client) throw new Error('API client missing');
+                await client.delete(`/api/legal/documents/${id}`);
                 Toast.success('Đã xóa văn bản');
                 loadStats();
                 loadDocuments();

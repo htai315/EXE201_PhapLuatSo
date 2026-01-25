@@ -57,7 +57,12 @@ async function checkAuth() {
     }
 
     try {
-        const user = await window.apiClient.get('/api/auth/me');
+        const client = AppRuntime.getClient();
+        if (!client) {
+            console.warn('[Admin Activity Logs] API client not available; aborting');
+            return;
+        }
+        const user = await AppRuntime.safe('AdminActivity:getMe', () => AppRuntime.getMe(client));
         console.log('User info:', user);
         document.getElementById('adminUserName').textContent = user.fullName || user.email;
 
@@ -80,7 +85,12 @@ async function loadActivityLogs(page = 0) {
 
     try {
         const url = `/api/admin/activity-logs?page=${page}&size=50`;
-        const response = await window.apiClient.get(url);
+        const client = AppRuntime.getClient();
+        if (!client) {
+            console.warn('[Admin Activity Logs] API client not available; cannot load logs');
+            return;
+        }
+        const response = await AppRuntime.safe('AdminActivity:loadLogs', () => client.get(url));
 
         renderLogsTable(response.logs);
         renderPagination(response);
