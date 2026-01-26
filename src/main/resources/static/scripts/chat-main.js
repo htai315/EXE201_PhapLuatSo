@@ -183,8 +183,15 @@ async function handleFormSubmit(e) {
         // Remove typing indicator
         removeTypingIndicator(typingId);
 
-        // Add bot response
-        addMessage('bot', data.assistantMessage.content, data.assistantMessage.citations);
+        // Add bot response with null-safety check
+        if (data && data.assistantMessage && data.assistantMessage.content) {
+            addMessage('bot', data.assistantMessage.content, data.assistantMessage.citations);
+        } else {
+            // Fallback for unexpected response structure
+            const fallbackContent = data?.error || data?.message || 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau.';
+            addMessage('bot', fallbackContent);
+            console.warn('Unexpected API response structure:', data);
+        }
 
         // Refresh credits counter
         if (ChatState.creditsCounter) {
