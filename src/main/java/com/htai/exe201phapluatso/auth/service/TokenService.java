@@ -57,13 +57,8 @@ public class TokenService {
     private static final long GRACE_PERIOD_SECONDS = 30;
 
     /**
-     * Validate refresh token, then ROTATE with reuse detection:
-     * - If token was already used more than GRACE_PERIOD_SECONDS ago, this is a
-     * SECURITY BREACH
-     * → Revoke ALL tokens for this user and throw TokenReusedException
-     * - If token was used within grace period, return cached user (allow
-     * navigation)
-     * - Otherwise, mark token as used and return user for new token pair
+     * Validate refresh token (simplified - no reuse detection).
+     * Just check the token is valid, not revoked, and not expired.
      */
     @Transactional
     public User validateAndRotate(String rawToken) {
@@ -74,45 +69,18 @@ public class TokenService {
 
         LocalDateTime now = LocalDateTime.now();
 
-        // Check if token was already used (REUSE DETECTION with grace period)
-        if (token.getUsedAt() != null) {
-            long secondsSinceUse = java.time.Duration.between(token.getUsedAt(), now).getSeconds();
-
-            if (secondsSinceUse > GRACE_PERIOD_SECONDS) {
-                // Token reused after grace period - this is a security breach
-                log.warn("TOKEN REUSE DETECTED for user {} ({}s after first use) - revoking all tokens",
-                        token.getUser().getId(), secondsSinceUse);
-
-                // Revoke ALL tokens for this user - security breach response
-                revokeAllUserTokens(token.getUser().getId());
-
-                // Log security event
-                securityAuditService.logTokenReuse(token.getUser().getId(), "unknown", hash);
-
-                throw new TokenReusedException(token.getUser().getId(), hash);
-            } else {
-                // Within grace period - allow reuse (normal navigation behavior)
-                log.debug("Token reuse within grace period ({}s) for user {}", secondsSinceUse,
-                        token.getUser().getId());
-                return token.getUser();
-            }
-        }
-
+        // Check if token is revoked
         if (token.getRevokedAt() != null) {
             throw new RuntimeException("Refresh token revoked");
         }
+        
+        // Check if token is expired
         if (now.isAfter(token.getExpiresAt())) {
             throw new RuntimeException("Refresh token expired");
         }
 
-        // Mark token as used (for reuse detection) - but don't revoke yet
-        token.setUsedAt(now);
-        // Don't set revokedAt immediately - allow grace period
-        refreshRepo.save(token);
-
-        // Log token rotation
-        securityAuditService.logTokenRotation(token.getUser().getId(), "unknown");
-
+        // Token is valid - return user
+        log.debug("Valid refresh token for user: {}", token.getUser().getId());
         return token.getUser();
     }
 
