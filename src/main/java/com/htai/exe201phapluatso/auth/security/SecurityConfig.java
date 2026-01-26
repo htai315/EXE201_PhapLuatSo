@@ -5,6 +5,8 @@ import com.htai.exe201phapluatso.auth.oauth2.OAuth2AuthenticationFailureHandler;
 import com.htai.exe201phapluatso.auth.oauth2.OAuth2AuthenticationSuccessHandler;
 import com.htai.exe201phapluatso.auth.repo.UserRepo;
 import com.htai.exe201phapluatso.auth.service.JwtService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,6 +24,8 @@ import java.util.Arrays;
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
+
+        private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
         private final CustomOAuth2UserService customOAuth2UserService;
         private final OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler;
@@ -143,8 +147,6 @@ public class SecurityConfig {
 
                                                 // mọi thứ khác mới cần đăng nhập
                                                 .anyRequest().authenticated())
-                                // Exception handling: return 401 for API endpoints, redirect to OAuth for HTML
-                                // pages
                                 .exceptionHandling(ex -> ex
                                                 .authenticationEntryPoint((request, response, authException) -> {
                                                         String path = request.getRequestURI();
@@ -160,16 +162,16 @@ public class SecurityConfig {
                                                                 // HTML pages: redirect to login
                                                                 response.sendRedirect("/html/login.html");
                                                         }
+                                                })
+                                                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                                                        logger.error("Access Denied (403): {} - Reason: {}", 
+                                                                request.getRequestURI(), accessDeniedException.getMessage());
+                                                        response.setStatus(403);
+                                                        response.setContentType("application/json");
+                                                        response.getWriter().write(
+                                                                "{\"error\":\"Forbidden\",\"message\":\"Access Denied: " 
+                                                                + accessDeniedException.getMessage() + "\"}");
                                                 }))
-                                .accessDeniedHandler((request, response, accessDeniedException) -> {
-                                        logger.error("Access Denied (403): {} - Reason: {}", 
-                                                request.getRequestURI(), accessDeniedException.getMessage());
-                                        response.setStatus(403);
-                                        response.setContentType("application/json");
-                                        response.getWriter().write(
-                                                "{\"error\":\"Forbidden\",\"message\":\"Access Denied: " 
-                                                + accessDeniedException.getMessage() + "\"}");
-                                })
                                 // OAuth2 Login Configuration
                                 .oauth2Login(oauth2 -> oauth2
                                                 .userInfoEndpoint(userInfo -> userInfo
