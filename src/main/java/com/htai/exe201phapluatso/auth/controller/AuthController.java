@@ -83,7 +83,7 @@ public class AuthController {
 
     /**
      * Refresh endpoint - reads refresh token from cookie, returns new access token.
-     * Also rotates refresh token (sets new cookie).
+     * Keeps the same refresh token (no rotation).
      */
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(HttpServletRequest request, HttpServletResponse response) {
@@ -92,33 +92,26 @@ public class AuthController {
         if (cookies == null) {
             logger.warn("[Refresh] No cookies received in request");
         } else {
-            logger.info("[Refresh] Received {} cookies", cookies.length);
-            for (Cookie c : cookies) {
-                logger.debug("[Refresh] Cookie: name={}, path={}", c.getName(), c.getPath());
-            }
+            logger.debug("[Refresh] Received {} cookies", cookies.length);
         }
 
         // Extract refresh token from cookie
         String refreshToken = cookieUtils.extractRefreshToken(cookies);
-        logger.info("[Refresh] Extracted refresh token: {}",
-                refreshToken != null ? "present (length=" + refreshToken.length() + ")" : "null");
 
         if (refreshToken == null || refreshToken.isBlank()) {
-            logger.warn("[Refresh] No refresh token found in cookies, returning 401");
-            cookieUtils.clearRefreshTokenCookie(response);
+            logger.warn("[Refresh] No refresh token found in cookies");
             return ResponseEntity.status(401).body(new MessageResponse("No refresh token provided"));
         }
 
         try {
             TokenResponse tokens = auth.refresh(new RefreshRequest(refreshToken));
 
-            // Set new refresh token cookie (rotation)
-            cookieUtils.addRefreshTokenCookie(response, tokens.refreshToken());
-
+            // No need to set new cookie - keeping the same refresh token
             // Return only access token in response body
             return ResponseEntity.ok(new AccessTokenResponse(tokens.accessToken(), tokens.accessExpiresInSeconds()));
         } catch (Exception e) {
-            // Clear cookie on any error (invalid, expired, reused)
+            logger.warn("[Refresh] Token validation failed: {}", e.getMessage());
+            // Clear cookie on any error (invalid, expired)
             cookieUtils.clearRefreshTokenCookie(response);
             return ResponseEntity.status(401).body(new MessageResponse(e.getMessage()));
         }

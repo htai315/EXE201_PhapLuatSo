@@ -57,11 +57,12 @@ public class TokenService {
     private static final long GRACE_PERIOD_SECONDS = 30;
 
     /**
-     * Validate refresh token (simplified - no reuse detection).
-     * Just check the token is valid, not revoked, and not expired.
+     * Validate refresh token WITHOUT rotation.
+     * Token can be reused until it expires or is explicitly revoked (logout).
+     * This supports multiple browser tabs without issues.
      */
-    @Transactional
-    public User validateAndRotate(String rawToken) {
+    @Transactional(readOnly = true)
+    public User validateRefreshToken(String rawToken) {
         String hash = HashUtil.sha256Base64(rawToken.trim());
 
         RefreshToken token = refreshRepo.findByTokenHash(hash)
@@ -79,9 +80,16 @@ public class TokenService {
             throw new RuntimeException("Refresh token expired");
         }
 
-        // Token is valid - return user
         log.debug("Valid refresh token for user: {}", token.getUser().getId());
         return token.getUser();
+    }
+
+    /**
+     * Backward compatibility - alias for validateRefreshToken
+     */
+    @Transactional(readOnly = true)
+    public User validateAndRotate(String rawToken) {
+        return validateRefreshToken(rawToken);
     }
 
     /**

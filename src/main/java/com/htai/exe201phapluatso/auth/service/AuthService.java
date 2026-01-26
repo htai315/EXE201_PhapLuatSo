@@ -162,14 +162,19 @@ public class AuthService {
         return login(req, "unknown", "unknown");
     }
 
-    // -------- REFRESH (ROTATE) --------
-    @Transactional
+    // -------- REFRESH (NO ROTATION - keep same refresh token) --------
+    @Transactional(readOnly = true)
     public TokenResponse refresh(RefreshRequest req) {
-        // TokenService.validateAndRotate will throw TokenReusedException if reuse
-        // detected
-        // GlobalExceptionHandler will catch it and return 401 with proper message
-        User u = tokenService.validateAndRotate(req.refreshToken());
-        return issueTokens(u);
+        // Validate the refresh token (no rotation - same token can be reused)
+        User u = tokenService.validateRefreshToken(req.refreshToken());
+        
+        // Issue new access token only (keep same refresh token)
+        var roles = u.getRoles().stream().map(Role::getName).toList();
+        String accessToken = jwtService.createAccessToken(u.getId(), u.getEmail(), roles);
+        long accessExpSeconds = accessMinutes * 60;
+        
+        // Return same refresh token (no rotation)
+        return new TokenResponse(accessToken, req.refreshToken(), accessExpSeconds);
     }
 
     public void logout(RefreshRequest req) {
