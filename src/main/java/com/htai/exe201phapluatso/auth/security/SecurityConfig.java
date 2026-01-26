@@ -61,12 +61,27 @@ public class SecurityConfig {
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
 
-                // Use configured origins from properties
-                configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+                // Split and trim origins to avoid whitespace issues
+                if (allowedOrigins != null && !allowedOrigins.isEmpty()) {
+                        String[] origins = allowedOrigins.split(",");
+                        for (String origin : origins) {
+                                configuration.addAllowedOrigin(origin.trim());
+                        }
+                }
+
                 configuration.setAllowedMethods(Arrays.asList(allowedMethods.split(",")));
-                configuration.setAllowedHeaders(Arrays.asList(allowedHeaders.split(",")));
+                
+                String[] headers = allowedHeaders.split(",");
+                for (String header : headers) {
+                        configuration.addAllowedHeader(header.trim());
+                }
+                
                 configuration.setAllowCredentials(allowCredentials);
-                configuration.setExposedHeaders(Arrays.asList(exposedHeaders.split(",")));
+                
+                String[] exposed = exposedHeaders.split(",");
+                for (String header : exposed) {
+                        configuration.addExposedHeader(header.trim());
+                }
 
                 UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
                 source.registerCorsConfiguration("/api/**", configuration);
@@ -146,6 +161,15 @@ public class SecurityConfig {
                                                                 response.sendRedirect("/html/login.html");
                                                         }
                                                 }))
+                                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                                        logger.error("Access Denied (403): {} - Reason: {}", 
+                                                request.getRequestURI(), accessDeniedException.getMessage());
+                                        response.setStatus(403);
+                                        response.setContentType("application/json");
+                                        response.getWriter().write(
+                                                "{\"error\":\"Forbidden\",\"message\":\"Access Denied: " 
+                                                + accessDeniedException.getMessage() + "\"}");
+                                })
                                 // OAuth2 Login Configuration
                                 .oauth2Login(oauth2 -> oauth2
                                                 .userInfoEndpoint(userInfo -> userInfo
