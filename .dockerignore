@@ -1,0 +1,14 @@
+target/
+*.jar
+.git/
+.mvn/
+mvnw
+mvnw.cmd
+.env
+.env.example
+ARCHITECTURE.md
+PROJECT_REVIEW.md
+README.md
+docs/
+uploads/
+.DS_Store
