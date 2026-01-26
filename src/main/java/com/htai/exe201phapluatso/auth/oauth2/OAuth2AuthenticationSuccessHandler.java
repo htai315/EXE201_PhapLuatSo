@@ -53,12 +53,14 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         CustomOidcUser oidcUser = (CustomOidcUser) authentication.getPrincipal();
         User user = oidcUser.getUser();
 
+        logger.info("OAuth2 login successful for user: {} (ID: {})", user.getEmail(), user.getId());
+
         // Generate refresh token and set as HttpOnly cookie
         // (Access token will be obtained by frontend calling /api/auth/refresh)
         TokenService.IssuedRefreshToken refreshToken = tokenService.issueRefreshToken(user);
         cookieUtils.addRefreshTokenCookie(response, refreshToken.raw());
 
-        logger.info("OAuth2 login successful for user: {}. Refresh cookie set.", user.getEmail());
+        logger.info("Refresh token cookie set. Redirecting to: {}", frontendRedirectUrl);
 
         // Redirect to frontend WITHOUT any tokens in URL (Pure Option B)
         getRedirectStrategy().sendRedirect(request, response, frontendRedirectUrl);

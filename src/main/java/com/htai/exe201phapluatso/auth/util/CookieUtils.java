@@ -13,7 +13,8 @@ import org.springframework.stereotype.Component;
 public class CookieUtils {
 
     public static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
-    public static final String COOKIE_PATH = "/api/auth";
+    // Use "/" to ensure cookie is sent for all paths including OAuth redirect
+    public static final String COOKIE_PATH = "/";
 
     @Value("${app.jwt.refresh-days:7}")
     private long refreshDays;

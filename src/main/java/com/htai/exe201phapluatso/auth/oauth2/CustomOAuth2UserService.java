@@ -33,6 +33,9 @@ public class CustomOAuth2UserService extends OidcUserService {
     @Override
     @Transactional
     public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
+        logger.info("Processing OAuth2 login from provider: {}", 
+            userRequest.getClientRegistration().getRegistrationId());
+        
         OidcUser oidcUser = super.loadUser(userRequest);
         
         try {
@@ -41,7 +44,7 @@ public class CustomOAuth2UserService extends OidcUserService {
             logger.error("OAuth2 authentication error: {}", ex.getMessage());
             throw ex;
         } catch (Exception ex) {
-            logger.error("Error processing OAuth2 user", ex);
+            logger.error("Error processing OAuth2 user: {}", ex.getMessage(), ex);
             String errorMessage = ex.getMessage() != null ? ex.getMessage() : "Unknown OAuth2 error";
             OAuth2Error error = new OAuth2Error("oauth2_error", errorMessage, null);
             throw new OAuth2AuthenticationException(error, ex);
