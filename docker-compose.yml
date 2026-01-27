@@ -1,17 +1,21 @@
 services:
+  # ============================================
+  # MAIN APPLICATION
+  # ============================================
   app:
     build: .
     container_name: exe201-app
+    restart: unless-stopped
     ports:
       - "8080:8080"
     env_file:
       - .env
     environment:
-      # Database - Override to use Docker internal hostname
-      SPRING_DATASOURCE_URL: jdbc:postgresql://exe201-db:5432/${DB_NAME}
-      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      # Redis - Docker internal hostname
+      # Database - Connect to PostgreSQL container
+      SPRING_DATASOURCE_URL: jdbc:postgresql://exe201-db:5432/${DB_NAME:-exe201_phapluatso_v2}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres}
+      # Redis - Connect to Redis container
       SPRING_DATA_REDIS_HOST: exe201-redis
       SPRING_DATA_REDIS_PORT: 6379
       # JWT
@@ -20,32 +24,51 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       # Frontend URLs
-      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL}
-      FRONTEND_REDIRECT_URL: ${FRONTEND_REDIRECT_URL}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-https://legaltech.ai.vn}
+      FRONTEND_REDIRECT_URL: ${FRONTEND_REDIRECT_URL:-https://legaltech.ai.vn/html/oauth2-redirect.html}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://legaltech.ai.vn}
       # Cookie & Security
-      COOKIE_DOMAIN: ${COOKIE_DOMAIN}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-.legaltech.ai.vn}
       COOKIE_SAME_SITE: ${COOKIE_SAME_SITE:-Lax}
       COOKIE_SECURE: ${COOKIE_SECURE:-true}
       CORS_ALLOW_CREDENTIALS: ${CORS_ALLOW_CREDENTIALS:-true}
       CSRF_ENABLED: ${CSRF_ENABLED:-false}
       # OpenAI
       OPENAI_API_KEY: ${OPENAI_API_KEY}
-      # PayOS
+      # PayOS Payment
       PAYOS_CLIENT_ID: ${PAYOS_CLIENT_ID}
       PAYOS_API_KEY: ${PAYOS_API_KEY}
       PAYOS_CHECKSUM_KEY: ${PAYOS_CHECKSUM_KEY}
-      PAYOS_RETURN_URL: ${PAYOS_RETURN_URL}
-      PAYOS_CANCEL_URL: ${PAYOS_CANCEL_URL}
+      PAYOS_RETURN_URL: ${PAYOS_RETURN_URL:-https://legaltech.ai.vn/html/payment-result.html}
+      PAYOS_CANCEL_URL: ${PAYOS_CANCEL_URL:-https://legaltech.ai.vn/html/plans.html}
       PAYMENT_STATUS_TOKEN_SECRET: ${PAYMENT_STATUS_TOKEN_SECRET}
       # Email
-      MAIL_ENABLED: ${MAIL_ENABLED:-false}
+      MAIL_ENABLED: ${MAIL_ENABLED:-true}
       MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
-      # Spring Profile
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-production}
+      # Logging Configuration
+      LOG_LEVEL_ROOT: ${LOG_LEVEL_ROOT:-WARN}
+      LOG_LEVEL_APP: ${LOG_LEVEL_APP:-INFO}
+      LOG_LEVEL_SPRING_WEB: ${LOG_LEVEL_SPRING_WEB:-WARN}
+      LOG_LEVEL_HIBERNATE_SQL: ${LOG_LEVEL_HIBERNATE_SQL:-WARN}
+      LOG_LEVEL_HIBERNATE_BINDER: ${LOG_LEVEL_HIBERNATE_BINDER:-WARN}
+      LOG_LEVEL_TRANSACTION: ${LOG_LEVEL_TRANSACTION:-WARN}
+      LOG_LEVEL_VNPAY: ${LOG_LEVEL_VNPAY:-INFO}
+      LOG_LEVEL_CREDIT: ${LOG_LEVEL_CREDIT:-INFO}
+      LOG_LEVEL_ENVLOADER: ${LOG_LEVEL_ENVLOADER:-INFO}
+      LOG_LEVEL_DOTENV: ${LOG_LEVEL_DOTENV:-INFO}
+      # Error Response Configuration
+      ERROR_INCLUDE_MESSAGE: ${ERROR_INCLUDE_MESSAGE:-never}
+      ERROR_INCLUDE_STACKTRACE: ${ERROR_INCLUDE_STACKTRACE:-never}
+      ERROR_INCLUDE_EXCEPTION: ${ERROR_INCLUDE_EXCEPTION:-false}
+      # HikariCP Connection Pool
+      HIKARI_MAX_POOL_SIZE: ${HIKARI_MAX_POOL_SIZE:-20}
+      HIKARI_MIN_IDLE: ${HIKARI_MIN_IDLE:-5}
+      HIKARI_CONNECTION_TIMEOUT: ${HIKARI_CONNECTION_TIMEOUT:-30000}
+      HIKARI_IDLE_TIMEOUT: ${HIKARI_IDLE_TIMEOUT:-600000}
+      HIKARI_MAX_LIFETIME: ${HIKARI_MAX_LIFETIME:-1800000}
     depends_on:
       exe201-db:
         condition: service_healthy
@@ -53,31 +76,82 @@ services:
         condition: service_started
     volumes:
       - ./uploads:/app/uploads
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/auth/test"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
+  # ============================================
+  # POSTGRESQL DATABASE WITH PGVECTOR
+  # ============================================
   exe201-db:
     image: ankane/pgvector:latest
     container_name: exe201-db
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-exe201_phapluatso_v2}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_NAME:-exe201_phapluatso_v2}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  # ============================================
+  # REDIS CACHE
+  # ============================================
   exe201-redis:
     image: redis:alpine
     container_name: exe201-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ============================================
+  # NGINX REVERSE PROXY (Optional - for HTTPS)
+  # ============================================
+  nginx:
+    image: nginx:alpine
+    container_name: exe201-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./uploads:/var/www/uploads:ro
+    depends_on:
+      - app
+    networks:
+      - app-network
+    profiles:
+      - with-nginx
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   postgres_data:
