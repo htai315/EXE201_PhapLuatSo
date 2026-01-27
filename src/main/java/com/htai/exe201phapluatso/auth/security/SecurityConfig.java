@@ -13,12 +13,20 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.security.oauth2.client.endpoint.RestClientAuthorizationCodeTokenResponseClient;
+import org.springframework.web.client.RestClient;
+
+import java.net.http.HttpClient;
+import java.time.Duration;
 import java.util.Arrays;
 
 @Configuration
@@ -30,15 +38,18 @@ public class SecurityConfig {
         private final CustomOAuth2UserService customOAuth2UserService;
         private final OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler;
         private final OAuth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler;
+        private final OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient;
 
         // Constructor injection (best practice)
         public SecurityConfig(
                         CustomOAuth2UserService customOAuth2UserService,
                         OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler,
-                        OAuth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler) {
+                        OAuth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler,
+                        OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient) {
         this.customOAuth2UserService = customOAuth2UserService;
         this.oauth2AuthenticationSuccessHandler = oauth2AuthenticationSuccessHandler;
         this.oauth2AuthenticationFailureHandler = oauth2AuthenticationFailureHandler;
+        this.accessTokenResponseClient = accessTokenResponseClient;
     }
 
     // CORS Configuration Properties
@@ -92,94 +103,116 @@ public class SecurityConfig {
                 return source;
         }
 
-        @Bean
-        public SecurityFilterChain filterChain(
-                        HttpSecurity http,
-                        JwtService jwtService,
-                        UserRepo userRepo) throws Exception {
+    @Bean
+    public OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient() {
+        logger.info("Creating Custom OAuth2AccessTokenResponseClient with JDK HttpClient");
+        
+        // Use JDK HttpClient instead of reactor-netty to avoid QUIC native library issues
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(30))
+                .build();
+        
+        RestClient restClient = RestClient.builder()
+                .requestFactory(new JdkClientHttpRequestFactory(httpClient))
+                .build();
+        
+        RestClientAuthorizationCodeTokenResponseClient client = 
+                new RestClientAuthorizationCodeTokenResponseClient();
+        client.setRestClient(restClient);
+        
+        return client;
+    }
 
-                JwtAuthFilter jwtFilter = new JwtAuthFilter(jwtService, userRepo);
+    @Bean
+    public SecurityFilterChain filterChain(
+                    HttpSecurity http,
+                    JwtService jwtService,
+                    UserRepo userRepo) throws Exception {
 
-                http
-                                // CORS configuration
-                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                                // CSRF configuration based on environment
-                                .csrf(csrf -> {
-                                        if (!csrfEnabled) {
-                                                csrf.disable();
-                                        }
-                                })
-                                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                                .authorizeHttpRequests(auth -> auth
-                                                // public pages + assets
-                                                .requestMatchers(
-                                                                "/", "/index.html", "/app.html",
-                                                                "/css/**", "/img/**", "/scripts/**",
-                                                                "/html/**", "/favicon.ico", "/uploads/**")
-                                                .permitAll()
+            JwtAuthFilter jwtFilter = new JwtAuthFilter(jwtService, userRepo);
 
-                                                // payment result page (public - VNPay redirect without token)
-                                                .requestMatchers("/payment-result.html").permitAll()
+            http
+                            // CORS configuration
+                            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                            // CSRF configuration based on environment
+                            .csrf(csrf -> {
+                                    if (!csrfEnabled) {
+                                            csrf.disable();
+                                    }
+                            })
+                            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                            .authorizeHttpRequests(auth -> auth
+                                            // public pages + assets
+                                            .requestMatchers(
+                                                            "/", "/index.html", "/app.html",
+                                                            "/css/**", "/img/**", "/scripts/**",
+                                                            "/html/**", "/favicon.ico", "/uploads/**")
+                                            .permitAll()
 
-                                                // auth endpoints (public - không cần token)
-                                                .requestMatchers("/api/auth/register", "/api/auth/login",
-                                                                "/api/auth/refresh", "/api/auth/logout",
-                                                                "/api/auth/password-reset/**",
-                                                                "/api/auth/verify-email",
-                                                                "/api/auth/resend-verification",
-                                                                "/oauth2/**", "/login/**")
-                                                .permitAll()
+                                            // payment result page (public - VNPay redirect without token)
+                                            .requestMatchers("/payment-result.html").permitAll()
 
-                                                // payment IPN callback (public - VNPay server-to-server)
-                                                .requestMatchers("/api/payment/vnpay-ipn").permitAll()
+                                            // auth endpoints (public - không cần token)
+                                            .requestMatchers("/api/auth/register", "/api/auth/login",
+                                                            "/api/auth/refresh", "/api/auth/logout",
+                                                            "/api/auth/password-reset/**",
+                                                            "/api/auth/verify-email",
+                                                            "/api/auth/resend-verification",
+                                                            "/oauth2/**", "/login/**")
+                                            .permitAll()
 
-                                                // PayOS webhook callback (public - server-to-server)
-                                                .requestMatchers("/api/payment/webhook").permitAll()
+                                            // payment IPN callback (public - VNPay server-to-server)
+                                            .requestMatchers("/api/payment/vnpay-ipn").permitAll()
 
-                                                // Payment status check (public - for redirect page)
-                                                .requestMatchers("/api/payment/status/**").permitAll()
+                                            // PayOS webhook callback (public - server-to-server)
+                                            .requestMatchers("/api/payment/webhook").permitAll()
 
-                                                // admin endpoints (protected - ADMIN role required)
-                                                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                                            // Payment status check (public - for redirect page)
+                                            .requestMatchers("/api/payment/status/**").permitAll()
 
-                                                // auth endpoints (protected - cần token)
-                                                .requestMatchers("/api/auth/me", "/api/auth/test").authenticated()
+                                            // admin endpoints (protected - ADMIN role required)
+                                            .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                                                // mọi thứ khác mới cần đăng nhập
-                                                .anyRequest().authenticated())
-                                .exceptionHandling(ex -> ex
-                                                .authenticationEntryPoint((request, response, authException) -> {
-                                                        String path = request.getRequestURI();
-                                                        if (path.startsWith("/api/")) {
-                                                                // API endpoints: return 401 JSON response
-                                                                response.setStatus(401);
-                                                                response.setContentType("application/json");
-                                                                response.getWriter().write(
-                                                                                "{\"error\":\"Unauthorized\",\"message\":\""
-                                                                                                + authException.getMessage()
-                                                                                                + "\"}");
-                                                        } else {
-                                                                // HTML pages: redirect to login
-                                                                response.sendRedirect("/html/login.html");
-                                                        }
-                                                })
-                                                .accessDeniedHandler((request, response, accessDeniedException) -> {
-                                                        logger.error("Access Denied (403): {} - Reason: {}", 
-                                                                request.getRequestURI(), accessDeniedException.getMessage());
-                                                        response.setStatus(403);
-                                                        response.setContentType("application/json");
-                                                        response.getWriter().write(
-                                                                "{\"error\":\"Forbidden\",\"message\":\"Access Denied: " 
-                                                                + accessDeniedException.getMessage() + "\"}");
-                                                }))
-                                // OAuth2 Login Configuration
-                                .oauth2Login(oauth2 -> oauth2
-                                                .userInfoEndpoint(userInfo -> userInfo
-                                                                .oidcUserService(customOAuth2UserService))
-                                                .successHandler(oauth2AuthenticationSuccessHandler)
-                                                .failureHandler(oauth2AuthenticationFailureHandler))
-                                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                                            // auth endpoints (protected - cần token)
+                                            .requestMatchers("/api/auth/me", "/api/auth/test").authenticated()
 
-                return http.build();
-        }
+                                            // mọi thứ khác mới cần đăng nhập
+                                            .anyRequest().authenticated())
+                            .exceptionHandling(ex -> ex
+                                            .authenticationEntryPoint((request, response, authException) -> {
+                                                    String path = request.getRequestURI();
+                                                    if (path.startsWith("/api/")) {
+                                                            // API endpoints: return 401 JSON response
+                                                            response.setStatus(401);
+                                                            response.setContentType("application/json");
+                                                            response.getWriter().write(
+                                                                            "{\"error\":\"Unauthorized\",\"message\":\""
+                                                                                            + authException.getMessage()
+                                                                                            + "\"}");
+                                                    } else {
+                                                            // HTML pages: redirect to login
+                                                            response.sendRedirect("/html/login.html");
+                                                    }
+                                            })
+                                            .accessDeniedHandler((request, response, accessDeniedException) -> {
+                                                    logger.error("Access Denied (403): {} - Reason: {}", 
+                                                            request.getRequestURI(), accessDeniedException.getMessage());
+                                                    response.setStatus(403);
+                                                    response.setContentType("application/json");
+                                                    response.getWriter().write(
+                                                            "{\"error\":\"Forbidden\",\"message\":\"Access Denied: " 
+                                                            + accessDeniedException.getMessage() + "\"}");
+                                            }))
+                            // OAuth2 Login Configuration
+                            .oauth2Login(oauth2 -> oauth2
+                                            .tokenEndpoint(token -> token
+                                                            .accessTokenResponseClient(accessTokenResponseClient()))
+                                            .userInfoEndpoint(userInfo -> userInfo
+                                                            .oidcUserService(customOAuth2UserService))
+                                            .successHandler(oauth2AuthenticationSuccessHandler)
+                                            .failureHandler(oauth2AuthenticationFailureHandler))
+                            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+            return http.build();
+    }
 }
