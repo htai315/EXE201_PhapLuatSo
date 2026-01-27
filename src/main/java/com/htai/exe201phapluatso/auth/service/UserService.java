@@ -8,20 +8,13 @@ import com.htai.exe201phapluatso.auth.repo.UserRepo;
 import com.htai.exe201phapluatso.common.exception.BadRequestException;
 import com.htai.exe201phapluatso.common.exception.NotFoundException;
 import com.htai.exe201phapluatso.common.exception.UnauthorizedException;
+import com.htai.exe201phapluatso.common.service.CloudinaryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.Set;
-import java.util.UUID;
 
 @Service
 public class UserService {
@@ -30,24 +23,15 @@ public class UserService {
 
     private final UserRepo userRepo;
     private final PasswordEncoder passwordEncoder;
+    private final CloudinaryService cloudinaryService;
 
-    // Thư mục lưu avatar
-    private static final String UPLOAD_DIR = "uploads/avatars/";
-    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-    private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
-        "image/jpeg", "image/png", "image/gif", "image/webp"
-    );
+    // Cloudinary folder for avatars
+    private static final String AVATAR_FOLDER = "avatars";
 
-    public UserService(UserRepo userRepo, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepo userRepo, PasswordEncoder passwordEncoder, CloudinaryService cloudinaryService) {
         this.userRepo = userRepo;
         this.passwordEncoder = passwordEncoder;
-        
-        // Tạo thư mục upload nếu chưa có
-        try {
-            Files.createDirectories(Paths.get(UPLOAD_DIR));
-        } catch (IOException e) {
-            log.error("Không thể tạo thư mục upload", e);
-        }
+        this.cloudinaryService = cloudinaryService;
     }
 
     public UserProfileResponse getUserProfile(String email) {
@@ -101,97 +85,23 @@ public class UserService {
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
 
-        // Validate file
-        validateAvatarFile(file);
-
-        try {
-            // Xóa avatar cũ nếu có
-            if (user.getAvatarUrl() != null && !user.getAvatarUrl().isEmpty()) {
-                deleteOldAvatar(user.getAvatarUrl());
+        // Delete old avatar from Cloudinary if exists
+        if (user.getAvatarUrl() != null && user.getAvatarUrl().contains("cloudinary.com")) {
+            String publicId = cloudinaryService.extractPublicId(user.getAvatarUrl());
+            if (publicId != null) {
+                cloudinaryService.deleteFile(publicId);
             }
-
-            // Generate unique filename (ignore original filename for security)
-            String extension = getFileExtension(file.getContentType());
-            String filename = UUID.randomUUID().toString() + extension;
-
-            // Save file
-            Path filePath = Paths.get(UPLOAD_DIR + filename);
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-            // Update user avatar URL
-            String avatarUrl = "/uploads/avatars/" + filename;
-            user.setAvatarUrl(avatarUrl);
-            userRepo.save(user);
-            
-            log.info("Avatar uploaded for user: {}", email);
-
-            return avatarUrl;
-        } catch (IOException e) {
-            log.error("Không thể lưu file avatar", e);
-            throw new BadRequestException("Không thể lưu file. Vui lòng thử lại.");
-        }
-    }
-    
-    /**
-     * Validate avatar file
-     */
-    private void validateAvatarFile(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new BadRequestException("File không được để trống");
         }
 
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw new BadRequestException("Kích thước file không được vượt quá 5MB");
-        }
+        // Upload new avatar to Cloudinary
+        String avatarUrl = cloudinaryService.uploadImage(file, AVATAR_FOLDER);
 
-        String contentType = file.getContentType();
-        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType)) {
-            throw new BadRequestException("File phải là ảnh (JPG, PNG, GIF, WEBP)");
-        }
+        // Update user avatar URL
+        user.setAvatarUrl(avatarUrl);
+        userRepo.save(user);
         
-        // Validate filename to prevent path traversal
-        String filename = file.getOriginalFilename();
-        if (filename != null && (filename.contains("..") || filename.contains("/") || filename.contains("\\"))) {
-            throw new BadRequestException("Tên file không hợp lệ");
-        }
-    }
-    
-    /**
-     * Get file extension from content type
-     */
-    private String getFileExtension(String contentType) {
-        return switch (contentType) {
-            case "image/jpeg" -> ".jpg";
-            case "image/png" -> ".png";
-            case "image/gif" -> ".gif";
-            case "image/webp" -> ".webp";
-            default -> ".jpg";
-        };
-    }
+        log.info("Avatar uploaded for user: {} -> {}", email, avatarUrl);
 
-    /**
-     * Xóa file avatar cũ khỏi hệ thống
-     */
-    private void deleteOldAvatar(String avatarUrl) {
-        try {
-            // Extract filename from URL (e.g., "/uploads/avatars/abc.jpg" -> "abc.jpg")
-            String filename = avatarUrl.substring(avatarUrl.lastIndexOf("/") + 1);
-            
-            // Validate filename to prevent path traversal
-            if (filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
-                log.warn("Invalid avatar filename: {}", filename);
-                return;
-            }
-            
-            Path filePath = Paths.get(UPLOAD_DIR + filename);
-            
-            // Xóa file nếu tồn tại
-            if (Files.exists(filePath)) {
-                Files.delete(filePath);
-                log.debug("Đã xóa avatar cũ: {}", filename);
-            }
-        } catch (IOException e) {
-            log.warn("Không thể xóa avatar cũ: {}", e.getMessage());
-        }
+        return avatarUrl;
     }
 }
