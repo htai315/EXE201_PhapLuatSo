@@ -12,22 +12,25 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class OrderCodeGenerator {
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
     /**
-     * Generate next unique order code from database sequence.
-     * 
-     * @return unique order code (8 digits: 10000000-99999999)
+     * Generate unique order code based on current time.
+     * Format: YYMMDDHHmmss + 3 random digits
+     * Max length: 15 digits (Safe for Java Long and PayOS)
      */
-    @Transactional
     public long generateOrderCode() {
-        // Use native SQL to get next value from sequence
-        // This is thread-safe and works in distributed systems
-        Long orderCode = (Long) entityManager
-                .createNativeQuery("SELECT nextval('order_code_sequence')")
-                .getSingleResult();
-        
-        return orderCode;
+        // Lấy thời gian hiện tại
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+
+        // Format: YYMMDDHHmmss (12 digits)
+        // Ví dụ 2024-01-27 23:30:45 -> 240127233045
+        String timePart = java.time.format.DateTimeFormatter.ofPattern("yyMMddHHmmss").format(now);
+
+        // Random 3 digits (100-999)
+        int randomPart = java.util.concurrent.ThreadLocalRandom.current().nextInt(100, 1000);
+
+        // Combine: 12 digits + 3 digits = 15 digits
+        String orderCodeStr = timePart + randomPart;
+
+        return Long.parseLong(orderCodeStr);
     }
 }
