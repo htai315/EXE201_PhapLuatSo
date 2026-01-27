@@ -13,8 +13,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
-import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -32,18 +30,15 @@ public class SecurityConfig {
         private final CustomOAuth2UserService customOAuth2UserService;
         private final OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler;
         private final OAuth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler;
-        private final OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient;
 
         // Constructor injection (best practice)
         public SecurityConfig(
                         CustomOAuth2UserService customOAuth2UserService,
                         OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler,
-                        OAuth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler,
-                        OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient) {
+                        OAuth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler) {
         this.customOAuth2UserService = customOAuth2UserService;
         this.oauth2AuthenticationSuccessHandler = oauth2AuthenticationSuccessHandler;
         this.oauth2AuthenticationFailureHandler = oauth2AuthenticationFailureHandler;
-        this.accessTokenResponseClient = accessTokenResponseClient;
     }
 
     // CORS Configuration Properties
@@ -179,8 +174,6 @@ public class SecurityConfig {
                                                 }))
                                 // OAuth2 Login Configuration
                                 .oauth2Login(oauth2 -> oauth2
-                                                .tokenEndpoint(token -> token
-                                                                .accessTokenResponseClient(accessTokenResponseClient))
                                                 .userInfoEndpoint(userInfo -> userInfo
                                                                 .oidcUserService(customOAuth2UserService))
                                                 .successHandler(oauth2AuthenticationSuccessHandler)

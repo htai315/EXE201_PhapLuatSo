@@ -2,6 +2,8 @@ package com.htai.exe201phapluatso.auth.util;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -11,6 +13,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class CookieUtils {
+
+    private static final Logger log = LoggerFactory.getLogger(CookieUtils.class);
 
     public static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
     // Use "/" to ensure cookie is sent for all paths including OAuth redirect
@@ -54,7 +58,12 @@ public class CookieUtils {
             cookieHeader.append("; Domain=").append(cookieDomain);
         }
 
-        response.addHeader("Set-Cookie", cookieHeader.toString());
+        String cookie = cookieHeader.toString();
+        log.info("[CookieUtils] Setting refresh token cookie - Secure={}, SameSite={}, Domain={}, Path={}", 
+                secureCookie, sameSite, cookieDomain.isEmpty() ? "(none)" : cookieDomain, COOKIE_PATH);
+        log.debug("[CookieUtils] Full cookie header: {}", cookie.replaceAll("=.*?;", "=***;"));
+        
+        response.addHeader("Set-Cookie", cookie);
     }
 
     /**

@@ -45,6 +45,17 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security-oauth2-client</artifactId>
+            <exclusions>
+                <!-- Exclude netty-quic to avoid native library issues on Linux -->
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-codec-native-quic</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-codec-classes-quic</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
