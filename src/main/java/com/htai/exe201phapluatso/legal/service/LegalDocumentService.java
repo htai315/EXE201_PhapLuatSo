@@ -4,7 +4,6 @@ import com.htai.exe201phapluatso.auth.entity.User;
 import com.htai.exe201phapluatso.auth.repo.UserRepo;
 import com.htai.exe201phapluatso.common.exception.BadRequestException;
 import com.htai.exe201phapluatso.common.exception.NotFoundException;
-import com.htai.exe201phapluatso.common.service.CloudinaryService;
 import com.htai.exe201phapluatso.legal.dto.LegalDocumentDTO;
 import com.htai.exe201phapluatso.legal.dto.UploadLegalDocumentRequest;
 import com.htai.exe201phapluatso.legal.dto.UploadLegalDocumentResponse;
@@ -23,12 +22,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,11 +47,8 @@ public class LegalDocumentService {
     private final UserRepo userRepo;
     private final VectorSearchService vectorSearchService;
     private final ChatMessageRepo chatMessageRepo;
-    private final CloudinaryService cloudinaryService;
 
-    // Cloudinary folder for legal documents
-    private static final String LEGAL_DOCS_FOLDER = "legal-documents";
-    
+    private static final String UPLOAD_DIR = "uploads/legal/";
     private static final long MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB for legal documents
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
         "application/pdf"
@@ -58,8 +60,7 @@ public class LegalDocumentService {
             LegalDocumentParserService parserService,
             UserRepo userRepo,
             VectorSearchService vectorSearchService,
-            ChatMessageRepo chatMessageRepo,
-            CloudinaryService cloudinaryService
+            ChatMessageRepo chatMessageRepo
     ) {
         this.documentRepo = documentRepo;
         this.articleRepo = articleRepo;
@@ -67,7 +68,6 @@ public class LegalDocumentService {
         this.userRepo = userRepo;
         this.vectorSearchService = vectorSearchService;
         this.chatMessageRepo = chatMessageRepo;
-        this.cloudinaryService = cloudinaryService;
     }
 
     @Transactional
@@ -83,8 +83,8 @@ public class LegalDocumentService {
         User user = userRepo.findByEmail(userEmail)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
 
-        // 3. Upload file to Cloudinary
-        String fileUrl = cloudinaryService.uploadDocument(file, LEGAL_DOCS_FOLDER);
+        // 3. Save file to disk
+        String filePath = saveFile(file);
 
         // 4. Parse PDF and extract articles
         List<LegalArticle> articles = parserService.parseDocument(file);
@@ -100,7 +100,7 @@ public class LegalDocumentService {
             document.setEffectiveDate(LocalDate.parse(request.effectiveDate()));
         }
         
-        document.setFilePath(fileUrl); // Now stores Cloudinary URL
+        document.setFilePath(filePath);
         document.setTotalArticles(articles.size());
         document.setCreatedBy(user);
         document.setCreatedAt(LocalDateTime.now());
@@ -114,8 +114,8 @@ public class LegalDocumentService {
         // 7. Save to database
         document = documentRepo.save(document);
         
-        log.info("Document uploaded: {} with {} articles by user {} -> {}", 
-                document.getDocumentName(), document.getTotalArticles(), userEmail, fileUrl);
+        log.info("Document uploaded: {} with {} articles by user {}", 
+                document.getDocumentName(), document.getTotalArticles(), userEmail);
 
         // 8. Generate embeddings for new articles (async-like, in background)
         generateEmbeddingsForDocument(document);
@@ -165,7 +165,7 @@ public class LegalDocumentService {
         }
         
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new BadRequestException("File không được vượt quá 50MB");
+            throw new BadRequestException("File không được vượt quá 20MB");
         }
         
         String contentType = file.getContentType();
@@ -191,6 +191,33 @@ public class LegalDocumentService {
             .replace("\"", "&quot;")
             .replace("'", "&#x27;")
             .trim();
+    }
+
+    /**
+     * Save uploaded file to disk
+     */
+    private String saveFile(MultipartFile file) {
+        try {
+            // Create upload directory if not exists
+            Path uploadPath = Paths.get(UPLOAD_DIR);
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            // Generate unique filename (ignore original filename for security)
+            String filename = UUID.randomUUID() + ".pdf";
+
+            // Save file
+            Path filePath = uploadPath.resolve(filename);
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            
+            log.info("File saved: {}", filePath);
+
+            return UPLOAD_DIR + filename;
+        } catch (IOException e) {
+            log.error("Error saving file", e);
+            throw new BadRequestException("Không thể lưu file. Vui lòng thử lại.");
+        }
     }
 
     /**
@@ -249,13 +276,12 @@ public class LegalDocumentService {
     public void deleteDocument(Long id) {
         LegalDocument document = getDocumentById(id);
         
-        // Delete file from Cloudinary
-        String filePath = document.getFilePath();
-        if (filePath != null && filePath.contains("cloudinary.com")) {
-            String publicId = cloudinaryService.extractPublicId(filePath);
-            if (publicId != null) {
-                cloudinaryService.deleteFile(publicId);
-            }
+        // Delete file from disk
+        try {
+            Path filePath = Paths.get(document.getFilePath());
+            Files.deleteIfExists(filePath);
+        } catch (IOException e) {
+            log.error("Could not delete file: {}", document.getFilePath(), e);
         }
         
         // Get article IDs to delete citations first
