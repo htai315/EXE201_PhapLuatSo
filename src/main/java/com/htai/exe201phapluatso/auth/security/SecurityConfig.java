@@ -24,6 +24,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.security.oauth2.client.endpoint.RestClientAuthorizationCodeTokenResponseClient;
 import org.springframework.web.client.RestClient;
+import org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
@@ -38,18 +39,16 @@ public class SecurityConfig {
         private final CustomOAuth2UserService customOAuth2UserService;
         private final OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler;
         private final OAuth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler;
-        private final OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient;
+
 
         // Constructor injection (best practice)
         public SecurityConfig(
                         CustomOAuth2UserService customOAuth2UserService,
                         OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler,
-                        OAuth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler,
-                        OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient) {
+                        OAuth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler) {
         this.customOAuth2UserService = customOAuth2UserService;
         this.oauth2AuthenticationSuccessHandler = oauth2AuthenticationSuccessHandler;
         this.oauth2AuthenticationFailureHandler = oauth2AuthenticationFailureHandler;
-        this.accessTokenResponseClient = accessTokenResponseClient;
     }
 
     // CORS Configuration Properties
@@ -109,11 +108,13 @@ public class SecurityConfig {
         
         // Use JDK HttpClient instead of reactor-netty to avoid QUIC native library issues
         HttpClient httpClient = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
                 .connectTimeout(Duration.ofSeconds(30))
                 .build();
         
         RestClient restClient = RestClient.builder()
                 .requestFactory(new JdkClientHttpRequestFactory(httpClient))
+                .messageConverters(converters -> converters.add(0, new OAuth2AccessTokenResponseHttpMessageConverter()))
                 .build();
         
         RestClientAuthorizationCodeTokenResponseClient client = 

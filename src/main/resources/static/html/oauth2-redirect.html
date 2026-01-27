@@ -68,34 +68,42 @@
     <script>
         /**
          * OAuth2 Redirect Handler - Pure Option B
-         * 
-         * Security model:
-         * - NO tokens in URL (not even access token)
-         * - Refresh token is in HttpOnly cookie (set by OAuth2 handler)
-         * - Access token is obtained by calling /api/auth/refresh
-         * - Access token is stored in-memory only
+         * Enhanced with Debug Logging
          */
         (async function initOAuth2Session() {
             'use strict';
 
+            function log(msg, data) {
+                console.log(`[OAuth2Redirect] ${new Date().toISOString()} - ${msg}`, data || '');
+            }
+
+            function error(msg, data) {
+                console.error(`[OAuth2Redirect] ${new Date().toISOString()} - ${msg}`, data || '');
+            }
+
+            log('Page initialized');
+
             // Check for error from OAuth2 failure handler
             const urlParams = new URLSearchParams(window.location.search);
-            const error = urlParams.get('error');
+            const errorParam = urlParams.get('error');
 
-            if (error) {
-                Toast.error('Đăng nhập Google thất bại: ' + decodeURIComponent(error));
+            log('Query params parsed', Object.fromEntries(urlParams));
+
+            if (errorParam) {
+                error('Error param found in URL: ' + errorParam);
+                Toast.error('Đăng nhập Google thất bại: ' + decodeURIComponent(errorParam));
                 setTimeout(() => {
-                    window.location.href = '/html/login.html';
-                }, 2000);
+                    window.location.href = '/html/login.html?error=oauth2_failed&message=' + encodeURIComponent(errorParam);
+                }, 3000);
                 return;
             }
 
             // Pure Option B: Obtain access token via refresh endpoint
-            // The refresh token cookie was set by OAuth2AuthenticationSuccessHandler
-            console.log('[OAuth2] Starting session initialization via refresh...');
+            log('Starting session initialization via refresh...');
 
             try {
                 // Call refresh endpoint - cookie is auto-sent with credentials: 'include'
+                log('Calling /api/auth/refresh...');
                 const response = await fetch('/api/auth/refresh', {
                     method: 'POST',
                     credentials: 'include', // CRITICAL: send HttpOnly cookie
@@ -104,55 +112,75 @@
                     }
                 });
 
+                log('Refresh response received', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries([...response.headers])
+                });
+
                 if (!response.ok) {
-                    console.error('[OAuth2] Refresh failed with status:', response.status);
-                    Toast.error('Không thể khởi tạo phiên đăng nhập. Vui lòng thử lại.');
+                    error('Refresh failed with status: ' + response.status);
+                    if (response.status === 401) {
+                        Toast.error('Không tìm thấy phiên đăng nhập (Cookie missing/expired).');
+                    } else {
+                        Toast.error('Lỗi server: ' + response.status);
+                    }
                     setTimeout(() => {
-                        window.location.href = '/html/login.html';
-                    }, 2000);
+                        window.location.href = '/html/login.html?error=refresh_failed&status=' + response.status;
+                    }, 3000);
                     return;
                 }
 
                 const data = await response.json();
+                log('Token response body parsed', { hasAccessToken: !!data.accessToken });
 
                 // Store access token in memory (NOT localStorage)
                 if (window.TokenManager && data.accessToken) {
                     window.TokenManager.setAccessToken(data.accessToken, data.expiresIn || 900);
-                    console.log('[OAuth2] Access token obtained and stored in memory');
+                    log('Access token stored in TokenManager');
                 } else {
+                    error('TokenManager missing or no access token in response');
                     throw new Error('TokenManager not available or no access token in response');
                 }
 
                 // Fetch user info to populate localStorage with name/role (not tokens)
                 try {
-                    const client = AppRuntime.getClient();
-                    if (client) {
-                        const user = await AppRuntime.safe('OAuth2:getMe', () => AppRuntime.getMe(client));
-                        if (user) {
-                            console.log('[OAuth2] User info fetched:', user.email);
-                            if (user.fullName) localStorage.setItem('userName', user.fullName);
-                            if (user.role) localStorage.setItem('userRole', user.role);
+                    // Try to use AppRuntime if available, otherwise manual fetch
+                    log('Fetching user info /api/auth/me...');
+                    // We can reuse the token we just got
+                    const meResponse = await fetch('/api/auth/me', {
+                        headers: {
+                            'Authorization': 'Bearer ' + data.accessToken
                         }
+                    });
+
+                    if (meResponse.ok) {
+                        const user = await meResponse.json();
+                        log('User info fetched', user);
+                        if (user.fullName) localStorage.setItem('userName', user.fullName);
+                        if (user.role) localStorage.setItem('userRole', user.role);
+                        // Also set user in localStorage for consistency with older code
+                        localStorage.setItem('user', JSON.stringify(user));
                     } else {
-                        console.warn('[OAuth2] API client not available; skipping user fetch');
+                        log('User info fetch failed', { status: meResponse.status });
                     }
                 } catch (userError) {
                     console.warn('[OAuth2] Could not fetch user info:', userError);
-                    // Continue anyway - user info is optional
                 }
 
                 // Success - redirect to home
+                log('Login flow successful. Redirecting to index...');
                 Toast.success('Đăng nhập thành công!');
                 setTimeout(() => {
                     window.location.href = '/index.html';
                 }, 1000);
 
-            } catch (error) {
-                console.error('[OAuth2] Session initialization failed:', error);
-                Toast.error('Đã xảy ra lỗi. Vui lòng thử lại.');
+            } catch (err) {
+                error('Session initialization exception:', err);
+                Toast.error('Đã xảy ra lỗi hệ thống.');
                 setTimeout(() => {
-                    window.location.href = '/html/login.html';
-                }, 2000);
+                    window.location.href = '/html/login.html?error=exception';
+                }, 3000);
             }
         })();
     </script>
