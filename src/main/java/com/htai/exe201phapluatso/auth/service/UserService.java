@@ -30,24 +30,18 @@ public class UserService {
 
     private final UserRepo userRepo;
     private final PasswordEncoder passwordEncoder;
+    private final com.htai.exe201phapluatso.common.service.CloudinaryService cloudinaryService;
 
-    // Thư mục lưu avatar
-    private static final String UPLOAD_DIR = "uploads/avatars/";
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
         "image/jpeg", "image/png", "image/gif", "image/webp"
     );
 
-    public UserService(UserRepo userRepo, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepo userRepo, PasswordEncoder passwordEncoder, 
+                       com.htai.exe201phapluatso.common.service.CloudinaryService cloudinaryService) {
         this.userRepo = userRepo;
         this.passwordEncoder = passwordEncoder;
-        
-        // Tạo thư mục upload nếu chưa có
-        try {
-            Files.createDirectories(Paths.get(UPLOAD_DIR));
-        } catch (IOException e) {
-            log.error("Không thể tạo thư mục upload", e);
-        }
+        this.cloudinaryService = cloudinaryService;
     }
 
     public UserProfileResponse getUserProfile(String email) {
@@ -105,28 +99,22 @@ public class UserService {
         validateAvatarFile(file);
 
         try {
-            // Xóa avatar cũ nếu có
+            // Xóa avatar cũ trên Cloudinary nếu có
             if (user.getAvatarUrl() != null && !user.getAvatarUrl().isEmpty()) {
                 deleteOldAvatar(user.getAvatarUrl());
             }
 
-            // Generate unique filename (ignore original filename for security)
-            String extension = getFileExtension(file.getContentType());
-            String filename = UUID.randomUUID().toString() + extension;
-
-            // Save file
-            Path filePath = Paths.get(UPLOAD_DIR + filename);
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            // Upload lên Cloudinary
+            String avatarUrl = cloudinaryService.uploadFile(file, "avatars");
 
             // Update user avatar URL
-            String avatarUrl = "/uploads/avatars/" + filename;
             user.setAvatarUrl(avatarUrl);
             userRepo.save(user);
             
-            log.info("Avatar uploaded for user: {}", email);
+            log.info("Avatar uploaded to Cloudinary for user: {}", email);
 
             return avatarUrl;
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Không thể lưu file avatar", e);
             throw new BadRequestException("Không thể lưu file. Vui lòng thử lại.");
         }
@@ -148,50 +136,16 @@ public class UserService {
         if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType)) {
             throw new BadRequestException("File phải là ảnh (JPG, PNG, GIF, WEBP)");
         }
-        
-        // Validate filename to prevent path traversal
-        String filename = file.getOriginalFilename();
-        if (filename != null && (filename.contains("..") || filename.contains("/") || filename.contains("\\"))) {
-            throw new BadRequestException("Tên file không hợp lệ");
-        }
-    }
-    
-    /**
-     * Get file extension from content type
-     */
-    private String getFileExtension(String contentType) {
-        return switch (contentType) {
-            case "image/jpeg" -> ".jpg";
-            case "image/png" -> ".png";
-            case "image/gif" -> ".gif";
-            case "image/webp" -> ".webp";
-            default -> ".jpg";
-        };
     }
 
     /**
-     * Xóa file avatar cũ khỏi hệ thống
+     * Xóa file avatar cũ khỏi Cloudinary
      */
     private void deleteOldAvatar(String avatarUrl) {
         try {
-            // Extract filename from URL (e.g., "/uploads/avatars/abc.jpg" -> "abc.jpg")
-            String filename = avatarUrl.substring(avatarUrl.lastIndexOf("/") + 1);
-            
-            // Validate filename to prevent path traversal
-            if (filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
-                log.warn("Invalid avatar filename: {}", filename);
-                return;
-            }
-            
-            Path filePath = Paths.get(UPLOAD_DIR + filename);
-            
-            // Xóa file nếu tồn tại
-            if (Files.exists(filePath)) {
-                Files.delete(filePath);
-                log.debug("Đã xóa avatar cũ: {}", filename);
-            }
-        } catch (IOException e) {
-            log.warn("Không thể xóa avatar cũ: {}", e.getMessage());
+            cloudinaryService.deleteFile(avatarUrl);
+        } catch (Exception e) {
+            log.warn("Không thể xóa avatar cũ trên Cloudinary: {}", e.getMessage());
         }
     }
 }

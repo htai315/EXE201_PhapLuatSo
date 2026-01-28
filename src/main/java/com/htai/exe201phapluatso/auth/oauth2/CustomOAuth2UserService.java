@@ -113,7 +113,16 @@ public class CustomOAuth2UserService extends OidcUserService {
 
     private User updateExistingUser(User existingUser, OAuth2UserInfo userInfo) {
         existingUser.setFullName(userInfo.getName());
-        existingUser.setAvatarUrl(userInfo.getImageUrl());
+        
+        // Only update avatar if:
+        // 1. Current avatar is null or empty
+        // 2. OR Current avatar is NOT a Cloudinary URL (meaning it might be a previous Google URL or local file we want to replace)
+        // We preserve Cloudinary URLs because those are custom uploads by the user
+        String currentAvatar = existingUser.getAvatarUrl();
+        if (currentAvatar == null || currentAvatar.isEmpty() || !currentAvatar.contains("cloudinary")) {
+            existingUser.setAvatarUrl(userInfo.getImageUrl());
+        }
+        
         existingUser.setEmailVerified(true);
         
         User updatedUser = userRepo.save(existingUser);
