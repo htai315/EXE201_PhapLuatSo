@@ -359,7 +359,7 @@
             // Display amount and plan name
             if (data.amount) {
                 const formattedAmount = new Intl.NumberFormat('vi-VN').format(data.amount);
-                paymentAmount.textContent = `${formattedAmount} VNĐ` + (data.planName ? ` - ${data.planName}` : '');
+                paymentAmount.textContent = `${formattedAmount} VND` + (data.planName ? ` - ${data.planName}` : '');
             }
 
             const modal = new bootstrap.Modal(document.getElementById('qrModal'));
