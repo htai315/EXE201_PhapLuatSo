@@ -11,8 +11,10 @@ services:
     env_file:
       - .env
     environment:
-      # Database - Configured via application.properties and .env
-      # Do not override SPRING_DATASOURCE_* here to allow prod DB connection
+      # Database - Connect to PostgreSQL container
+      SPRING_DATASOURCE_URL: jdbc:postgresql://exe201-db:5432/${DB_NAME:-exe201_phapluatso_v2}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres}
       # Redis - Connect to Redis container
       SPRING_DATA_REDIS_HOST: exe201-redis
       SPRING_DATA_REDIS_PORT: 6379
