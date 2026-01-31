@@ -49,5 +49,5 @@ jobs:
         script: |
           cd EXE201_PhapLuatSo
           git pull origin master
-          docker compose pull nginx || true
-          docker compose up -d --build app nginx
+          docker compose pull
+          docker compose up -d --build app
