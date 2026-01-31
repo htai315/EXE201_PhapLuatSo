@@ -11,10 +11,8 @@ services:
     env_file:
       - .env
     environment:
-      # Database - Connect to PostgreSQL container
-      SPRING_DATASOURCE_URL: jdbc:postgresql://exe201-db:5432/${DB_NAME:-exe201_phapluatso_v2}
-      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres}
+      # Database - Configured via application.properties and .env
+      # Do not override SPRING_DATASOURCE_* here to allow prod DB connection
       # Redis - Connect to Redis container
       SPRING_DATA_REDIS_HOST: exe201-redis
       SPRING_DATA_REDIS_PORT: 6379
@@ -70,14 +68,17 @@ services:
       HIKARI_IDLE_TIMEOUT: ${HIKARI_IDLE_TIMEOUT:-600000}
       HIKARI_MAX_LIFETIME: ${HIKARI_MAX_LIFETIME:-1800000}
     depends_on:
-      exe201-db:
-        condition: service_healthy
       exe201-redis:
         condition: service_started
     volumes:
       - ./uploads:/app/uploads
     networks:
       - app-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/auth/test"]
       interval: 30s
@@ -89,6 +90,7 @@ services:
   # POSTGRESQL DATABASE WITH PGVECTOR
   # ============================================
   exe201-db:
+    profiles: ["infra"]
     image: ankane/pgvector:latest
     container_name: exe201-db
     restart: unless-stopped
