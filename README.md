@@ -67,7 +67,7 @@ cd EXE201_PhapLuatSo
 ### 3. Cấu Hình Database
 Tạo database trong PostgreSQL:
 ```sql
-CREATE DATABASE exe201_phapluatso;
+CREATE DATABASE exe201_phapluatso;;;
 ```
 
 ### 4. Cấu Hình Environment
