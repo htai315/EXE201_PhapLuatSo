@@ -14,7 +14,7 @@ services:
       # Database - Connect to PostgreSQL container
       SPRING_DATASOURCE_URL: jdbc:postgresql://exe201-db:5432/${DB_NAME:-exe201_phapluatso_v2}
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-xK9$mP2@vL5#nQ8^jR4&wT7*yU1%bN6!aH3}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-KnmazsnsdE12312345}
       # Redis - Connect to Redis container
       SPRING_DATA_REDIS_HOST: exe201-redis
       SPRING_DATA_REDIS_PORT: 6379
@@ -99,7 +99,7 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME:-exe201_phapluatso_v2}
       POSTGRES_USER: ${DB_USERNAME:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-xK9$mP2@vL5#nQ8^jR4&wT7*yU1%bN6!aH3}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-KnmazsnsdE12312345}
     ports:
       - "5432:5432"
     volumes:
