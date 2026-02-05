@@ -179,6 +179,8 @@ export function getInputValue() {
  */
 export function clearInput() {
     elements.questionInput.value = '';
+    // Reset textarea height to single line
+    elements.questionInput.style.height = 'auto';
 }
 
 /**
@@ -187,6 +189,52 @@ export function clearInput() {
  */
 export function setInputValue(value) {
     elements.questionInput.value = value;
+    // Trigger resize after setting value
+    autoResizeTextarea();
+}
+
+/**
+ * Auto-resize textarea based on content
+ * Grows up to max-height, then scrolls internally
+ */
+export function autoResizeTextarea() {
+    const textarea = elements.questionInput;
+    if (!textarea) return;
+
+    // Reset height to auto to get correct scrollHeight
+    textarea.style.height = 'auto';
+
+    // Calculate new height (respecting max-height from CSS)
+    const maxHeight = 140; // Match CSS --input-max-height
+    const newHeight = Math.min(textarea.scrollHeight, maxHeight);
+
+    textarea.style.height = newHeight + 'px';
+
+    // Enable internal scroll if content exceeds max height
+    textarea.style.overflowY = textarea.scrollHeight > maxHeight ? 'auto' : 'hidden';
+}
+
+/**
+ * Setup textarea event handlers
+ * @param {Function} onSubmit - Callback to trigger form submission
+ */
+export function setupTextareaHandlers(onSubmit) {
+    const textarea = elements.questionInput;
+    if (!textarea) return;
+
+    // Auto-resize on input
+    textarea.addEventListener('input', autoResizeTextarea);
+
+    // Handle Enter key: submit on Enter, newline on Shift+Enter
+    textarea.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (onSubmit) onSubmit();
+        }
+    });
+
+    // Initial resize
+    autoResizeTextarea();
 }
 
 /**

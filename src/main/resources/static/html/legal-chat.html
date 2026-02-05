@@ -114,7 +114,6 @@
         <div class="chat-main">
             <div class="chat-header">
                 <h1>Trợ lý AI Pháp Luật</h1>
-                <p>Hỏi đáp về pháp luật Việt Nam với AI, có dẫn chứng cụ thể</p>
             </div>
 
             <div class="chat-messages" id="chatMessages">
@@ -125,7 +124,8 @@
                     <div>
                         <div class="message-label">Trợ lý AI</div>
                         <div class="message-content">
-                            <p>Xin chào! Tôi là trợ lý AI chuyên về pháp luật Việt Nam. Bạn có thể hỏi tôi về các vấn đề pháp lý và tôi sẽ trả lời dựa trên các văn bản pháp luật đã được cập nhật</p>
+                            <p>Xin chào! Tôi là trợ lý AI chuyên về pháp luật Việt Nam. Bạn có thể hỏi tôi về các vấn đề
+pháp lý và tôi sẽ trả lời dựa trên các văn bản pháp luật đã được cập nhật</p>
                         </div>
                     </div>
                 </div>
@@ -135,8 +135,8 @@
                 <div class="chat-input-container">
                     <form id="chatForm">
                         <div class="input-wrapper">
-                            <input type="text" id="questionInput" placeholder="Nhập câu hỏi của bạn về pháp luật..."
-                                required>
+                            <textarea id="questionInput" placeholder="Nhập câu hỏi của bạn về pháp luật..." required
+                                rows="1"></textarea>
                             <button class="send-btn" type="submit" id="sendBtn">
                                 <i class="bi bi-send-fill"></i>
                             </button>

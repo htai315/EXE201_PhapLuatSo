@@ -47,7 +47,9 @@ import {
     toggleSidebar,
     closeSidebar,
     toggleClearSearchButton,
-    clearSearchInput
+    clearSearchInput,
+    setupTextareaHandlers,
+    autoResizeTextarea
 } from './chat-ui.js';
 
 // Import credits counter (loaded separately)
@@ -113,6 +115,11 @@ function setupEventListeners() {
     if (chatForm) {
         chatForm.addEventListener('submit', handleFormSubmit);
     }
+
+    // Setup textarea auto-resize and Enter key handling
+    setupTextareaHandlers(() => {
+        if (chatForm) chatForm.dispatchEvent(new Event('submit'));
+    });
 }
 
 /**
